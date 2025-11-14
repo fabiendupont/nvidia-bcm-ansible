@@ -1,0 +1,19 @@
+---
+# Handlers for BCM Agent role
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart bcm-agent
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+    state: restarted
+  when: bcm_agent_started | bool
+
+- name: Enable podman auto-update timer
+  ansible.builtin.systemd:
+    name: podman-auto-update.timer
+    enabled: true
+    state: started
+  when: bcm_agent_auto_update | bool

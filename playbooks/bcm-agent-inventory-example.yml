@@ -1,0 +1,78 @@
+---
+# Example inventory for BCM Agent deployment
+#
+# Copy this file and customize for your environment:
+#   cp bcm-agent-inventory-example.yml inventory.yml
+#   vim inventory.yml
+#
+# Then deploy with:
+#   ansible-playbook -i inventory.yml deploy-bcm-agent.yml
+
+all:
+  vars:
+    # Global BCM configuration
+    bcm_agent_bcm_host: "bcmhead"
+    bcm_agent_bcm_port: 8081
+    bcm_agent_image_tag: "1.0.0"
+
+  children:
+    # BCM head node
+    bcm_head:
+      hosts:
+        bcmhead:
+          ansible_host: 10.141.255.254
+      vars:
+        # Use symlinks on head node
+        bcm_agent_cert_method: "symlink"
+        bcm_agent_cert_source: "/cm/local/apps/cm-lite-daemon/etc"
+
+    # Compute nodes managed by BCM
+    bcm_compute:
+      hosts:
+        node001:
+          ansible_host: 10.141.160.1
+        node002:
+          ansible_host: 10.141.160.2
+        node003:
+          ansible_host: 10.141.160.3
+        node004:
+          ansible_host: 10.141.160.4
+        node005:
+          ansible_host: 10.141.160.5
+      vars:
+        # Copy certificates on compute nodes
+        bcm_agent_cert_method: "copy"
+        bcm_agent_cert_source: "/cm/local/apps/cm-lite-daemon/etc"
+
+    # Standalone servers (not BCM-managed)
+    standalone:
+      hosts:
+        server01:
+          ansible_host: 192.168.1.100
+        server02:
+          ansible_host: 192.168.1.101
+      vars:
+        # Copy certificates from custom location
+        bcm_agent_cert_method: "copy"
+        bcm_agent_cert_source: "/root/bcm-certs"
+
+    # GPU nodes (higher sync frequency)
+    gpu_nodes:
+      hosts:
+        gpu001:
+          ansible_host: 10.141.170.1
+        gpu002:
+          ansible_host: 10.141.170.2
+      vars:
+        bcm_agent_sync_interval: 60  # More frequent updates
+        bcm_agent_debug: true
+
+    # Development/testing nodes
+    dev:
+      hosts:
+        devnode:
+          ansible_host: 10.141.180.10
+      vars:
+        bcm_agent_image_tag: "latest"
+        bcm_agent_debug: true
+        bcm_agent_log_level: "debug"

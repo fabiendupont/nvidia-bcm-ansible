@@ -1,0 +1,43 @@
+---
+# Validation tasks for BCM Agent
+
+- name: Check if running RHEL 9+
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "RedHat"
+      - ansible_distribution_major_version | int >= 9
+    fail_msg: "BCM Agent requires RHEL 9 or compatible distribution"
+    success_msg: "OS version check passed: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Check if Podman is installed
+  ansible.builtin.command: podman --version
+  register: podman_version_output
+  changed_when: false
+  failed_when: false
+
+- name: Fail if Podman is not installed
+  ansible.builtin.fail:
+    msg: "Podman is not installed. Please install Podman {{ bcm_agent_podman_min_version }}+ first."
+  when: podman_version_output.rc != 0
+
+- name: Extract Podman version
+  ansible.builtin.set_fact:
+    podman_version: "{{ podman_version_output.stdout | regex_search('\\d+\\.\\d+') }}"
+
+- name: Check Podman version
+  ansible.builtin.assert:
+    that:
+      - podman_version is version(bcm_agent_podman_min_version, '>=')
+    fail_msg: "Podman version {{ podman_version }} is too old. Quadlet requires {{ bcm_agent_podman_min_version }}+"
+    success_msg: "Podman version {{ podman_version }} meets requirements"
+
+- name: Display deployment configuration
+  ansible.builtin.debug:
+    msg:
+      - "BCM Agent Deployment Configuration:"
+      - "  Image: {{ bcm_agent_image }}"
+      - "  BCM Host: {{ bcm_agent_bcm_host }}:{{ bcm_agent_bcm_port }}"
+      - "  Certificate Source: {{ bcm_agent_cert_source }}"
+      - "  Certificate Method: {{ bcm_agent_cert_method }}"
+      - "  Log Level: {{ bcm_agent_log_level }}"
+      - "  State: {{ bcm_agent_state }}"

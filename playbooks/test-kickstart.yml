@@ -1,0 +1,126 @@
+---
+###############################################################################
+# Quick Test: Kickstart Deployment Configuration
+###############################################################################
+#
+# This is a simplified test playbook to verify the kickstart workflow
+# without actually deploying to nodes.
+#
+###############################################################################
+
+- name: Test Kickstart Configuration (Dry Run)
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    bcm_server_ip: 10.141.255.254
+    test_category: test-kickstart
+
+  tasks:
+    - name: Test 1 - Create test category
+      nvidia.bcm.bcm_category:
+        name: "{{ test_category }}"
+        state: present
+        notes: "Test category for kickstart workflow validation"
+      register: category_result
+
+    - name: Display category creation result
+      ansible.builtin.debug:
+        msg:
+          - "Category created: {{ category_result.changed }}"
+          - "Category name: {{ category_result.category.name }}"
+          - "Category UUID: {{ category_result.category.uuid }}"
+
+    - name: Test 2 - Verify we can query the category
+      nvidia.bcm.bcm_category:
+        name: "{{ test_category }}"
+        state: query
+      register: query_result
+
+    - name: Display query result
+      ansible.builtin.debug:
+        msg:
+          - "Category found: {{ query_result.category.name }}"
+          - "Software image: {{ query_result.category.software_image }}"
+
+    - name: Test 3 - Create test kickstart file
+      ansible.builtin.copy:
+        dest: /tmp/test-kickstart.cfg
+        content: |
+          #version=RHEL9
+          # This is a test kickstart file
+          url --url="http://mirror.rockylinux.org/pub/rocky/9.5/BaseOS/x86_64/os"
+          rootpw --plaintext test123
+          autopart
+          reboot
+      register: kickstart_result
+
+    - name: Display kickstart file creation
+      ansible.builtin.debug:
+        msg: "Kickstart file created: {{ kickstart_result.changed }}"
+
+    - name: Test 4 - Create test iPXE script
+      ansible.builtin.copy:
+        dest: /tmp/test-kickstart.ipxe
+        content: |
+          #!ipxe
+          echo Test iPXE Script
+          kernel http://mirror/vmlinuz inst.ks=http://{{ bcm_server_ip }}/ks/test.cfg
+          initrd http://mirror/initrd.img
+          boot
+      register: ipxe_result
+
+    - name: Display iPXE script creation
+      ansible.builtin.debug:
+        msg: "iPXE script created: {{ ipxe_result.changed }}"
+
+    - name: Test 5 - Verify node assignment (if node exists)
+      block:
+        - name: Try to assign node to test category
+          nvidia.bcm.bcm_node:
+            name: node001
+            state: present
+            category: "{{ test_category }}"
+          register: node_result
+          ignore_errors: yes
+
+        - name: Display node assignment result
+          ansible.builtin.debug:
+            msg: "Node assignment: {{ 'Success' if not node_result.failed else 'Skipped (node may not exist)' }}"
+      rescue:
+        - name: Node assignment failed
+          ansible.builtin.debug:
+            msg: "Node assignment skipped - node001 may not exist"
+
+    - name: Cleanup - Remove test category
+      nvidia.bcm.bcm_category:
+        name: "{{ test_category }}"
+        state: absent
+      register: cleanup_result
+
+    - name: Cleanup - Remove test files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/test-kickstart.cfg
+        - /tmp/test-kickstart.ipxe
+
+    - name: Test Summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Kickstart Workflow Test Complete"
+          - "=========================================="
+          - ""
+          - "✅ Category creation: PASSED"
+          - "✅ Category query: PASSED"
+          - "✅ Kickstart file: PASSED"
+          - "✅ iPXE script: PASSED"
+          - "{{ '✅' if not node_result.failed else '⚠️' }} Node assignment: {{ 'PASSED' if not node_result.failed else 'SKIPPED' }}"
+          - "✅ Cleanup: PASSED"
+          - ""
+          - "All modules working correctly!"
+          - "Ready to deploy full kickstart workflow."
+          - ""

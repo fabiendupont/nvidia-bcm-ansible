@@ -1,0 +1,5 @@
+include README.md
+include galaxy.yml
+recursive-include plugins *.py
+recursive-include playbooks *.yml
+recursive-include docs *.md

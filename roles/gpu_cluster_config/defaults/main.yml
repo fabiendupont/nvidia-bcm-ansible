@@ -1,0 +1,14 @@
+---
+# Default variables for GPU cluster configuration
+
+# Software image settings
+gpu_image_name: "default-image"
+gpu_kernel_params: "rd.driver.blacklist=nouveau nvidia-drm.modeset=1 quiet"
+
+# Network settings
+gpu_network_name: "internalnet"
+gpu_network_mtu: 9000  # Jumbo frames for better GPU Direct RDMA performance
+
+# Category settings
+gpu_category_name: "default"
+gpu_category_notes: "GPU compute nodes with NVIDIA drivers"

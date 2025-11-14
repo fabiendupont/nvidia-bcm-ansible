@@ -1,0 +1,67 @@
+---
+# Certificate setup tasks for BCM Agent
+
+- name: Check if certificate source directory exists
+  ansible.builtin.stat:
+    path: "{{ bcm_agent_cert_source }}"
+  register: cert_source_dir
+
+- name: Fail if certificate source not found
+  ansible.builtin.fail:
+    msg: "Certificate source directory not found: {{ bcm_agent_cert_source }}"
+  when: not cert_source_dir.stat.exists or not cert_source_dir.stat.isdir
+
+- name: Check for required certificate files
+  ansible.builtin.stat:
+    path: "{{ bcm_agent_cert_source }}/{{ item }}"
+  register: cert_files
+  loop:
+    - cacert.pem
+    - cert.pem
+    - cert.key
+  loop_control:
+    label: "{{ item }}"
+
+- name: Fail if required certificates are missing
+  ansible.builtin.fail:
+    msg: "Required certificate not found: {{ item.item }}"
+  when: not item.stat.exists
+  loop: "{{ cert_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Create certificate directory
+  ansible.builtin.file:
+    path: "{{ bcm_agent_cert_dest }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create symlinks to certificates
+  ansible.builtin.file:
+    src: "{{ bcm_agent_cert_source }}/{{ item }}"
+    dest: "{{ bcm_agent_cert_dest }}/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - cacert.pem
+    - cert.pem
+    - cert.key
+  when: bcm_agent_cert_method == 'symlink'
+
+- name: Copy certificates
+  ansible.builtin.copy:
+    src: "{{ bcm_agent_cert_source }}/{{ item.name }}"
+    dest: "{{ bcm_agent_cert_dest }}/{{ item.name }}"
+    mode: "{{ item.mode }}"
+    owner: root
+    group: root
+    remote_src: true
+  loop:
+    - { name: 'cacert.pem', mode: '0444' }
+    - { name: 'cert.pem', mode: '0444' }
+    - { name: 'cert.key', mode: '0400' }
+  loop_control:
+    label: "{{ item.name }}"
+  when: bcm_agent_cert_method == 'copy'

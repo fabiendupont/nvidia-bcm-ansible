@@ -1,0 +1,60 @@
+---
+# Service configuration tasks for BCM Agent
+
+- name: Create systemd directory for Quadlet
+  ansible.builtin.file:
+    path: /etc/containers/systemd
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Deploy Quadlet configuration
+  ansible.builtin.template:
+    src: bcm-agent.container.j2
+    dest: /etc/containers/systemd/bcm-agent.container
+    mode: '0644'
+    owner: root
+    group: root
+  notify:
+    - Reload systemd
+    - Restart bcm-agent
+
+- name: Flush handlers to reload systemd
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable BCM Agent service
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+    enabled: "{{ bcm_agent_enabled }}"
+    daemon_reload: true
+
+- name: Start BCM Agent service
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+    state: "{{ 'started' if bcm_agent_started else 'stopped' }}"
+
+- name: Wait for service to be active
+  ansible.builtin.wait_for:
+    timeout: 30
+  when: bcm_agent_started | bool
+
+- name: Check service status
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+  register: bcm_agent_service_status
+  when: bcm_agent_started | bool
+
+- name: Display service status
+  ansible.builtin.debug:
+    msg: "BCM Agent service is {{ bcm_agent_service_status.status.ActiveState }}"
+  when:
+    - bcm_agent_started | bool
+    - bcm_agent_service_status is defined
+
+- name: Enable Podman auto-update timer
+  ansible.builtin.systemd:
+    name: podman-auto-update.timer
+    enabled: true
+    state: started
+  when: bcm_agent_auto_update | bool

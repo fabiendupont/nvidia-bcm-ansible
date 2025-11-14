@@ -1,0 +1,41 @@
+---
+# Removal tasks for BCM Agent
+
+- name: Stop BCM Agent service
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+    state: stopped
+  failed_when: false
+
+- name: Disable BCM Agent service
+  ansible.builtin.systemd:
+    name: bcm-agent.service
+    enabled: false
+  failed_when: false
+
+- name: Remove Quadlet configuration
+  ansible.builtin.file:
+    path: /etc/containers/systemd/bcm-agent.container
+    state: absent
+  notify: Reload systemd
+
+- name: Reload systemd after removal
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Remove container
+  containers.podman.podman_container:
+    name: bcm-agent
+    state: absent
+  failed_when: false
+
+- name: Remove container image (optional)
+  containers.podman.podman_image:
+    name: "{{ bcm_agent_image }}"
+    state: absent
+  when: bcm_agent_remove_image | default(false) | bool
+  failed_when: false
+
+- name: Display removal status
+  ansible.builtin.debug:
+    msg: "BCM Agent has been removed from this host"

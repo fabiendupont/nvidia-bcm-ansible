@@ -1,0 +1,164 @@
+---
+# Register a RHEL VM with BCM and deploy BCM Agent
+#
+# This playbook:
+#   1. Gathers facts from the target VM
+#   2. Registers the VM as a node in BCM (via cmsh on BCM head node)
+#   3. Deploys BCM Agent on the VM (via Quadlet/Podman)
+#
+# Usage:
+#   ansible-playbook -i inventory.yml register-and-deploy-bcm-agent.yml \
+#     --limit new-vm
+#
+# Requirements:
+#   - Target VM must be running RHEL 9+
+#   - Target VM must have Podman 4.4+
+#   - BCM head node must be accessible
+#   - Playbook must run with privilege escalation (become: true)
+
+- name: Gather facts from target VM
+  hosts: all
+  gather_facts: true
+  become: false
+
+  tasks:
+    - name: Display target VM information
+      ansible.builtin.debug:
+        msg:
+          - "Target VM: {{ ansible_hostname }}"
+          - "FQDN: {{ ansible_fqdn }}"
+          - "IP Address: {{ ansible_default_ipv4.address }}"
+          - "MAC Address: {{ ansible_default_ipv4.macaddress }}"
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: Store VM facts for BCM registration
+      ansible.builtin.set_fact:
+        vm_hostname: "{{ ansible_hostname }}"
+        vm_fqdn: "{{ ansible_fqdn }}"
+        vm_ip: "{{ ansible_default_ipv4.address }}"
+        vm_mac: "{{ ansible_default_ipv4.macaddress }}"
+
+- name: Register VM with BCM
+  hosts: all
+  gather_facts: false
+  delegate_to: "{{ bcm_head_node | default('localhost') }}"
+  run_once: true
+
+  vars:
+    # BCM configuration - override these in inventory or extra-vars
+    bcm_node_name: "{{ hostvars[inventory_hostname].vm_hostname }}"
+    bcm_node_ip: "{{ hostvars[inventory_hostname].vm_ip }}"
+    bcm_node_mac: "{{ hostvars[inventory_hostname].vm_mac }}"
+    bcm_node_category: "{{ bcm_category | default('default') }}"
+    bcm_node_network: "{{ bcm_network | default('internalnet') }}"
+    bcm_node_partition: "{{ bcm_partition | default('defaultPartition') }}"
+
+  tasks:
+    - name: Check if node already exists in BCM
+      ansible.builtin.command: >
+        cmsh -c "device; list -f name | grep -w {{ bcm_node_name }}"
+      register: node_exists
+      failed_when: false
+      changed_when: false
+
+    - name: Display node existence check
+      ansible.builtin.debug:
+        msg: "{{ 'Node already exists in BCM' if node_exists.rc == 0 else 'Node not found, will create' }}"
+
+    - name: Create node in BCM
+      ansible.builtin.shell: |
+        cmsh -c "device; add name={{ bcm_node_name }}; \
+                 set mac={{ bcm_node_mac }}; \
+                 set ip={{ bcm_node_ip }}; \
+                 set network={{ bcm_node_network }}; \
+                 set partition={{ bcm_node_partition }}; \
+                 set category={{ bcm_node_category }}; \
+                 commit"
+      register: node_creation
+      when: node_exists.rc != 0
+      changed_when: true
+
+    - name: Display node creation result
+      ansible.builtin.debug:
+        msg: "Node {{ bcm_node_name }} created in BCM"
+      when: node_creation is changed
+
+    - name: Update existing node in BCM
+      ansible.builtin.shell: |
+        cmsh -c "device; use {{ bcm_node_name }}; \
+                 set mac={{ bcm_node_mac }}; \
+                 set ip={{ bcm_node_ip }}; \
+                 set network={{ bcm_node_network }}; \
+                 set category={{ bcm_node_category }}; \
+                 commit"
+      register: node_update
+      when: node_exists.rc == 0
+      changed_when: true
+
+    - name: Display node update result
+      ansible.builtin.debug:
+        msg: "Node {{ bcm_node_name }} updated in BCM"
+      when: node_update is changed
+
+    - name: Verify node was created/updated
+      nvidia.bcm.bcm_node:
+        name: "{{ bcm_node_name }}"
+        state: query
+      register: bcm_node_info
+
+    - name: Display BCM node information
+      ansible.builtin.debug:
+        var: bcm_node_info.node
+
+    - name: Set node roles in BCM (optional)
+      ansible.builtin.shell: |
+        cmsh -c "device; use {{ bcm_node_name }}; \
+                 roles; add {{ item }}; \
+                 commit"
+      loop: "{{ bcm_node_roles | default([]) }}"
+      when: bcm_node_roles is defined and bcm_node_roles | length > 0
+      changed_when: true
+
+- name: Deploy BCM Agent on VM
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "Deploying BCM Agent to: {{ ansible_hostname }}"
+          - "BCM Host: {{ bcm_agent_bcm_host | default('bcmhead') }}"
+          - "Image: {{ bcm_agent_image_repository | default('quay.io/nvidia/bcm-agent') }}:{{ bcm_agent_image_tag | default('1.0.0') }}"
+
+  roles:
+    - role: nvidia.bcm.bcm_agent
+
+  post_tasks:
+    - name: Wait for BCM Agent to start
+      ansible.builtin.wait_for:
+        timeout: 30
+
+    - name: Verify BCM Agent service is running
+      ansible.builtin.systemd:
+        name: bcm-agent.service
+      register: service_status
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "========================================="
+          - "BCM Registration and Agent Deployment Complete"
+          - "========================================="
+          - "Node: {{ ansible_hostname }}"
+          - "BCM Name: {{ vm_hostname }}"
+          - "IP: {{ vm_ip }}"
+          - "MAC: {{ vm_mac }}"
+          - "Service Status: {{ service_status.status.ActiveState }}"
+          - "Metrics: http://{{ vm_ip }}:{{ bcm_agent_metrics_port | default(9100) }}/metrics"
+          - ""
+          - "Next steps:"
+          - "  - Verify in BCM: cmsh -c 'device; show {{ vm_hostname }}'"
+          - "  - Check logs: journalctl -u bcm-agent.service -f"
+          - "  - Test metrics: curl http://{{ vm_ip }}:{{ bcm_agent_metrics_port | default(9100) }}/metrics"

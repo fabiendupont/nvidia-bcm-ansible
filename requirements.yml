@@ -1,0 +1,22 @@
+---
+# Ansible Galaxy requirements file for NVIDIA BCM Collection
+#
+# Usage:
+#   ansible-galaxy collection install -r requirements.yml
+
+collections:
+  # External dependencies
+  - name: containers.podman
+    version: '>=1.10.0'
+
+  # Install the NVIDIA BCM collection from local tarball
+  - name: /root/bcm/ansible_collections/nvidia/bcm/nvidia-bcm-1.0.0.tar.gz
+    type: file
+
+  # Or from a URL (if hosted)
+  # - name: https://releases.example.com/nvidia-bcm-1.0.0.tar.gz
+  #   type: url
+
+  # Or from source directory
+  # - name: /root/bcm/ansible_collections/nvidia/bcm
+  #   type: dir

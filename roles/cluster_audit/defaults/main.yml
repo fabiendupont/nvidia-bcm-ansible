@@ -1,0 +1,13 @@
+---
+# Default variables for cluster audit
+
+# Report output location
+audit_report_dir: "/tmp/bcm_audit"
+audit_report_filename: "bcm_audit_{{ ansible_date_time.date }}.txt"
+
+# What to audit
+audit_nodes: true
+audit_categories: true
+audit_images: true
+audit_networks: true
+audit_overlays: true

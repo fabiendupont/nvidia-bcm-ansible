@@ -1,0 +1,11 @@
+---
+# Default variables for network optimization
+
+# Network settings
+network_name: "internalnet"
+network_mtu: 9000  # Jumbo frames
+network_domain: "cluster.local"
+
+# Performance settings
+enable_jumbo_frames: true
+optimize_for_hpc: true
