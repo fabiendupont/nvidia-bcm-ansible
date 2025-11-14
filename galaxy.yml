@@ -1,0 +1,28 @@
+---
+namespace: nvidia
+name: bcm
+version: 0.1.0
+readme: README.md
+authors:
+  - NVIDIA Corporation
+
+description: Ansible collection for managing NVIDIA Base Command Manager (BCM)
+
+license:
+  - GPL-3.0-or-later
+
+tags:
+  - nvidia
+  - bcm
+  - base_command_manager
+  - cluster
+  - hpc
+  - infrastructure
+
+dependencies:
+  containers.podman: '>=1.10.0'
+
+repository: https://github.com/fabiendupont/nvidia-bcm-ansible
+documentation: https://github.com/fabiendupont/nvidia-bcm-ansible
+homepage: https://github.com/fabiendupont/nvidia-bcm-ansible
+issues: https://github.com/fabiendupont/nvidia-bcm-ansible/issues

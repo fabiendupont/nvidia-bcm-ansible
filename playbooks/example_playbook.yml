@@ -1,0 +1,76 @@
+---
+# Example playbook demonstrating BCM module usage
+
+- name: Manage BCM Nodes
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+    - name: Query information about a specific node
+      nvidia.bcm.bcm_node:
+        name: node001
+        state: query
+      register: node_info
+
+    - name: Display node information
+      ansible.builtin.debug:
+        var: node_info.node
+
+    - name: Ensure a node exists with specific configuration
+      nvidia.bcm.bcm_node:
+        name: node100
+        state: present
+        hostname: node100.cluster.local
+        ip: 10.0.1.100
+        mac: "00:11:22:33:44:66"
+        category: compute
+      register: result
+
+    - name: Show result of node creation/update
+      ansible.builtin.debug:
+        msg: "{{ result.msg }}"
+
+    - name: Update node category
+      nvidia.bcm.bcm_node:
+        name: node100
+        state: present
+        category: gpu_compute
+      when: result.changed
+
+    - name: Remove a node (commented out for safety)
+      nvidia.bcm.bcm_node:
+        name: node999
+        state: absent
+      # Uncomment to actually remove nodes
+      tags: ['never', 'remove_nodes']
+
+
+- name: Work with Dynamic Inventory
+  # This uses the BCM dynamic inventory to target specific groups
+  hosts: category_compute
+  gather_facts: false
+
+  tasks:
+    - name: Show node details from inventory
+      ansible.builtin.debug:
+        msg: |
+          Node: {{ inventory_hostname }}
+          IP: {{ bcm_ip | default('N/A') }}
+          Category: {{ bcm_category | default('N/A') }}
+          Status: {{ bcm_status | default('N/A') }}
+
+
+- name: Conditional tasks based on node properties
+  hosts: all
+  gather_facts: false
+
+  tasks:
+    - name: Task only for GPU nodes
+      ansible.builtin.debug:
+        msg: "This is a GPU compute node"
+      when: "'gpu' in (bcm_category | lower)"
+
+    - name: Task only for nodes that are up
+      ansible.builtin.debug:
+        msg: "Node is online and available"
+      when: bcm_status == 'up'
