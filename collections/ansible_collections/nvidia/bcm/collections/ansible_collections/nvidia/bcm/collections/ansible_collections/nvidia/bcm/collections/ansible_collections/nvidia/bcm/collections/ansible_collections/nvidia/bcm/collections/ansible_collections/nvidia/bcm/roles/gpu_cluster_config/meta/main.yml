@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: NVIDIA Corporation
+  description: Configure BCM cluster for GPU workloads
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.14"
+
+  platforms:
+    - name: EL
+      versions:
+        - "9"
+
+  galaxy_tags:
+    - nvidia
+    - bcm
+    - gpu
+    - hpc
+
+dependencies: []

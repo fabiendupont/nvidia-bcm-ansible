@@ -1,0 +1,468 @@
+---
+###############################################################################
+# RHEL/Rocky Linux Kickstart Deployment via BCM Categories
+###############################################################################
+#
+# This playbook demonstrates how to configure RHEL/Rocky Linux deployment
+# using Kickstart + iPXE with BCM category-based PXE boot configuration.
+#
+# Architecture:
+#   1. Create BCM categories for different OS versions
+#   2. Configure category-specific PXE boot menus
+#   3. Assign nodes to categories
+#   4. Nodes automatically boot using their category's PXE configuration
+#
+# Prerequisites:
+#   - NVIDIA BCM Ansible Collection installed
+#   - BCM head node with TFTP/HTTP services running
+#   - Access to OS mirror (local or remote)
+#
+###############################################################################
+
+- name: Configure Kickstart Deployment via BCM Categories
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  vars:
+    # BCM Configuration
+    bcm_tftp_root: /tftpboot
+    bcm_http_root: /var/www/html
+    bcm_server_ip: 10.141.255.254
+    bcm_http_port: 8080
+
+    # OS Mirror Configuration
+    # Option 1: Use remote mirror
+    os_mirror_url: "http://mirror.rockylinux.org/pub/rocky"
+
+    # Option 2: Use local mirror (uncomment to use)
+    # os_mirror_url: "http://{{ bcm_server_ip }}:{{ bcm_http_port }}/mirrors"
+
+    # Deployment Configurations
+    deployments:
+      # RHEL 9.6 Kickstart Deployment
+      - name: rhel96
+        category_name: rhel96-kickstart
+        category_notes: "RHEL 9.6 deployed via Kickstart"
+        os_version: "9.6"
+        os_variant: rhel  # rhel or rocky
+        mirror_path: "{{ os_mirror_url }}/9/BaseOS/x86_64/os"
+        kickstart_template: rhel96-minimal.cfg
+        nodes:
+          - node001
+          - node002
+
+      # Rocky Linux 9.5 Kickstart Deployment
+      - name: rocky95
+        category_name: rocky95-kickstart
+        category_notes: "Rocky Linux 9.5 deployed via Kickstart"
+        os_version: "9.5"
+        os_variant: rocky
+        mirror_path: "{{ os_mirror_url }}/9.5/BaseOS/x86_64/os"
+        kickstart_template: rocky95-minimal.cfg
+        nodes:
+          - node003
+          - node004
+
+      # BCM Native Provisioning (for comparison)
+      - name: bcm-native
+        category_name: bcm-rocky95
+        category_notes: "Rocky 9.5 via BCM native provisioning"
+        os_version: "9.5"
+        os_variant: bcm
+        nodes:
+          - node005
+
+  tasks:
+    ###########################################################################
+    # Phase 1: Setup Directory Structure
+    ###########################################################################
+
+    - name: Create kickstart directory
+      ansible.builtin.file:
+        path: "{{ bcm_http_root }}/ks"
+        state: directory
+        mode: '0755'
+      tags: [setup, kickstart]
+
+    - name: Create iPXE scripts directory
+      ansible.builtin.file:
+        path: "{{ bcm_tftp_root }}/ipxe"
+        state: directory
+        mode: '0755'
+      tags: [setup, ipxe]
+
+    - name: Create category PXE configs directory
+      ansible.builtin.file:
+        path: "{{ bcm_tftp_root }}/pxelinux.cfg"
+        state: directory
+        mode: '0755'
+      tags: [setup, pxe]
+
+    ###########################################################################
+    # Phase 2: Create Kickstart Files
+    ###########################################################################
+
+    - name: Create RHEL 9.6 minimal kickstart
+      ansible.builtin.copy:
+        dest: "{{ bcm_http_root }}/ks/rhel96-minimal.cfg"
+        mode: '0644'
+        content: |
+          #version=RHEL9
+
+          # System authorization
+          auth --enableshadow --passalgo=sha512
+
+          # Use network installation
+          url --url="{{ deployments[0].mirror_path }}"
+
+          # Keyboard and language
+          keyboard --vckeymap=us --xlayouts='us'
+          lang en_US.UTF-8
+
+          # Network configuration
+          network --bootproto=dhcp --device=link --onboot=on --ipv6=auto --activate
+          network --hostname=localhost.localdomain
+
+          # Root password (CHANGE THIS!)
+          rootpw --iscrypted $6$rounds=4096$saltsaltsal$YhQjLABXbXxJ9jPuOvL6dXeOoQgA7vXCReN1l4vNz/V3khL9n.wVQz8l3o.xDJbGb5dZfKsJoYJ2JVj1WqBnX1
+
+          # System timezone
+          timezone UTC --utc
+
+          # Disk partitioning
+          ignoredisk --only-use=sda
+          clearpart --all --initlabel --drives=sda
+
+          # Automatic partitioning
+          autopart --type=lvm
+
+          # Bootloader
+          bootloader --location=mbr --boot-drive=sda
+
+          # SELinux
+          selinux --enforcing
+
+          # Firewall
+          firewall --enabled --ssh
+
+          # Do not configure X
+          skipx
+
+          # Reboot after installation
+          reboot
+
+          # Package selection
+          %packages
+          @^minimal-environment
+          @standard
+          curl
+          wget
+          vim
+          net-tools
+          %end
+
+          # Post-installation script
+          %post --log=/root/ks-post.log
+
+          # Register with BCM (optional)
+          # This allows BCM to track the node even though it was kickstart-deployed
+          echo "Kickstart deployment completed at $(date)" > /root/kickstart-info.txt
+          echo "BCM Server: {{ bcm_server_ip }}" >> /root/kickstart-info.txt
+
+          # Optional: Contact BCM API to register
+          # curl -X POST http://{{ bcm_server_ip }}:{{ bcm_http_port }}/api/register-node \
+          #   -d "hostname=$(hostname)" \
+          #   -d "mac=$(ip link show dev eth0 | grep ether | awk '{print $2}')"
+
+          %end
+      tags: [kickstart, rhel96]
+
+    - name: Create Rocky 9.5 minimal kickstart
+      ansible.builtin.copy:
+        dest: "{{ bcm_http_root }}/ks/rocky95-minimal.cfg"
+        mode: '0644'
+        content: |
+          #version=RHEL9
+
+          # System authorization
+          auth --enableshadow --passalgo=sha512
+
+          # Use network installation
+          url --url="{{ deployments[1].mirror_path }}"
+
+          # Keyboard and language
+          keyboard --vckeymap=us --xlayouts='us'
+          lang en_US.UTF-8
+
+          # Network configuration
+          network --bootproto=dhcp --device=link --onboot=on --ipv6=auto --activate
+          network --hostname=localhost.localdomain
+
+          # Root password (CHANGE THIS!)
+          rootpw --plaintext changeme123
+
+          # System timezone
+          timezone UTC --utc
+
+          # Disk partitioning
+          ignoredisk --only-use=sda
+          clearpart --all --initlabel --drives=sda
+          autopart --type=lvm
+
+          # Bootloader
+          bootloader --location=mbr --boot-drive=sda
+
+          # SELinux
+          selinux --enforcing
+
+          # Firewall
+          firewall --enabled --ssh
+
+          # Do not configure X
+          skipx
+
+          # Reboot after installation
+          reboot
+
+          # Package selection
+          %packages
+          @^minimal-environment
+          @standard
+          %end
+
+          %post --log=/root/ks-post.log
+          echo "Rocky Linux 9.5 kickstart deployment completed" > /root/kickstart-info.txt
+          %end
+      tags: [kickstart, rocky95]
+
+    ###########################################################################
+    # Phase 3: Create iPXE Boot Scripts
+    ###########################################################################
+
+    - name: Create iPXE script for RHEL 9.6 kickstart
+      ansible.builtin.copy:
+        dest: "{{ bcm_tftp_root }}/ipxe/rhel96-kickstart.ipxe"
+        mode: '0644'
+        content: |
+          #!ipxe
+
+          echo ========================================
+          echo RHEL 9.6 Kickstart Installation
+          echo ========================================
+          echo.
+          echo Mirror: {{ deployments[0].mirror_path }}
+          echo Kickstart: http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg
+          echo.
+          echo Loading kernel and initrd...
+          echo.
+
+          kernel {{ deployments[0].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg console=tty0 || goto failed
+          initrd {{ deployments[0].mirror_path }}/images/pxeboot/initrd.img || goto failed
+
+          echo Booting...
+          boot
+
+          :failed
+          echo.
+          echo ========================================
+          echo Boot failed!
+          echo ========================================
+          echo.
+          echo Check network connectivity and mirror URL
+          sleep 30
+          exit
+      tags: [ipxe, rhel96]
+
+    - name: Create iPXE script for Rocky 9.5 kickstart
+      ansible.builtin.copy:
+        dest: "{{ bcm_tftp_root }}/ipxe/rocky95-kickstart.ipxe"
+        mode: '0644'
+        content: |
+          #!ipxe
+
+          echo ========================================
+          echo Rocky Linux 9.5 Kickstart Installation
+          echo ========================================
+          echo.
+          echo Mirror: {{ deployments[1].mirror_path }}
+          echo Kickstart: http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg
+          echo.
+
+          kernel {{ deployments[1].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg console=tty0 || goto failed
+          initrd {{ deployments[1].mirror_path }}/images/pxeboot/initrd.img || goto failed
+
+          boot
+
+          :failed
+          echo Boot failed!
+          sleep 30
+          exit
+      tags: [ipxe, rocky95]
+
+    ###########################################################################
+    # Phase 4: Create BCM Categories (Using Our Module!)
+    ###########################################################################
+
+    - name: Create BCM categories for kickstart deployments
+      nvidia.bcm.bcm_category:
+        name: "{{ item.category_name }}"
+        state: present
+        notes: "{{ item.category_notes }}"
+      loop: "{{ deployments }}"
+      when: item.os_variant != 'bcm'
+      tags: [bcm, categories]
+
+    ###########################################################################
+    # Phase 5: Create Category-Specific PXE Boot Configurations
+    ###########################################################################
+
+    - name: Create PXE config for RHEL 9.6 kickstart category
+      ansible.builtin.copy:
+        dest: "{{ bcm_tftp_root }}/pxelinux.cfg/category.rhel96-kickstart"
+        mode: '0644'
+        content: |
+          # BCM Category PXE Configuration: rhel96-kickstart
+          # Generated by Ansible
+
+          LABEL rhel96_kickstart
+            KERNEL undionly.kpxe
+            APPEND tftp://{{ bcm_server_ip }}/ipxe/rhel96-kickstart.ipxe
+            MENU LABEL ^RHEL 9.6 - Kickstart Installation
+            MENU DEFAULT
+
+          LABEL local
+            LOCALBOOT 0
+            MENU LABEL Boot from ^Local Disk
+
+          DEFAULT rhel96_kickstart
+          PROMPT 0
+          TIMEOUT 50
+          MENU TITLE RHEL 9.6 Kickstart Deployment
+      tags: [pxe, rhel96]
+
+    - name: Create PXE config for Rocky 9.5 kickstart category
+      ansible.builtin.copy:
+        dest: "{{ bcm_tftp_root }}/pxelinux.cfg/category.rocky95-kickstart"
+        mode: '0644'
+        content: |
+          # BCM Category PXE Configuration: rocky95-kickstart
+
+          LABEL rocky95_kickstart
+            KERNEL undionly.kpxe
+            APPEND tftp://{{ bcm_server_ip }}/ipxe/rocky95-kickstart.ipxe
+            MENU LABEL ^Rocky Linux 9.5 - Kickstart Installation
+            MENU DEFAULT
+
+          LABEL local
+            LOCALBOOT 0
+            MENU LABEL Boot from ^Local Disk
+
+          DEFAULT rocky95_kickstart
+          PROMPT 0
+          TIMEOUT 50
+          MENU TITLE Rocky Linux 9.5 Kickstart Deployment
+      tags: [pxe, rocky95]
+
+    ###########################################################################
+    # Phase 6: Assign Nodes to Categories (Using Our Module!)
+    ###########################################################################
+
+    - name: Assign nodes to kickstart categories
+      nvidia.bcm.bcm_node:
+        name: "{{ item.1 }}"
+        state: present
+        category: "{{ item.0.category_name }}"
+      loop: "{{ deployments | subelements('nodes', skip_missing=True) }}"
+      when: item.0.os_variant != 'bcm'
+      tags: [bcm, nodes]
+
+    ###########################################################################
+    # Phase 7: Verification and Instructions
+    ###########################################################################
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Kickstart Deployment Configuration Complete"
+          - "=========================================="
+          - ""
+          - "Categories Created:"
+          - "  - rhel96-kickstart (nodes: node001, node002)"
+          - "  - rocky95-kickstart (nodes: node003, node004)"
+          - ""
+          - "Next Steps:"
+          - "1. Power cycle the nodes"
+          - "2. Nodes will PXE boot based on their category"
+          - "3. Kickstart will install the OS automatically"
+          - "4. Nodes will reboot into the installed OS"
+          - ""
+          - "To manually trigger deployment:"
+          - "  cmsh -c 'device; use node001; set category rhel96-kickstart; commit'"
+          - ""
+          - "To verify configuration:"
+          - "  ansible-playbook kickstart-deployment.yml --tags verify"
+          - ""
+      tags: [always]
+
+    ###########################################################################
+    # Verification Tasks
+    ###########################################################################
+
+    - name: Verify categories exist
+      nvidia.bcm.bcm_category:
+        name: "{{ item.category_name }}"
+        state: query
+      loop: "{{ deployments }}"
+      when: item.os_variant != 'bcm'
+      register: category_check
+      tags: [never, verify]
+
+    - name: Verify node assignments
+      nvidia.bcm.bcm_node:
+        name: "{{ item.1 }}"
+        state: query
+      loop: "{{ deployments | subelements('nodes', skip_missing=True) }}"
+      register: node_check
+      tags: [never, verify]
+
+    - name: Display verification results
+      ansible.builtin.debug:
+        msg:
+          - "Category: {{ item.category.name }}"
+          - "Notes: {{ item.category.notes }}"
+          - "Software Image: {{ item.category.software_image }}"
+      loop: "{{ category_check.results }}"
+      when: not item.skipped | default(false)
+      tags: [never, verify]
+
+###############################################################################
+# Usage Examples:
+###############################################################################
+#
+# Deploy everything:
+#   ansible-playbook kickstart-deployment.yml
+#
+# Deploy only RHEL 9.6:
+#   ansible-playbook kickstart-deployment.yml --tags rhel96
+#
+# Deploy only Rocky 9.5:
+#   ansible-playbook kickstart-deployment.yml --tags rocky95
+#
+# Update only kickstart files:
+#   ansible-playbook kickstart-deployment.yml --tags kickstart
+#
+# Update only iPXE scripts:
+#   ansible-playbook kickstart-deployment.yml --tags ipxe
+#
+# Update only PXE configs:
+#   ansible-playbook kickstart-deployment.yml --tags pxe
+#
+# Update only BCM configuration:
+#   ansible-playbook kickstart-deployment.yml --tags bcm
+#
+# Verify deployment:
+#   ansible-playbook kickstart-deployment.yml --tags verify
+#
+###############################################################################

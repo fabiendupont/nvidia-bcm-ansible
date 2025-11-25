@@ -1,0 +1,159 @@
+---
+# Deploy RHEL+Slurm cluster on BCM via PXE
+#
+# This playbook automates the deployment of a complete RHEL+Slurm cluster:
+# 1. Extract and setup RHEL ISO for PXE boot
+# 2. Generate role-specific kickstart files
+# 3. Create BCM categories for each node role
+# 4. Register nodes in BCM
+#
+# Usage:
+#   ansible-playbook -i inventory/rhel_cluster.yml playbooks/deploy_rhel_cluster.yml
+#
+# Prerequisites:
+#   - RHEL ISO file available on BCM head node
+#   - Inventory file with cluster definition
+#   - BCM head node accessible
+
+- name: Deploy RHEL+Slurm Cluster on BCM
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    # These variables should be defined in inventory or group_vars
+    # cluster_name: hpc01
+    # rhel_version: "9.6"
+    # rhel_iso_path: /root/rhel-9.6-x86_64-dvd.iso
+    # node_roles: [...]
+    # cluster_nodes: [...]
+
+    deployment_log_file: "/var/log/bcm-deployment-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Deploying RHEL {{ rhel_version }} + Slurm Cluster: {{ cluster_name }}"
+          - "================================================================"
+          - "Roles to be configured: {{ node_roles | map(attribute='name') | list }}"
+          - "Nodes to be registered: {{ cluster_nodes | map(attribute='name') | list | length }}"
+          - "Deployment log: {{ deployment_log_file }}"
+          - "================================================================"
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - rhel_iso_path is defined
+          - node_roles is defined
+          - node_roles | length > 0
+        fail_msg: "Missing required variables. Check inventory configuration."
+
+    - name: Create deployment log
+      ansible.builtin.copy:
+        content: |
+          RHEL+Slurm Cluster Deployment Log
+          ===================================
+          Cluster Name: {{ cluster_name }}
+          RHEL Version: {{ rhel_version }}
+          Start Time: {{ ansible_date_time.iso8601 }}
+
+          Roles:
+          {% for role in node_roles %}
+            - {{ role.name }} ({{ role.category }})
+          {% endfor %}
+
+          Nodes:
+          {% for node in cluster_nodes | default([]) %}
+            - {{ node.name }} ({{ node.mac }}, {{ node.ip }}, {{ node.category }})
+          {% endfor %}
+
+        dest: "{{ deployment_log_file }}"
+        mode: '0644'
+
+  roles:
+    # Phase 1: Setup PXE infrastructure
+    - role: nvidia.bcm.pxe_setup
+
+    # Phase 2: Deploy RHEL cluster
+    - role: nvidia.bcm.rhel_cluster
+
+  post_tasks:
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Deployment Complete!"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Categories created: {{ node_roles | length }}"
+          - "Nodes registered: {{ cluster_nodes | default([]) | length }}"
+          - ""
+          - "Next steps:"
+          - "  1. Verify categories: cmsh -c 'category; list'"
+          - "  2. Verify nodes: cmsh -c 'device; list'"
+          - "  3. Power on nodes to start PXE installation"
+          - "  4. Monitor installation progress"
+          - ""
+          - "See /root/deployment-summary-{{ cluster_name }}.md for details"
+          - "================================================================"
+
+    - name: Update deployment log with completion
+      ansible.builtin.lineinfile:
+        path: "{{ deployment_log_file }}"
+        line: |
+
+          Deployment completed successfully at {{ ansible_date_time.iso8601 }}
+        state: present
+
+    - name: Save deployment summary
+      ansible.builtin.copy:
+        content: |
+          # {{ cluster_name }} Deployment Summary
+
+          ## Cluster Configuration
+          - Name: {{ cluster_name }}
+          - Type: RHEL {{ rhel_version }} + Slurm
+          - Deployed: {{ ansible_date_time.iso8601 }}
+
+          ## Categories
+          {% for role in node_roles %}
+          - {{ role.category }}
+            - Role: {{ role.name }}
+            - Kickstart: /tftpboot/ks/{{ role.category }}.cfg
+            - Boot files: /tftpboot/images/{{ role.category }}/ -> installer-rhel-{{ rhel_version }}/
+          {% endfor %}
+
+          ## Nodes
+          {% for node in cluster_nodes | default([]) %}
+          - {{ node.name }}
+            - MAC: {{ node.mac }}
+            - IP: {{ node.ip }}
+            - Category: {{ node.category }}
+          {% endfor %}
+
+          ## Commands
+
+          ### List categories
+          ```bash
+          cmsh -c 'category; list'
+          ```
+
+          ### List devices
+          ```bash
+          cmsh -c 'device; list'
+          ```
+
+          ### Power on a node
+          ```bash
+          cmsh -c 'device use <node-name>; power on'
+          ```
+
+          ### Monitor node status
+          ```bash
+          cmsh -c 'device; status'
+          ```
+        dest: "/root/deployment-summary-{{ cluster_name }}.md"
+        mode: '0644'

@@ -1,0 +1,3617 @@
+{
+ "files": [
+  {
+   "name": ".",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/action",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "170eab3fc8e38213c4bd1d60931e8e9675a4091af283571a10a9dd8f52c7cb8b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_zone_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8b9416f53b2e2dc09fc2998b46dcc717822bb3194c9b790630077b658da794d7",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_consolidator_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "78475ffb9beab480e9fd388ff24e6b23aebc1b0bba576a98841363e4ae599bec",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/session_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "856fc2762d885c831b00b417a7a2df6226a0ebe2c791d0427991b4f7c291e1cb",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ab6a7a7c0da5b341ecf20d5ba3e21b105941c9b5ce800af314bed9b42d8894d5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lsf_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1e0603e57049b8f8b1a590ab90efb64c7dc25f47b954b187539ca84a25e1f890",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/fs_part.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "91f983d7108e12149fc14b779b558ed9fa1b3b2a9e3596bbbe46e29da66006e8",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_wlm_slot.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "434efcdf5aebff60aee5a2d120e091617730adc2bc52342755818344913edd81",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/standalone_monitored_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "38f04c4ee93f500652a51d44c3c8ad88d71cd3284d55d02eebfdb039374c3fcd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lite_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "27f552eb95235ad213f288978aa84fb2f3ffa7081ca671f6cde79438ea51bcef",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/prometheus_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e7f86137b9e3d785766024d27c410e7c9e243b6a9e228e46fd7e3e75d2656045",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/software_image.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f443260e383e5824af5531052bd456be11f2a7e139311ca69668883492ec69d6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_cdu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "91825843bc4c662e279a4ec4e54d5fdcace470978771c06e1fbc18d7401f2ae2",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/rack_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3102985fbdebd7d2cdf0d360e1111e6e2af26551e241370862b0d55a2e542de8",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ocigpu_memory_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "055bbdeb6faca756927e88039fecaa80a018108041630ac9580acb2d9dcd52e1",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_circuit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5874072e652e660a15a18cd7a224aefccccceb7bbd80a580522b53ba7b8b3015",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_trigger.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0787b5096cf33b7d8a148d51c646150feecab3b4bf9f8e20569919bf2b9102de",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/generic_device_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a3305e1c31bfd9e4f24fe7370169d67576a651a4d1555a73b97f9291ead61af6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/forge_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e97b065a766af7bdad05787de76ca8742963d7b4525d4cf770914079f1e7924e",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_network_utilization.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3970db92802484ec1db3ede679bcbd86568c0872ad9f5cbc067b6e453fc46417",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/charge_back_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7e2a39b3da099b9f801963bb78153fab5d931252a6c8573d3840692a2c6177fc",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "dc04f4d79d6c4d8bc34f8b8bc3136c2dfde0fb90473ffdad376ab244bae3d908",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/pbs_pro_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bcc10168d3471976046f1bca696560f7afdae6f2be58ebb0cafa95ac832f5905",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_single_line_health_check_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9e42b6a265d88c85255ee8c444134e3af2c113ed2459abec63a241331e55e822",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fdb942a161925fe62089ff6bb70e982d224f53ffc295893511dd217a38247008",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/software_image_file_selection_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bc6a2a2e60b4e4351d6947c4dd815f3cb0ad67c6ef907088993d14b7fd82fa2d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/profile.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d331f5d80a7a8713026ce1394392e6ccd94cde7fef78ca5cee6a30f57743a68a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_event_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9bc3c08e4aaeaf144d864ae5e521a7ba28b74c53ada9d62a42ca286fae2c478c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/physical_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2c1bc70c3af87d377d823fbb75ca071bffb63c5c7d06a6191dd83ee6e73e1732",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/dpu_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "50cd8bdd55fd4239e8ba5c0270e5793ac3e2eba494fa7a03a557584c09c13ca2",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_pdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5bca76b6f6edfc5cdba67b893f1ab93a5c2600c7851644659621737614026f23",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/generic_device.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c24482b3e0442ff248f6bab5fd75bb172b4f4318e3fa092c2ad3309905806dbd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ocigpu_memory_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "af9ee88d89d640f5ac90e6370170e9dfa854b3da9307c9f2796c38bc57f8b1ec",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_gpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "277b039e177d43439009df7c118dfeafa23fde59a25dd94e6bebbcca0c52d8f3",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_metric.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7319ebc4b253ad9379b7eb952d004e6a56ea7f94b3a3ef8acce634154e26f954",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/bee_gfs_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "67d803f5239e738e05d9a308470ff806c2ce572a1687036dca7dd32de979b403",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_machine_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4184ff1c41eda95b62c7c24ed04d9725239128a42acf307a659bbdef4319c895",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/partition.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e2ea792f240bc113d21505f21f1f3c6de96ff376294bdad3a2aa89f541bd7cab",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_red_fish_subscription_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "88f61c4c2469023a30085f8ada876c01faba098f56dcccab86476fbbab5757a3",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_script_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4e8f79d544483d3e680f013eedd2e937e528061b3706a96280953915110197b4",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_power_circuit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8be7b25926c5963eb7044de7cd055dd1c6b41b43a40c41a873b9fb586ab35e4d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_nmx_controller_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f9eb44d3134c24080c97396cc1cda6d94f890242f491c5b07c3cc9318a62ff8c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/head_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "22bee6343f348e1fd864a8ba047608231f3192e129b12dc83db5e79ab7c8de8e",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/prometheus_query_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4a6fc1450804dedcbd5d5b786447bbe2833c984625331ede406e35fa41103405",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_cdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a9d258eb290fc34d7283c42ec6a46731d3e6bff8d8ac107a5009c9c5d5277dfe",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/forge_instance_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9fc00a22a43a124164ba8edd450950719dabf961ed3b0a307497f3cd1fac6d9f",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/switch_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1254540dee8ffd7a5a8a378f1044ea75772bd2c59a100c53004177f45857fe10",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_single_line_metric_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "83951052eee129c1aa1501c8a90c8d7b52ec956cb9296acfad62127d804b20bd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1ea0a525daaf585f720c7140e09e450faf8958ccaf0aa4e566903152442e6211",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_ec2_spot_prices.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0005c81ef0661263bc17849db15a436c5e631d693ac35f48cb6d46766cec6ff1",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_consolidator.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0071a26b5dc318fcf4a85a5e13aa6e4ef18a4579191e73c7a83e4a366dee56d8",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_location.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "88156965e95cbd0be897c2a7c1e0ad6a8dcc4bdc75e1a1aa7de1ae8a062d9b31",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "572797769db7c5bd30cb10f550c30c9d198b5dc29e4e32af5540fa4483dfef1d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_drain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "933222da1ac8e747d0fdf641db0ce61e58a69ab3e2a70397972f23a71bb02b02",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b28c0cf2fed7688adab6bedb61f0f5cfbc91a81636a3e59a18c93332bccdb38c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_nmx_controller.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2c79d0fed7049ea11e7286e2c1f8b8c6953e04d0107a7b3dcc365052093417cc",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_prs.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0a5fd895e1b28676444435cfbc10e74450ea204e345cba70ee2a0c7aa440dc0d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/network_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "af0ae8e377361e698e393db85ba9d8f60956dcbc8876746be8dee4ba10f29f44",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/software_image_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2be1e7d080269627affff891011e7ace8b7e34c83b5da5b94797183a5d9a0141",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_prs_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "aa163803e0cfde1b300e1ac4c36bab66d2982cb59a1ac0052e3e2f09e5d93452",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/certificate_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0771045665ee54c210d1831207666af04192475776e930002eac74ffaa161968",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/fs_part_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "56802c393e92a9b2196c2b5c1ec8e4aaa7a3038e485a8eea2fbf3563b748b021",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_trigger_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5656e1b695916bf6918151d294c45e36dd870afb0f62089fb5190bafe872892e",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_instance_pool.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "86066bf6d019ed95ad207514047b7f17e5b752f019da6affb6df75e0e5227956",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/chassis.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "65e574c64af326c372d207b2fc6066c755d3d02ed6c5f26f0c231eb40b483a5d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/drain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "10f200b805e1e283fc92df99ff2f1b5aa9fdd8154a37f11558a660fcc4479bd3",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/pbs_pro_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5795cfb81643e4a4b0e9f3a257d1f7e2d1667fba22724be9af62b09c7d7fc759",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f171bf4d3adbeb1d6e9e1c4eb47f9ca287baedbd34b3eb32c0413c0f553018ce",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_enum_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "11916acc0dcb6e954eabbfa5ea1e0946687ee58ad5703f0bb829689502302b85",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cooling_distribution_unit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "47e27b43e1a1baa91a7d5cfbeb5b1f9a7f6fbc85765d5f54c2e34df7343cb63b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "73e474c2cdf8cfcabef4e6d9a836800b6b57d422f748fdba3dd64f73b656bff5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_shape_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "40d92b638074b67149f000be2e3170b8c899f31fd75f45d6ae23081910461a1a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lsf_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "05ef1f6f1fff651cdcbe0503dc252c5762cd5bc9b61ab827dcc1be4901adeee8",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/etcd_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "37ffc16c010e176e4dde833e4ce2490b80dfcb4f48537c802bdc54cd74751c2c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_gpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ed20a69fcb9be35383cc837f32f17a4ff96a2b731a0f8e88249eebcbf2d07f79",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_network_utilization_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "63bd91f6c7768752f37407c8a76d9b194be3a40220b5ab6de026e4bccdbed42d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_script_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "707ae18fecb277d3421da884a569e8111c41e3fcc06dca5190dbc5676957d088",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8cc0275234d0f1436e7d27769f2fc5eb83f17e30fdcf37647cef0e4f0cc3c116",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/dpu_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4485b149e98e50871bbf1b758371fee2eb90981e83dbc7f6897601e539288e33",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cm_service_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b3e08e182ab6b08d2e8319b067a43a528132967f944ecd4bbb88563b9681087f",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_ec2_spot_prices_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d75c991be2ae8c6262586f67fb0a387e9e23670d88ddc488069091f3aa746637",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/pbs_pro_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a28eab491bde3ba2bfa3d1dddd60bf239592a7935c7ee890742c44e05cbaa3e5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cloud_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8a290be78232234d3fcc6e50d9c17bb73999973ddc6870a6e592f14ec8e4b726",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_switch_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f632afeb938da448e5612e610269b98ffcb402926e9a484fb3f2c33a0e1514ab",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/forge_instance_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8cd681e4748df17dbf3a04117a7cad6b1df61788941906c56516c9849adec0d2",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/profile_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7379c590c331c0711a3e9fd2c0839866ddf6051c74328e65b58ddf476359c2e6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/user_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "cc67e9d58ec77d238d0e7aab52fb2ab3bce1b59064da32a0b7ceca4fbfe79939",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_zone.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f0d7d12cba467281deb766ce2c7b9daa88ce1fcb31496542f14d68844d5c8830",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "30306b039c6f4757168d7109973c11faa4e31bea25f93667ccc90c50ee1531e6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_undrain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7bb4ebe2907f0807e7b30371c7af5bdb6d43a54f406ad57d19139d94c607ecdd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/rack_sensor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fee194c31a753bb540d3a465c902988f0da75b62055d5cda0ea3cdb54e6e70a7",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/configuration_overlay_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0688f6b91947de23289e25f291efeb7e5fe4f9019c561a0c54ff59c9c0ee2276",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/slurm_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6f5a9dbf8c6e396f8b7c9c10b8ee4a9549c9d8a561ebffcad8ce9f85a530cac5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "28bb39a80a0c11701843fc80e91487a25abb1710dfabf970747bfcaea45edce4",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/pbs_pro_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3e4d6d5beb571b51a10c9e41fa25a2f937f1534029f0c3af9adc679aac610cd9",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/node_group_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ee46b2102a9b82efe720d7bf401c033beb547da2e9ce45b82271b3fca74e6902",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "291320ee9bdf4970958738b609a6e7f654d5d1094288ad8b41626c07efb4f236",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/certificate_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "04e07a642f3408a611fafae1cb930de728f8da4beecadb58de754bcac3bd17ad",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1e19fa47cecaf1cf4721c7c923e32cba2e29d4f49f1405ea631b9adb1acb3e21",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "463f97119e7792adaef9f4451145a799d781c22eccb3b305ef06745b41f6dfba",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/category.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4d5461d349c7c0d70773d7f340ca9cc3227b58f4b58cb4b075c1d71a5931a8ce",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/certificate.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "487788c209cb064971bfae721069b2be67b71505ff2625fd8119964a26540769",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_wlm_slot_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e4e908085c03eba2896843772f2246b07549066adaa2a2254b1e60b1d1ea2e69",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_location_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "03db26f6e38f90a01838544d3ddeec3925b7ef2e36b45928170b1e61a0bce630",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b5e416c80847303a27575708322d99da49babeb616a49443c1486f5f6f32df99",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/group_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "64c0b03fdc9210fb0325ff049f532cb36a04ac257f6921dc0be3f0fb44db3e0b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_enum.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d2900a3ba16442c6b6d8af019d70f3eb1138f01549333d6d3d3de76a6ead2f00",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/node_group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "287880bf05d3841b647121920d5bab56105bd3d9055315e4d60a216f3669dd45",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_dpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "839e70bd0703bfeab804c011e002bebd6bf5b47aaa262f9d37602467dfdba3e4",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_shape.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e98af4b90605c7dc3dfbc1f92d5d03b0a5437a70c470d920ed2e7f97d4c38471",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "995caa859e8b0badf1ae448e77db557ceee208d49ed58ffe49fe6c2d6fe23181",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_cm_daemon_state.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e24f2e18c24c5d31dd6c62d8a12e40d8dd250d5b55c1a6206d160747770ad917",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/etcd_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "958c75a6de6bb0c892cc469dee3facd8a596f8e06200dbbc42bf1d98959ac99a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_red_fish_subscription.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5ffdabce8f062eb54934583ffe574f9f19e6e970d14e7592132f76ecaa1d1ae2",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_email_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9772db069d3b5549eda9c141c2759975f18e5e0a935c5e1a91e5d09f0f0699e5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/forge_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ec98be8bad1c581a0633ca3ab8b2aa9b32620d6db07b63423bf7e901a41aef35",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_cpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f511bfd10757d714d0bcbdaf6beec890711aa3eeed7aa94a4e6bc2516c4dfb61",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0cfeeb448e4f106bc72c263d563c1ff19444db01e580e6c031a955201c04af40",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_pdu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "08927a5b8b4ed6c5f3bdd0e8d097db152942e9c7241c93b855b95cbc095a00cc",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/slurm_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c0f1280d3cc687487623661efbda8d6eca047530fa19f43e8efa31f6378cfcbe",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lsf_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7b98bafafd0af9f21415e02efe17a7d84939b28cf9d3dbe819afcd4e72594811",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "135cf43aac7f1de8fa3a15e40b76eac218820c68b565fb464b665680eefef7a9",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6213f202b5eec6c7dd60e67ceee7af38f11327159df6bc6845d66423e37eb73f",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/report_query_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bfbe94244f9be70200087a92744debe149ff5b1c1c3c5d83249d45351b4ca47d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/software_image_file_selection.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e2e646e467d5fd344f75409c47e1b80e663a089eaad78cc03ca7c65363681004",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/labeled_entity_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "de62d31c624c4da641bdb9a3c636ebfddea30e72e7deba5286c88ec17e24059c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_event_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "46234b6dcc2a080a3e81d40d26733cd0dcb4c4bd4a10978e325e071ec5bc0c1b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/labeled_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8f7205a01231c71c0d899c9a8300aa5b89bf03378bae4bd091607f7a65e30803",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "909986fbf9d05ec339b51a5346b85286e1f72b41d23d97749d0313da5707e73b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_flavor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a39fb7f0a15694ed962995821d07e82ba580cd91f72fae7d7dc8ede4bed016da",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_dpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c220f2d3e5f3689027f20d69d95599f4c6c36e2b46ec60921fe9a26d551a7db9",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/network.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "822bef0f9f0123c0da8d1cad94ba84eccc66ff270694b0e11787308086020411",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a9c2250547d33f89e9de8e79fa8d52d0e271841a9be004476065ad3a32f944cc",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "24b58956e6d7bcd9b7ed7804fd593c6530f234a3aa4a0a1c5912e39ade6d5a70",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_cpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ad05c94abf6e4e46d5e7458d400b4eeae073ee169dc6eb637c83556830ead1dd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/kube_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0169a7c1e593ad9eef36fe700518082d7525f1a4d55dd542995b1dfe7a293490",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4b1bf1ae8c932a8d931189274f20d3eef1f4aac75ecc2b9439f29175f419f008",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_power_shelf_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ddb4009942e2bd96adf06882b5a6824cd7ff2e889255c0f061e60c81251306aa",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_nvsm_health_dump_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d496a060ae4242fbc11190c8c64d057e3a8dc23af07624345278b83da4683c0d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_flavor_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e5930921e23820318293c95d13483c1cff0204e13a3666b163a86c3e176f8ca7",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/chassis_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "334473575bbdb2f74a424fbcc596da1e966485a191ee08870eadffc442c79ac5",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/partition_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ce039c14572b66b8551527346fd4dc0c59c369cd94dc1452025ff7e32a99001d",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_vm_size_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8e66c9dfce571a7e25496bdb2ff0dd74b0d85c11bde27330fc69a7ebd582f930",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_aggregate_switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c702365aeab01bec19dfe05acbfa2d6b817bf6ddd22406e9029af8dc79116dca",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2ace2a45aebc635dcf76174a820900dc2ca390e9226db3e6d1d1f39571d13b94",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cloud_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1af24a142627e5f5ff96afe907f27c305a1ff12fe0f4946f6c1a7c2b0f395ccc",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/os_cloud_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7886093bbf8cc6f860a6b6646cc32fe4084a2bee9bb18983beb7227ab400e0b1",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cooling_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b61ff86d89f9919bb7a5f6d4793e27171fc76da4ff64e52b4df9c235aa17d61a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/physical_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d34b2962384c496f9a8c2082254a3d9cf403901eabd0659ea103137d34d05803",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/certificate_request_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "af8d062bb698a5d799d2700e3ea5bc9a697875c3b946e6c55074906a824e17da",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_image_update_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0e2e3144c571da8a1f026dad7bfebab7916aa6b3b3db05c464500090a700436b",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/rack.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5107918b7498ed85b37488996dc81718b60da0a8e499b31d9cc778404d32959a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_email_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0f7c15e6088b09b9a85ea67bb85190e7ea00227426b1b30310b245be6177ee81",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/edge_site.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2a047ca34966dc4377f75cce5d497717190d28201b550fb65ad86f0b9d36fb32",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_distribution_unit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1478224b7a2189a983506ccfbb117963f2110d4a10e52c6f763eb6153e96f6e9",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_metric_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4e304e1255c9341e39e1a5949cd9d1b6e5cb24d10aefcb383d6068cd8cfddb91",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_health_check.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c79d3842e80866ffd4f35973bf99270853491b78687dd76ba99c00f09faecfd1",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/oci_instance_pool_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b9353970635fd8eb3c5e80d00b3bc6880509eff3f5c8475ca00add0afe1abab6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_measurable_health_check_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9143aef46fb83e2dec54d6882450839e844b39e83aa5dbe7a4512299cedae1cd",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/category_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b0c58388917ccb56821be893bdc076d09621eee9dd88566351df10d358422537",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/kube_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e2b55984b9687b3403f38f96dfe7cbd020d97b29072f429800dc367c05ded338",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/configuration_overlay.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3b00aa92e28c0333a5017a442b70dfe851876021d22cb25fa475914b6d8534ed",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_shelf_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ea3a5a21a4f633a5be5a399bb9e772bbb139d010c5d81c13d46f2a3c78720429",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/user.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "de9ff10250b002dd7a9ff8dd89a47225c26c3b57a5429d9aa97cf770e5e84c85",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e50eb16325eb608f9c4156207e256610b857ad0827a1308836721fb70db306a8",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/report_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "186d6c5943299a8c6e829d0dd5c0e0ec81bf58cab9e35b5459a18444396f9199",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/azure_vm_size.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3b9e2f0a6b263211a1c3e9ebac596d4308753b83977fd4bb8b8108b98d423036",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/standalone_monitored_entity_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "95c8a8958dd66fb1c9906bb4230ff8d5a9452d74cf37371714e8e82c3753a92f",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f78515cfdc17245f1a891376e40afdd4f221985777091bb5dac51b38b1ea7e54",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_single_line_metric_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "38c1798decfa6990e155310423eff2d357ce0ef61530dd86ce470c4f91208400",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/bee_gfs_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e6bd68c6eedbb5e1d9b444cd83971ea187d7d79bed7ea4ab6630aa0c653c74c7",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_image_update_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "990269992e1fcd893745268666f1a4b46c20a9b3ad02612bacc82114f4e4e007",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lite_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "413fef7c31d4a4dc3c00ba34fc004960f1f3242ec022ecce6490feaae826921a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_undrain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "702db26da1db022bde7e5d7561cf6bb27cdc2f4129c0ac2c98b47f62e2861f05",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/charge_back_request_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "11c7a0b6cd41dd4ef6b8c3f01abfc2b7dc43f0c8280c1f58180a86d01cf295d6",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/power_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4106c554f80a7cb3ea51c3ff80fc5b5ab69540f239b7116c4e295999fe5e1c96",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/head_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "99ae040281bc704ba7bb5e6067e896ef7c1d44b72c4fc93cbf03b01e02f0d2a0",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_cm_daemon_state_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "abd9b4232e907ed1766d74de89cd9ca2be29b54b9beda20460f07bee6d19439c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/ec2_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "474583d8da6bb020cda86bfd685a92de8f1a6581154b641dcf083e20bbffb125",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_proc_vm_stat_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9c6589797f838c2699fc8484e3b5280e0b6f60c3cb515c5a918bf53b92990f6c",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_single_line_health_check_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "712808fa5a9a3647912471f2d53c157476d954f479342ec001ec55f6d3c9e156",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/lsf_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9d22ffa95031d12853d45e8284ac5aadcfc612ee95ecd462393bf8c24ae42654",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_data_producer_proc_vm_stat.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d0572f0dc0c12a2a46c1e1376a0ddd469b3dc96a5fea3b77e9b5308ecfc22a84",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/slurm_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ea9bce66f3a83963a8dc90fb65485f6156d9c2797e9e18895237533d2e22d008",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/rack_sensor_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ff9d46c809922fa40cc5b34de03642acd70902dc0e639be735905704f7e55079",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/monitoring_nvsm_health_dump_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9d019422c3426a9837decacdbe9fc01ca273a242213206c1d4d4c86a8e615dcf",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/slurm_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "148e12749de21368e44ef740fa8088381e4fc2d077f6f03e92e7a5e2e505b71a",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5a4d7cc18103cb685a2f114f18bf5da492440f487d4713a9fbc7d728713dde66",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/gcp_machine_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "898ae8957f6f1883dec0f0e562f8c5a585c446c2860c96e99f68c9abe241ee7f",
+   "format": 1
+  },
+  {
+   "name": "plugins/action/edge_site_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "37e76430c98b84cfb05e5f779a6ebd9975f18b9c16a0ea4cc867deb3df858da7",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "09c1717b65b2a117cf143c56e978fd425e782104f22cc516d77e38e8aba2f5d6",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_zone_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "13949e720e001e5f1d56e797c600a149703a6819ac0f2a01b49ed6f25456e592",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_consolidator_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "98651118153963fdf4524724233232f9b644d7b1435d80a4163e82ccf2cb98c2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/session_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "050b1ca075da8ba7a6e8e2e6657df4d74e2dcad254a2015bd2b19a1a929a704b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "96766864f11c859edb5ccf81c0c364df1c3f35f89d52d2e0d991da6d5642720b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lsf_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4a3f39c8a2c0d6b6fd70dc11b36ee6afd0137d46c4643bd311144e73ac0cfade",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/fs_part.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "20c275df6f9e4e69c955e1e96335133cff741b60d571cffd42ed203a3b8ce149",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_wlm_slot.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8c669a47be36201a8de5dbc48ce7656fe5a05e3da58613d43a1c5fb234bb5a02",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/standalone_monitored_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5f70eab4cda5efc7544d52140bef1114c69977f0e1caafa39d2a81a3a7b74c6b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lite_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "87d475218e2b3cc80809f6e79598c8ec4cee0016e2626c2ab4bc4f9c0e208d0c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/prometheus_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4d59104e3b2d3fcd668dacd07c906906f6eb7aed2c34a444624261a63db70b5b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/software_image.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1b09360c0c95160b9368a833a5c8b18e8fe481c7604d7cf836bbf47363eb0600",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_cdu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2182ba7a2ec65867532005a7ffd94b179dc35230f859eefa80d9f5fa069a3c61",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/rack_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a4110f780d5f9042ea4982ae5be40bc2d0c2d7b57e3e9355ca899f7eb144179d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ocigpu_memory_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1638378338aad7d374ead775ec437b3a0cb88076c93211f0f92af54733d30706",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_circuit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "23c571c0b858ce9860e943d2adcf29e1a9d5cd645fe3b27b65366fed8c14cbaf",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_trigger.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3f85c0b41c510d6cbe23f16eb11a9eeee975cdda869732218e5c73791bbbeda2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/generic_device_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c0fa5499c7a97a3530339ddfd67a41f3ffc2ac6de341e255d049de5248f9bfcb",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/forge_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5c74a9824cc150f55dfc42c9c146a05fd036f22cec7fd17a9964647c411af62a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_network_utilization.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ccbae7e181b8605c698cf4be2b937cea959b7dbd94f0a119d2528f1fe2199a7f",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/charge_back_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "850084aa016285e832aaa6fac8dc985432405fd7ffc7913c7e65af2e7e1b2c94",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "eae64ede4830308a42a8e0407e668a75ec8ab8cf35d35314a1c1c15f6874b44d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/pbs_pro_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7a664579a08679b95f8367b558fd400c48a433836fa2ae00349f8b4d2f0ac394",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_single_line_health_check_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ad1ba333eb57df890276240798d1f2c7648a2486ec4721228c6e5a1d75b70f48",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9fe13b7707370d8a88d2a92cf626a1acb380d9bd49c45dd5772fd7db3c86a5ec",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/software_image_file_selection_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4a69da4001ec39a73bc6cf46d7c2dbc065fba071a96ed5844a602663d08d3908",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/profile.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "73fa072516533e346b1051036f22bba81b0eaf63fb839665318bc811b4fbd3ec",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_event_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0b2529d3e9ca2dbb533d0b8f18ddf5b983d53c206a7873b03fb5035d86102d26",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/physical_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c572d5100f6bd921cf3fbb892a095ae29bedcb6d99681ee6233ff3de2bf6ad82",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/dpu_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f4705885b88141c91b65bdf2586eacd72eb198627dc9c41eaef6de404b1027af",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_pdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3a809211f7414884d173cbf4d0f4e954059e72063495a211b0b6dac04b474fc0",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/generic_device.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a69bb648a56437fe4808bedec8f8f5e782d150b8f0b7d7107d14d447cdff776b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ocigpu_memory_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "248c7087e7b7fdab32ee5453b843072cc35b1b5c586a8859e6859ffe3d1ecf8c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_gpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9d1a4311efc247dc67614d9c6fe21a8e3b609ba3290943777e83740dd56cf64a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_metric.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2d6a0aba6b980bf9de10cee89a7e962e8255e73b262436129d196ba547b63be2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/bee_gfs_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4236e8345a3334b83a3018a517e98343eed911dbfd6684582554b16484a151c7",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_machine_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d5ce8c9110896cfe527f89835eaec7049e54bc0502312062d3bfe0d38bf1448d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/partition.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "22f7760fe40fe652c381fb7ce5dfd4929ba13278882f8ae2f70ba53c9097e26b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_red_fish_subscription_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5ef291d994f84dde4857da92cf5d0616df5e7519f8dfedabf74a6d5ef9364bb0",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_script_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9824497f9d10a63e6b9cf6f81bba062a1b76206e4730be5c5119d84fe7083dd3",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_power_circuit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "77a78ce750fba266044098ec9c36f9586bc28f39c69507a1756d900023050b41",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_nmx_controller_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2b17601a4b01bef5f7bed0f56611a142b2e342a97ff06167f4d2c94e684180a3",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/head_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "09efe09fd9c02713cb8cc051dab0d3199e26059a6532eb032f4c4d613d0f8bf5",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/prometheus_query_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "67de2b90efde5b48d9c1b4a69ec034d5c53e2ecbdac9dc0a1c23992889006c9d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_cdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "133b1d690d945f19d89d607df011f148c454f3caaee0a9c68235d9cd0459af20",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/forge_instance_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f59fbe36da5c7cbc344b585140be4d627a58e5bad1d838fbc529d59b932399b4",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/switch_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b568d2d551d1e7cb92e87f40a03a88388473da631e3950be225a605353b42db6",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_single_line_metric_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5e3277f85253341a6dc227251585a09e204bb2f1acc210f0f988f1db46ebed44",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "595d30a4e7bdfcaca0f6d98154a1ec9267a3c66b0a38b41302d206e9c170efa9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_ec2_spot_prices.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "32615fd614cbedbb9dcf0a1964ff25369a7dadd26b20e474f9d313aa0e261425",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_consolidator.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a77d02b92367d19e9da701f42ec147e9552faf0f2bdf1a9f68e86a5d84481159",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_location.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "cff280aef6efaa4005713034e05161981be22c92453325c048f28888d9a34ba0",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "11fe9e2e8dca0923cac27e5e49ad45e644491ae572b46569d222197c445ddbed",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_drain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5e9fac596d12b473908818acf80fa9d3a8d1ea451c3d7cf867af97750cb91499",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fcc6abdec26fdf812610ad96bf83167f98fae6d5e35203334c622b05f41ac0ba",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_nmx_controller.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c75eee7835810a99b45706c8be1eaf0f7fc6c128afb6e501bb12e8f2d590659f",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_prs.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6c8a8927c4185a2a822205c0d2f285486a10256e6df8dce264c461f8300e3ca7",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/network_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4b483c9c2a1622a896092dbd5db088014fa417b71c494a85fa3a2a288283f5a6",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/software_image_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f178d4e393a45e14a1691b1feef2af532074db8f6bd4092de82c8407fff657c4",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_prs_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "729204469dc423b6407ab39372df47ed0277ee71f27df2830aa8ecbad6649ef0",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/certificate_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a061661293200c107cec7400fbff30409e318577a92c0e40cd6da68a5262f673",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/fs_part_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4918dc8424d564b1ec4379b3b3d65c6b6a78026ee6920ec16b8bb8c281e76c67",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_trigger_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f43f5735af4fb94217f222f223bb5c77979eba65ee902e5ed16e57d37ebbf923",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_instance_pool.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "479fd5b4677c037b25a1a56db16d861eaff8272956ee451e4989a4811e001d94",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/chassis.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "169c6abf57604a07aa23ef4347be960b9906edde04218b8d83676272de9b34db",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/drain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "330d839165bb34f5f474eb169b94da9cd917dc6604a9901dad6d5b213db4e0a1",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/pbs_pro_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "98659019b36ac167ad3ff17bc7bf44c4f86293fcef0f891b9c2fc5d353b4d87d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "26c7bb55babd5934542801961b772cf5356c76510660e2ab02d25e5a4a20007a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_enum_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e05919a44242af745e3903dd9c232119d69c28d2efa5848eb5be23d901c9d2ec",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cooling_distribution_unit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5d7f5b2cfbb5df85c4b4bf8d11f5bd0ee91a7186ec96e2e8758432d55d8ef943",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "af6d5fdfc99f6c8331d036a9fdc83cdb7cc0afc6f65cb6e622a2e7e47e974940",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_shape_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "82724012fa3648792c8edfd4958ef09b63f148db1054b0be862af91d10137c0c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lsf_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "28e7d057916cb671ec89fa08920764e712e2192c56490b840d52d71866e32d3b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/etcd_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ee5b240fe868fa3923d0e8546a850c56fdb09dd3b9b4bb694356e56295d09649",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_gpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "61064332a50a94510b0466935fb9d58e4b7dc4c6c3a57fa90bbf95c306b97440",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_network_utilization_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1a66cc9defefe2bda35e75c43ea605b2831316ea12baefca0fe8f1e21cace4a6",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_script_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "406366c1209993dfd59893bd25cf710799b96375b4d95a9cc1b40ff75dfa7d0a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b5dd3c6bc89dc91541d4424918279378c1456f22e5d3d62f152a055715eaf7de",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/dpu_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8c425ec916ee61f0706b37c8bf7de2dc889e5fc4e193db24715c73d5ee168203",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cm_service_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3967337b84d1442aeaf4feb3f8a033f1dc8c57a86f043a144181b8b272161e42",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_ec2_spot_prices_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "904f2d64e742b7aad310f0797233f5a30baac9f9a44e2ca94d5896056d8e4966",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/pbs_pro_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "504e6e2d9bb4a0f94fb6efb6915ae2f971a04f9704b2539297f9eafd4facd952",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cloud_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2166357fcb4e72e7c6b8a29026213f04992122437bb9bb90746b418a8bb52cf4",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_switch_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "65d32c36f0f2ba9c8c030f23a556cb3c3d75a555b88e0ab1f0d88d1e94f28adc",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/forge_instance_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d5122a76e32cbfaf0d300d8e572908b805afa569a33253f024208f8ced0eaf9a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/profile_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9cd4b95e4fe8cb0a717ea833cd7acbe78e2b878136a7100ce85f80322b3934f3",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/user_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fc6646d31a9c7a28faffcbd261addf7e71c72f416c967b2260212ce2833cd444",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_zone.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7d6a865ff5632b6448235515f3a49f5a30a4d95a96e64a1b912fa92cb3cb95ba",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_script_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e77e70a0198e5f8d3da9499eef7ed3f9c3f9f408b1747f2347a1e9d78a206d7e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_undrain_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fb57079a0fd867de3d541ce4fb03f2e05d918ef4c2f65edeec57d8c83fef280f",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/rack_sensor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e5dcfe2c913303f3fdbc673a4797eae3ef671021bff88da2c327b7f6f4abf9d1",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/configuration_overlay_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0db4d10c2f9beb525b21fb57dd345c2cc7a1e3b46ada8d4e847e8727e79de30c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/slurm_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "455549ff95c836fd883ed891e1e7bc0f336f77ff311f3cdf36adc135162f3355",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "11f6968aa9ab705756d422bd663a252484df9f8d5fab4299308c22ae7ce70892",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/pbs_pro_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7c55f12828e819b16d88eb8ba773fa3182d60948ed864c20d8af161549ba4ab1",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/node_group_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4e31e563bad528655f4508c8d5b6d72e113decf1f52bbd87d809688dbf0661b2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "81f3ee382599fc857cbbecfa726781a7d42585fed2ee44fde03109e8d22b6435",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/certificate_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "910ef4b51bd8cc1a62bea9854e172ed860f1a51fb4c0ec37a3f7115e31ead5f9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0e15a420d86b85c6f7dc3e4913468468a78b5e47c573646f1769c42e410ce4d9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6d3158447d06637352e8a20d11871bc05671c272b65082f158f1ad2e46a76b54",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/category.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "30e8f2fa1608f4fe03981723fa7601e061b1faaacc4f75fa57a6f306b918e97c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/certificate.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9f6b0981404a69e194e31dc6c3f3bbb9602f962766ab100d923c5f5cd89fbe9b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_wlm_slot_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "45839e4d519d510c5208e4788df592206ee23d64b5f2c61a5dd61c81fa0dd701",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_location_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9b43dcc3a98348b5c16d5704efb39dc1f7331612d385676b68af3cf5d6661975",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6effd01d724290735c84a3b0db073a9e66ea2ee52235e236e42f7eb002109c99",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/group_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6086bbe986366963e22ac7df25c264bc2cce1f9536bcddb96f095d1f76d31886",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_enum.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "813142e878579984dcded7ff71bb05cc714e459e07930427708cc1cb41d0e584",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/node_group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d489da0365f681f473674161faef8de1ed9683cc0c65b863db8f7e8e8543b08c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_dpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2fb5aa56d053f799af6c5e91c291f17bf40671d873d1603a063e1d7c45dd5b18",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_shape.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5faa1e96ac51460b30af65ebf004b3c4f5b6f12119a05fb5d6f6a424ea31a2f2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "10d38f972a62d0c2aea6bd62dec244e5ce5cba86d18e2a736b17f9ec54845f23",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_cm_daemon_state.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3aced1c6767bd57c08d44e8247bc4bcb930c9ecfeced8dafaaff16411000695d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/etcd_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bec1ae6353b09e3a806174e9767d60ac7e6d578a567cb59a7f7d23747fe6b74b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_red_fish_subscription.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "765a297b4e0c2b085f0e6fc84923c42bdd2169026172f8a761d1aa181853df5d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_email_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "427a4652181b16b31bd5b6f0d0c66488b68925b9312a10d921c58918f1b68d8e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/forge_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "50ff64d39fd9dba03a513bf3adc9b37bbb69a1cba1f8e94c32752960556ce50a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_cpu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e028f3ca84331edab0153121d016fff829ee202e8a25002801383aa3ad8e5be5",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "825f0f7de26df160920bb7f4c5a86a87f811244935899854e8c237e88561e98b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_pdu_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f3fe759126d2a517ab3147490b934b2f92290a4a2f315e0efa036d6b3038ff71",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/slurm_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4d35c7597efc0d3b5d20cf686cde4f97b4a4b50ab98505f19f8b84b965fd0db6",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lsf_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "09271a3cc47ebcbc460dfb56a0e550fcd343867c3f41001f922cfe7fcf7bdf34",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ab9249b9a95c1268f42cd0a0591b6bdeeb45617b2520a86f33c7aa9a8636c231",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "206b326b7b9dff34be465cd9a43baf5edd640a5201a959de6f61177ce049eff2",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/report_query_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c83f886f6b8ef9ec3806c5480b4520bdf3fb5bdf26a8dd091576ee66d92320d4",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/software_image_file_selection.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "273113998fa3bbdf139cbcab8be6be9b783fd8c080b77fdc3aa09a92228275b9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/labeled_entity_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "dbd98af3789140ca1b2e86c6d2905c0c3e116b29624b78029e30a3f7bb314cbf",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_event_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "60bb78250a26cd94df25c51aa7cb202b043731dc276e2115ca185ef99a88c175",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/labeled_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0708cba6865dbeb8c05095d9a1f61bfa2ec23c730bf1c028ca3cd2ed2192ff7b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7ce409f610f16774fa465375e7493eb12d322de4276b82f31958b888844d6e98",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_flavor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "91f9c1f5261060cc3b6b6e56097110e5678fb352178ef6c5ccd93ee84163fa98",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_dpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ad41ecf1bc62cb521d9ef6193737a16bafb9ff4437b1e09d28669f745ba70253",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/network.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bbf3d22905de15037ff71c67d8b3c095d9c1572ac7d2c0f1b521f776518bd7f9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b3bbddade6d87a4d749507817f41e0f4b7d46fa6e106681d357ac55112a7e164",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_type_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "dd42224ad545fbd2e62891a82a19799a127ccebf9bfe2ad474c9712ab8d0bdcb",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_cpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6efefcfa62b60d4b603ab9c13ad22f948e311ad893b6492a78ccc7f1e43902ce",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/kube_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ca3e4a7df873754c00ad5caa104474c3dfe9ed5ddcb4d6198c75a694ee5b523c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ed757afd2093f785cde1ff6aee000f1ba590112e7c5e4e5af9119a02352c6825",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_power_shelf_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e366c742f01363f963f1790308a42ea5f320e9c6ee8fcb8889d6c00e09b493de",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_nvsm_health_dump_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "27132a065b18b21e5fd671ed4fd228c41876de44d9b20723f02e52dd9cf66091",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_flavor_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "cf29455a8a6f7d9141b303fdc5605090c839374c347b8865c9476a96c05ab21e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/chassis_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d30beafb0f8ed9bd3adc266e716b1ebcc6f4dc4a9c3b2d14c901bce99afae9ec",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/partition_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4012992400757489cdc05b699285254099214dc4ada45a5273ddd859dceefec9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_vm_size_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "391f8a3c5cc142c2a8ef3c5fdecd319dff7b2d05d6747ffa3c412438768ec58e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_aggregate_switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "aca7b1ac9d0036e330b5ac1e714957c122a37720dfe205dbeb302cf97c6ef807",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "dbeabcaacf5e4099a49c1b09f37733d88ed2fcbb8df7416554d9771ae32e8956",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cloud_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bbe28830780bfa4f909d301fee6aed1c60c8a5e47c3edae3b16619cf54c8371a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/os_cloud_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8e1eca56dc0a8c84c6ee2a8f07838b6bd20e51eca97322ec17d5de4d0378850c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cooling_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "75166446e7b39c77f27d9ee6bb1325fc355f5b41d7083f6ab80db2cd66ccf872",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/physical_node_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fe980b13353a9e6ef71de1b9699f82f5228d38f706b755df99bd4a6033515e80",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/certificate_request_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fc540d1f141370259b0b88d6c3afca3c67391dcd60d01085cf800f20480bc91a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_image_update_action_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4e704750bf9c374e6d2cf9088e54fb38ebc7a70b48a76fcbcd592cbf9b6c17e4",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/rack.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "abf38f79f6002ddb127a9461dbd27f4399e6afb0be38f144c4526c91968e354d",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_email_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e698e38d48c02562bd444be077f91feb187ff46150dec9b724c29454144775ce",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/edge_site.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "15bb70a6e0858d63455e566770090162124c294b19f8ba53b7acc7549d2eaa9a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_distribution_unit_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ca48418a6452b4cf3c5b8c0aaddb4afb5b819ab3a27faa843abace40e61b9b63",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_metric_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6856a5c8fd9e72c9c57e2fe53ad4dbd0438b9c247471c0816b0fa6fd3d51cb3e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_health_check.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d77f4a02be7abfc132dfce8ac91e8b218d19cb55815b8eccbb35aa2370d01c14",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/oci_instance_pool_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7c0ff17a234a9975ed465a966952b9f11d6626cc8b44edf14e479a49fc815a07",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_measurable_health_check_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0a2c80ecf134fd7ead7152c72cb500dba44997c219559badbecba529f91e10c3",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/category_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0435a1920e88cc5ca7b23bd914029345114405c62dfa5d18bff90f5d830bd78c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/kube_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "500287ec7023f3daaadc969076b60a38bffc1f221a6719d06fff3e1388b64590",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/configuration_overlay.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0ef18f8348bb905f3eb7732dbd2bae2a458ca243e9c8ddb20e805e72d8897d01",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_shelf_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9bf165e1b874ee9c197c47925596ac8a33afd7c203b7f21dff4fe05b78b7794a",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/user.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2b9761d57d6dec1ab80626ea021efce665ff61405aac66af4454a0ab65452a79",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_provider_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "cccd4ca4bb0b5a60b0e466bd8a6ac7ed2a90a8b09e8ca449246672191b327194",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/report_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1f249dc6a276a4e91663eec1c9ac6f8d0adcf611fad16828db139e59512eb1fe",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/azure_vm_size.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "383546abb0e878245fa76c367740bb49c3243978fd8648346a00782b6469233e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/standalone_monitored_entity_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9ffd15b20d959c00038d69b28abd22bd6a216d62681d103bc65ae266a1789cfe",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9b48f4147a3d532d7ba221c55c06f68f03bed984716febccdd8c9a2dd2bfa45e",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_single_line_metric_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "98f020448ada71fcfa3ce210d566cb8de7346941b6297d7ca658534e9bdd7c07",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/bee_gfs_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "771f618fba5d3436fe4580f9ddc9d7c605fd9edf86f218cfa7cb26070a252eda",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_image_update_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "616c184d38e6fcabb4f0a60e9036883ce5cdc4ef3996423494a8bd148ce21560",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lite_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f0598db59e3bdc1c94b75a1d03e68708c2a93ebd1dd5f3b814bcb16422afbf6b",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_undrain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a6ff084a721ba1f3032992706ab1afdaa0e9b6056fad2d98fc4bf11b827d6344",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/charge_back_request_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0e5ee827d9f0af9d351a52a013fae894106a75bc2df39c9c1efafa2a441112f0",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/power_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "77f75b4b679211d4406810e5522d866fbbc410299d6b9bb842a2b6d6b0f678b7",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/head_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "810fbaeb4038f92004624edd201eb876c04738a15e21cb4fbfbf73996e671445",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_cm_daemon_state_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "46b8dd6351799b79224894566207dede58e90f0a4ba0d877f42d6b5297eeda2c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/ec2_region_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "33c051993b7bda7d3364e77d26749f58e4d2214894ca832bc9ec0096b115f3f7",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_proc_vm_stat_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "be54c9e17aaf727d060a65666d23d70886f593a76f2b0272913814795762e7cd",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_single_line_health_check_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "83eccfbd0cb586c2d3636e0237378cd944e7c20a18ef09da2b36a876c74dbe1f",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/lsf_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0967395177ead48cc334dd8fd77ac82d0e0138ac5df6fda5cd4a717518ad600f",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_data_producer_proc_vm_stat.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8f7d82b1a4dca7f6dfccdb0fe5784fd9a483fae44cb2d9c26f085ad9afc22599",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/slurm_job_queue_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0622cd2767ba7646175904fef21ed78dd45e36a76f1f238ca5af81cd0a9eecee",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/rack_sensor_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6eef3fe717894a7593c62a5b1ae9a0f1825c8ed02d56d4d50ce7ffe1add6b732",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/monitoring_nvsm_health_dump_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "556dd1cf07d8b76ff6d893fb28857234adfe730a5f2965f8157baa179ba88072",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/slurm_wlm_cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d90d4d30860afbcf9f80b1e87b61139c30de76eccc74fd6dc7eb9d383bb477c9",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/cluster_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4ade777ed6d3092ec9fe683fd5bd2fca476e4b3aba8d0b2cce1da3143563472c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/gcp_machine_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7efc01b845efd486322adb05a3eac4bb76fa2639a217bca29ad9401a367fd80c",
+   "format": 1
+  },
+  {
+   "name": "plugins/modules/edge_site_info.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "28645348c8f6622ad8c572844580b87e01c383deee2ef50e86aa309beaa935d4",
+   "format": 1
+  },
+  {
+   "name": "plugins/inventory",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/inventory/bright_nodes.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "308d7222f53b4d63929abaf5a8d373cb3b771b8ddff8cff1ed2d3d4e0bcb41a3",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/core.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8109dc30bda62f8666c175d873d96d7cc19d5e91ad05cf7a569435612b5a1804",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/base_action_module.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "40c10e80ff729a3c1ce47017e44c0084695d00199a5f453b1a18e06b9456f3a9",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/inspect.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "16e8a7a6024efaf9f66e260e42aeb43cd54a560e00974fc71c46f54079beecf1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/utils.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1287741d5f611a8f29d0a470824696206ea6791b932c273021df7f0c3a5f9e2a",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/ec2_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "700aa2c70ba6a44b1489ff00c516971f33b1590440028b18148ad95efa74b6d9",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/fs_part.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ae46a76543f226e31346b774623082fd3fe6bc7a8419d86b95d7d19aa03b91a1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_wlm_slot.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2cfb4140d18b4403b889bc2a1089ecc83abe2ccf6b761400d06ce8b049ccaef2",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/standalone_monitored_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e415db3c768f95b65df3d21d934106102ecf87dd787e6be8f3ff3976a7a4e8ed",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/prometheus_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bf2761ff4bb3205c17dfc18181b21d6d2730e7ac44948cbecc1fbbf29abdb579",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/software_image.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c97a32bd09d14ce739dacc76a988c74b8476afaf80729558b0770b45d5a464d0",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/ocigpu_memory_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "16d138c18c66744837a6e22d61ac50d0c00e687432a71a84e5b48593c9e4d26a",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_trigger.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fe46976c7f009396651718f3e61e63dc1e7fa1212ae92f045789b2206320b0b1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/forge_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "379a383e926484d3fab4b5c594f832e671cba1e5738cd489d9e7553480b6b783",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_network_utilization.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f46f80e44097c549c3f0ce403941a5be7ffdc46bc9de91aacdd75b4afbd2b53b",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/charge_back_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "44826e72258f047f35c8a94fc96191a181a24397d652563a37944acfe2983d1b",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/ec2_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f6e47cf79a253d6971efc73e044617095197e02545bebcfc58e2f8839bcad312",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/oci_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a412a8708f5bb8d1e5e6c6a818946c927ccab71484ded01d627915fb76c8a55c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/profile.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9b50654208e1bd0e0975aa0080cee0116851c78cde578edd513e66f6f2fd5565",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/physical_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8478f8d2cae7e693ac4f6241eeb25da6fe56a31a56f8ddd238050f91a4689785",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/dpu_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "82f0727fc0c5be4537a48b377039a154cd4caeae7fac7a726f0af21566f13135",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_aggregate_pdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fc4193b7aad5fe69002747211517845bebf33e7255125a1d8e62d50c7e371df6",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/generic_device.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "df30f304a33c717ebb381a6d56982999081c20dee7c292293c2554c8f32ffb69",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_measurable_metric.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e6be4a182907cebe3ca2d587430d4113c32b70ba7c27895fc24e237da4494459",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/partition.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f04738391b2b000b819820b58def7e2f88a48267644d1f97af6d358df76b12e1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_script_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "391c220b062f132faf2eae6e997157b221fff80c61fa89b6a269a4df82678561",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_aggregate_cdu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "82468c77a9a22f372cac206da5f822947e7bf1293cd64a6317df6eed32a99f21",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_ec2_spot_prices.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bc0360a2999020f2d0af58d388e869dbb11d3b07427c402c04e633d4b9ee803c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_consolidator.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "dcbfd97a77916c186e0491039a65dbae212027981634e2cc44589448ada7cf53",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/azure_location.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f68e3d8955bd51266f1af85200ea6da33e0c43182a4d13a16f0609c8158b70e6",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8461f6c7eecfa274d499425860d09b93a4b7a25450f5f6d184c644ca42319ba7",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_nmx_controller.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3c70702ab2b6f76b5788ed6dddd09c0bbfbfc92958a15ed895c84c254ca2f974",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_prs.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "1fd08bb927017bb123ab9e44fa0db1068480f4386afdc70bd0f9662ce7c60b95",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/oci_instance_pool.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "04c4da334bc9f2eb85f3319b1d8a176bb9b3e76647e2fd65bcbf22469d8e8c09",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/chassis.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "994f3f68c87dc6637e3fe67c768d7d7c9195c33f8e393fae121ee23469d7af7e",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9e5509ed00d07953b6f18ed574dddb1a4e20ce909c003f9379334744528fe7a9",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/azure_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "cffc1a7eb17b750b404b78b6ca395dfabfc833e2ba0e14510e9f650372e47001",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_gpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c88a6817081642a4b4cfbbde7dda1645ee5472865f5ba515d4153cea6c39d67b",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/pbs_pro_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e17497a46b79dd6092dd9db6923a1616d0a8430a7ae215e091dc3e6135c71882",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/cloud_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8d50eddf21350478c2fc5ac01f938edeb4c703c5ab4baa2a766b8a080354c8a2",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/forge_instance_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "07801d690ff25b32bb088b4823d1a1db8fdf28dccdb0798589a3cbb2efa1da04",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/gcp_zone.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "26853f3a2c8586862c464520c1712eb27e755319c8203e057281838e5bfcb210",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/rack_sensor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "151aa1f60b6feb0124fe753dc42a2d92760eb67550d22231eb62646404a00daa",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/slurm_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "9e2bae4140844ac9dceb14780169a102e743e6c1f7c61042dbcfd240d250ea88",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/ec2_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "66f7ce9e7c9c0de8ca726fbb2128501fcaf145fac35708892b9292260512d04c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/pbs_pro_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "d1d9b037318cdd750ba787dad4c46619fd315d1a6aa5f0d0579a4520c315b88d",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/certificate_request.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6b03693fbad25b2800e6d9dc23c6fe613adec094db2626e39e4a5e635bdce88c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_aggregate_power_circuit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3eeb982c4fe382eea0056457d89ebce3afc003131d10b49f5be32b1ea6723e33",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/os_cloud_region.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8b4bb39eafdcc6fafe2abc14703bffc60cf517ac23cfc1c03a506bc155660f7e",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/category.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "735607e258b61d3d9d272322b4fb6c7cd37862f55cf217ff73f5ecdc18afa317",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/certificate.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e1c462ff440cc4e53fb10411c0b3abeffa0163520675c7386645237c8ac413e1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "da813fe616fb3900b320a912162b03fd751a99f8d4d662cfdfa6004994bc5ab9",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_measurable_enum.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b5cf6ff61ece7123a22f55212e30c62db467fecc0fe8ea1b3300590f6feed6fa",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/node_group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "67f9b41fe92e91e2294b3ca818f668b5ff4b75aa1f85cb8cc5c51c931144ad25",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/oci_shape.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "96dd61eac1b029f49f34343c5dcee91495202f30d32e06c5fb10bf518688e1fb",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/oci_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7849c03a333864f113eddff145485f19e98bb28d97ea0ffffaaa60751c70eac4",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_cm_daemon_state.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8c19093848c7b8a3f0c426a6afcb1f03396671717ae1bf422117f0de36ef5d93",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/etcd_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "005e7558cb165fdee8e714ecf049b65ef06c1436b918693c4846c20a85021f92",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_red_fish_subscription.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "188591fb9ec2af21f43c630767fcfd331c7ec354e602e1d37c428f74b78ff361",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_aggregate_power_shelf.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "813033d7bba26f172422e97a26436fed1accc1856c4b138f0c0f36a82ff99d4d",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/slurm_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "84c19d10ab834e141e7676412d761937255590eada95b370cf79eb4d390fd414",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/lsf_wlm_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "22bccd15e4239d7f1f89054a30bc0e5422a561e78a9ffe60054eb958627a5572",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7be49c96c387f2109d65250adcccf18acf8199ca23bf5aca1b7b95153d165ea6",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/software_image_file_selection.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3aa019b9e57b401a630d8520949e29cf3a94ceaabeab78fe414df4d376c41c5c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_event_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "348f3eada9b0d72c63bf60a69450ffe7ab84d4596fc49d587345913c1935bf88",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/labeled_entity.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "858fb660acf64f517180ca8dc64808fab83cd5ca109c06a8de822c7129d3dbac",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/gcp_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e994bc4bab70fa47d77cf7e290bce6590d78a6fbe3fe85e6cdd365a3cf802764",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/os_cloud_flavor.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "75654b5915cfc06f5d8a69f1f9a4e3d668babbcda3b324a67daa4fb51fb4584e",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_dpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a63dbc50c7d67c673622193087293307389b027b8a06851388c566f4536cb4fc",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/network.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a4d4fb83f38dc2bea67ba25902dd53e769dfa5bcae0cbb6d259657d3a2a41f3b",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_cpu.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "78d5d917a849ab7a16b831cd6c2413156064e7c6e88d5ccbdb648b476dbb97eb",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "908d2690635505553eb701ed003cd93b9467fcaaff58e0db364a057b3762670d",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_aggregate_switch.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "58cfdc6846f65331920cc4bae5f9cd91bf0065af61d0e40da2c24000fc7d86bc",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/drain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a60dc77cb43f572fcc893b57850926cc414b33c865c66c687f7965abbbc8ec87",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/os_cloud_provider.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "a4c64dec6ebbe0067bcd4fde1b8e0f26cae783492c0b5733d657d538bf03f317",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/cooling_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4f37e5fe34b30b2169b142384d3dd4a3b3b47c1d21e8b5746fd221242b967f9f",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/rack.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f4a51617d3701284e2df3dd00a593fcf3c725739bbeada8787e52fd797bc6d99",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_email_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "40517f907f189189ed1e429c90c0b0e6cdfe07b53ce800048fe1e3c0c50bc42a",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/edge_site.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "2c1973ba7c16a8c55f6698c76cb9ef2e295e4bfb60c92b0c18793a2c05a58a79",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_measurable_health_check.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "87d074a30e5a599e05f407e0b44fd940958929e35decca4eb6ff4e43abde1a89",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/kube_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8892ccb49343534b755ec12d12e6ca000a0846d136f99cb0e50d111daa4251f1",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/configuration_overlay.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ddeccf9f6feaa2993805a9a8e191bd54884a10ea523b2f50295e2f1deb12b118",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/user.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "560fff1eece2f1cd87805cf62c50baffbd92281eda213c2e82d27effaf8d2734",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/report_query.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "91ba95ff4e966f06ba820c86aaed4785fe72fa5def6325fe44d17ae136ab253c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/azure_vm_size.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "6f085505c61c6eb163f2d0ee0fc602b159b8d9a0020bcd9abb275cedf2a29200",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/group.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7b8f359e26b84c53a62b4fedee836b28edbf4ee048272406abadfcf855fa6b00",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_single_line_metric_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ab5c569128f78175a39ea4acfc03537f4cc477e0bf56a5fba449acee2b17f9a0",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/bee_gfs_cluster.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "0a845f74b41715736b9bd71c9e2821f455e146eb80441fa2503c60fbef8d1f24",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_image_update_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "24ce7221848d8a5f55af8cb67e3fe66f6ee26a18214adf98ad0a1b58181ed299",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/lite_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c8af22f1dfa7ec527160132a7da1044be40d2b589689183a96d6c6c27e519ff6",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_undrain_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "7345b485d7ca1b67fe3266d9ce2ec24833dfc209ce19d98c0f1bbc1e52f0e9ab",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/power_distribution_unit.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ad1de7e9ab7e1367840a7c6e57cd0ce23707c29601d03b146a922e849f6bf64f",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/head_node.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e2e4765543e43f4cd6672d2d46d1cb7442d4500b33bce4eb0a7ad5c3d582112e",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_single_line_health_check_script.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "14b1a3a24d08afe8989b21994938918fb147c064339726cf0ca8510c75544a3c",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/lsf_job_queue.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c198d3674eda9d0fd95eedd1618f8057c8006b249cc59089dd458909b010545e",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_data_producer_proc_vm_stat.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fce32dd9c97884cf65a7e4055e6b7050f2481790156a1a93e99ad07ca0e01f2b",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/monitoring_nvsm_health_dump_action.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "3c3b107cd0ec9805242da03d83ec507cec90c440232c04c289c7265ac16c6d03",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/argspecs/gcp_machine_type.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "54c8bc92b31d0e5e021d65c4c2443bfa17589f3983dacf1e40d4d43c5ea470f6",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/entity_converter.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fde26959bb269dc86b42bb1c0f30d4facb43e847cf7af4ed88b9f853bb897f8f",
+   "format": 1
+  },
+  {
+   "name": "plugins/module_utils/base_module.py",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "013572f0ffc23095034db5fe9a609f1724600198b94c88e2b5ea3babc952955e",
+   "format": 1
+  },
+  {
+   "name": "README.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ae45992036fa58b773e28049ba38627a041736fce0d6a1ef8e175aee79d8f9e4",
+   "format": 1
+  },
+  {
+   "name": "meta",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "meta/runtime.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "8feee88ecf1f83a9efbfa994f3f8ff6d83c51ba69a3e73b223b1c87e7524fa68",
+   "format": 1
+  },
+  {
+   "name": "LICENSE",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f9c375a1be4a41f7b70301dd83c91cb89e41567478859b77eef375a52d782505",
+   "format": 1
+  },
+  {
+   "name": "roles",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_open",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_open/README.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "13e841746d6556bc1cfeb9c7d4c3b284387532f89e627780e83e4188c2fa2e94",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_open/tasks",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_open/tasks/main.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "e12967ad274c6378aead4775db79ce50f8f115f252197795eb7e160b5c938532",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/defaults",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/defaults/main.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "fd8bb5ecfa42aaee3257f5c004d0203202a019c3072f801b56c593c20111b6af",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/vars",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/vars/RedHat.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ce4d3993eb42ff7ca7db5a0aafefe7a943cb9a126bfa122084971f47da247ae5",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/vars/Suse.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ce4d3993eb42ff7ca7db5a0aafefe7a943cb9a126bfa122084971f47da247ae5",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/vars/Debian.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "f5da685525845e300bd10643c43d9b9e740265a2df92ade83bdac4d511b17d7a",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/README.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "b621eb38267868ac39bc44a9b181485191523c47458284e5d55ee5b0ec431165",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/handlers",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/handlers/main.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "bea8103911f5c2fc94e7a76b4003338141655b8397d394e6947794f6a752a695",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks/open-tunnels.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "28f756b178f64f65ab2c833e47498a151c92ee658a902cc28b08be4b82bab9f8",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks/close-tunnel.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "ed50842ed262276e3ed7385abc82ab1da0a41a26611c4939b90bb5381a8e9d00",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks/close-tunnels.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "5ce3bd9a10d76b3ede5a3e97811ad20697a8eb6f10e2a9b6d0cd3b024bdaa831",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks/open-tunnel.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "c9dde6de63a9eb58853f560d843b13d91c70ace4db5bd51f23cbf2b9111254a4",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels/tasks/main.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "70c7bcfae9c740a9ad61fd0283f15b501d72b8ddc3b919bface109e51da7a00e",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_close",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_close/README.md",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "13e841746d6556bc1cfeb9c7d4c3b284387532f89e627780e83e4188c2fa2e94",
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_close/tasks",
+   "ftype": "dir",
+   "chksum_type": null,
+   "chksum_sha256": null,
+   "format": 1
+  },
+  {
+   "name": "roles/software_image_tunnels_close/tasks/main.yml",
+   "ftype": "file",
+   "chksum_type": "sha256",
+   "chksum_sha256": "4d7e73adce21b91cf4c9dc14999b0b49e974ce5cea9392301ca256441706f00d",
+   "format": 1
+  }
+ ],
+ "format": 1
+}

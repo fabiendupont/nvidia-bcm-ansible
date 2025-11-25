@@ -1,0 +1,40 @@
+---
+# Default variables for pxe_setup role
+
+# BCM server IP address (head node)
+bcm_server: "{{ ansible_default_ipv4.address }}"
+
+# Base paths
+tftpboot_path: /tftpboot
+repos_path: "{{ tftpboot_path }}/repos"
+images_path: "{{ tftpboot_path }}/images"
+ks_path: "{{ tftpboot_path }}/ks"
+ignition_path: "{{ tftpboot_path }}/ignition"
+
+# HTTP server port for boot files
+http_port: 8080
+
+# Temporary mount point for ISOs
+iso_mount_point: /mnt/iso-temp
+
+# File permissions
+file_mode: '0644'
+dir_mode: '0755'
+
+# RHEL ISO settings
+rhel_iso_path: ""
+rhel_version: "9.6"
+rhel_repo_name: "rhel-{{ rhel_version }}"
+
+# OpenShift ISO settings
+openshift_iso_path: ""
+openshift_version: "4.16"
+openshift_repo_name: "openshift-{{ openshift_version }}"
+
+# Cleanup settings
+cleanup_iso_after_copy: false
+cleanup_temp_mount: true
+
+# Verification settings
+verify_http_access: true
+verify_boot_files: true

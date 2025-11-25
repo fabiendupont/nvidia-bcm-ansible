@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  author: NVIDIA Corporation
+  description: Deploy OpenShift clusters on BCM via PXE with Ignition
+  company: NVIDIA
+  license: GPL-3.0-or-later
+  min_ansible_version: '2.15'
+  platforms:
+    - name: EL
+      versions:
+        - '9'
+  galaxy_tags:
+    - nvidia
+    - bcm
+    - openshift
+    - coreos
+    - ignition
+    - pxe
+
+dependencies: []

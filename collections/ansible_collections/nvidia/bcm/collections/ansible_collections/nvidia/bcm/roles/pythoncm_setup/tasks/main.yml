@@ -1,0 +1,156 @@
+---
+# Setup pythoncm in local virtual environment for Ansible inventory plugin
+# This role builds a wheel from the BCM head node's pythoncm installation
+# and installs it in the local venv
+
+- name: Check if pythoncm is installed on BCM head node
+  ansible.builtin.command:
+    cmd: "{{ bcm_python_path }} -c 'import pythoncm; print(pythoncm.__file__)'"
+  register: pythoncm_check
+  changed_when: false
+
+- name: Display pythoncm location on BCM
+  ansible.builtin.debug:
+    msg: "pythoncm found at: {{ pythoncm_check.stdout }}"
+
+- name: Create temporary directory for wheel building
+  ansible.builtin.file:
+    path: "{{ temp_wheel_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Copy pythoncm source to temp directory
+  ansible.builtin.command:
+    cmd: "cp -r {{ pythoncm_site_packages }}/pythoncm {{ temp_wheel_dir }}/"
+  changed_when: false
+
+- name: Copy pythoncm metadata to temp directory
+  ansible.builtin.command:
+    cmd: "cp -r {{ pythoncm_site_packages }}/pythoncm-11.0.dist-info {{ temp_wheel_dir }}/"
+  changed_when: false
+
+- name: Create setup.py for wheel building
+  ansible.builtin.copy:
+    dest: "{{ temp_wheel_dir }}/setup.py"
+    mode: '0644'
+    content: |
+      from setuptools import setup, find_packages
+
+      setup(
+          name='pythoncm',
+          version='11.0',
+          packages=find_packages(),
+          description='CMDaemon API python binding',
+          author='Koen de Raedt',
+          author_email='coreteam@brightcomputing.com',
+          url='https://www.nvidia.com',
+          license='LicenseRef-NvidiaProprietary',
+          classifiers=[
+              'Development Status :: 5 - Production/Stable',
+              'Environment :: Console',
+              'Intended Audience :: System Administrators',
+              'License :: Other/Proprietary License',
+              'Operating System :: POSIX :: Linux',
+              'Programming Language :: Python :: 3',
+          ],
+          python_requires='>=3.9',
+      )
+
+- name: Build pythoncm wheel
+  ansible.builtin.command:
+    cmd: "{{ bcm_python_path }} -m pip wheel . --no-deps -w ."
+    chdir: "{{ temp_wheel_dir }}"
+  register: wheel_build
+  changed_when: wheel_build.rc == 0
+
+- name: Find built wheel file
+  ansible.builtin.find:
+    paths: "{{ temp_wheel_dir }}"
+    patterns: "pythoncm-*.whl"
+  register: wheel_files
+
+- name: Fail if wheel not found
+  ansible.builtin.fail:
+    msg: "Failed to build pythoncm wheel"
+  when: wheel_files.matched == 0
+
+- name: Copy wheel to local machine
+  ansible.builtin.fetch:
+    src: "{{ wheel_files.files[0].path }}"
+    dest: "/tmp/pythoncm-11.0-py3-none-any.whl"
+    flat: true
+
+- name: Clean up temporary wheel build directory
+  ansible.builtin.file:
+    path: "{{ temp_wheel_dir }}"
+    state: absent
+
+- name: Check if local venv exists
+  ansible.builtin.stat:
+    path: "{{ local_venv_path }}/bin/python3"
+  register: venv_stat
+  delegate_to: localhost
+  become: false
+
+- name: Create local virtual environment
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ local_venv_path }}"
+  delegate_to: localhost
+  become: false
+  when: not venv_stat.stat.exists
+
+- name: Upgrade pip in venv
+  ansible.builtin.command:
+    cmd: "{{ local_venv_path }}/bin/pip install --upgrade pip wheel"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Install pythoncm wheel in local venv
+  ansible.builtin.command:
+    cmd: "{{ local_venv_path }}/bin/pip install --force-reinstall /tmp/pythoncm-11.0-py3-none-any.whl"
+  delegate_to: localhost
+  become: false
+  register: pip_install
+  changed_when: "'Successfully installed' in pip_install.stdout"
+
+- name: Verify pythoncm installation in venv
+  ansible.builtin.command:
+    cmd: "{{ local_venv_path }}/bin/python3 -c 'import pythoncm; print(\"pythoncm version:\", getattr(pythoncm, \"__version__\", \"11.0\"))'"
+  delegate_to: localhost
+  become: false
+  register: pythoncm_verify
+  changed_when: false
+
+- name: Display pythoncm verification result
+  ansible.builtin.debug:
+    msg: "{{ pythoncm_verify.stdout }}"
+
+- name: Create ansible.cfg to use venv Python
+  ansible.builtin.copy:
+    dest: "{{ playbook_dir }}/../ansible.cfg"
+    mode: '0644'
+    content: |
+      [defaults]
+      inventory = ./inventory
+      interpreter_python = {{ local_venv_path }}/bin/python3
+      host_key_checking = False
+
+      [inventory]
+      enable_plugins = host_list, script, auto, yaml, ini, toml, brightcomputing.bcm110.bright_nodes
+  delegate_to: localhost
+  become: false
+
+- name: Display setup completion message
+  ansible.builtin.debug:
+    msg: |
+      pythoncm setup complete!
+
+      The following has been configured:
+      - pythoncm wheel built on BCM head node
+      - Virtual environment created at: {{ local_venv_path }}
+      - pythoncm installed in venv
+      - ansible.cfg updated to use venv Python
+
+      You can now use the dynamic inventory plugin:
+        ansible-inventory -i inventory/bcm_dynamic.yml --list

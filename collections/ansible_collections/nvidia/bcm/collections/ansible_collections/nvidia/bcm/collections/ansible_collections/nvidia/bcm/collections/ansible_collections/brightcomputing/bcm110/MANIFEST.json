@@ -1,0 +1,28 @@
+{
+ "collection_info": {
+  "namespace": "brightcomputing",
+  "name": "bcm110",
+  "version": "30.0.52573+git4350e03",
+  "authors": [
+   "iiiteam <iiiteam@brightcomputing.com>"
+  ],
+  "readme": "README.md",
+  "tags": [],
+  "description": "ansible collection to manage Bright Cluster Manager entities.\n",
+  "license": [],
+  "license_file": "LICENSE",
+  "dependencies": {},
+  "repository": "https://galaxy.ansible.com/brightcomputing/bcm110",
+  "documentation": "https://galaxy.ansible.com/brightcomputing/bcm110",
+  "homepage": "https://www.brightcomputing.com",
+  "issues": "https://www.brightcomputing.com/support"
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "2e2cbb6dc2b01dac93ce37e6c93cd07f11acc678add3620e96d7a136c5e5936c",
+  "format": 1
+ },
+ "format": 1
+}

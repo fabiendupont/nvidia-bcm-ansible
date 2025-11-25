@@ -1,0 +1,63 @@
+---
+# Main tasks for GPU cluster configuration
+
+- name: Query current software image configuration
+  nvidia.bcm.bcm_software_image:
+    name: "{{ gpu_image_name }}"
+    state: query
+  register: current_image
+
+- name: Display current kernel parameters
+  debug:
+    msg: "Current kernel parameters: {{ current_image.image.kernel_parameters }}"
+
+- name: Update kernel parameters for GPU workloads
+  nvidia.bcm.bcm_software_image:
+    name: "{{ gpu_image_name }}"
+    state: present
+    kernel_parameters: "{{ gpu_kernel_params }}"
+  when: current_image.image.kernel_parameters != gpu_kernel_params
+  register: image_updated
+
+- name: Notify if kernel parameters were updated
+  debug:
+    msg: "⚠️  Kernel parameters updated. Nodes will use new parameters on next boot."
+  when: image_updated.changed | default(false)
+
+- name: Query current network configuration
+  nvidia.bcm.bcm_network:
+    name: "{{ gpu_network_name }}"
+    state: query
+  register: current_network
+
+- name: Update network MTU for GPU workloads
+  nvidia.bcm.bcm_network:
+    name: "{{ gpu_network_name }}"
+    state: present
+    mtu: "{{ gpu_network_mtu }}"
+  when: current_network.network.mtu != gpu_network_mtu
+  register: network_updated
+
+- name: Notify if network was updated
+  debug:
+    msg: "✓ Network MTU updated to {{ gpu_network_mtu }} for improved GPU performance"
+  when: network_updated.changed | default(false)
+
+- name: Update category documentation
+  nvidia.bcm.bcm_category:
+    name: "{{ gpu_category_name }}"
+    state: present
+    notes: "{{ gpu_category_notes }} - Updated {{ ansible_date_time.iso8601 }}"
+  register: category_updated
+
+- name: Summary
+  debug:
+    msg: |
+      GPU Cluster Configuration Summary:
+        Software Image: {{ gpu_image_name }}
+        Kernel Parameters: {{ gpu_kernel_params }}
+        Network MTU: {{ gpu_network_mtu }}
+        Changes Made:
+          - Image: {{ 'Updated' if image_updated.changed | default(false) else 'No change' }}
+          - Network: {{ 'Updated' if network_updated.changed | default(false) else 'No change' }}
+          - Category: {{ 'Updated' if category_updated.changed | default(false) else 'No change' }}

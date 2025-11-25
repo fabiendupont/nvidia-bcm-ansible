@@ -1,0 +1,63 @@
+---
+# Example playbook demonstrating power management with nvidia.bcm collection
+
+- name: BCM Power Management Examples
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    target_nodes:
+      - node001
+      - node002
+      - node003
+
+  tasks:
+    - name: Query power status of a single node
+      nvidia.bcm.bcm_power:
+        name: node001
+        state: status
+      register: power_status
+
+    - name: Display power status
+      debug:
+        msg: |
+          Node: node001
+          Power State: {{ power_status.power_state }}
+          Method: {{ power_status.power_status_detail.method }}
+
+    - name: Query power status of multiple nodes
+      nvidia.bcm.bcm_power:
+        name: "{{ item }}"
+        state: status
+      loop: "{{ target_nodes }}"
+      register: power_status_all
+
+    - name: Display all power statuses
+      debug:
+        msg: "{{ item.item }}: {{ item.power_state }}"
+      loop: "{{ power_status_all.results }}"
+
+    # Uncomment to perform power operations (use with caution!)
+    #
+    # - name: Power on nodes
+    #   nvidia.bcm.bcm_power:
+    #     name: "{{ item }}"
+    #     state: on
+    #   loop: "{{ target_nodes }}"
+    #
+    # - name: Power off a node gracefully
+    #   nvidia.bcm.bcm_power:
+    #     name: node001
+    #     state: off
+    #
+    # - name: Hard reset a node
+    #   nvidia.bcm.bcm_power:
+    #     name: node001
+    #     state: reset
+    #
+    # - name: Conditional power on (only if off)
+    #   nvidia.bcm.bcm_power:
+    #     name: node001
+    #     state: on
+    #   when: power_status.power_state == 'off'

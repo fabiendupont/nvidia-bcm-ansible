@@ -1,0 +1,10 @@
+module sushy_virtqemud 1.0;
+
+require {
+    type container_t;
+    type virtqemud_t;
+    class unix_stream_socket connectto;
+}
+
+#============= container_t ==============
+allow container_t virtqemud_t:unix_stream_socket connectto;

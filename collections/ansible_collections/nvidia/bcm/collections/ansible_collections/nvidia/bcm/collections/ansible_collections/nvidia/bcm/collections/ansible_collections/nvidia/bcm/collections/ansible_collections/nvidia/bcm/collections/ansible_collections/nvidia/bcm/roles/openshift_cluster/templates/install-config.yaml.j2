@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+baseDomain: {{ openshift_base_domain | default('test.local') }}
+metadata:
+  name: {{ cluster_name }}
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  replicas: {{ openshift_worker_replicas | default(0) }}
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: {{ cluster_nodes | selectattr('role', 'equalto', 'master') | list | length }}
+networking:
+  clusterNetwork:
+  - cidr: {{ openshift_cluster_network_cidr | default('10.128.0.0/14') }}
+    hostPrefix: {{ openshift_cluster_network_host_prefix | default(23) }}
+  machineNetwork:
+  - cidr: {{ openshift_machine_network_cidr | default('10.141.0.0/16') }}
+  networkType: {{ openshift_network_type | default('OVNKubernetes') }}
+  serviceNetwork:
+  - {{ openshift_service_network_cidr | default('172.30.0.0/16') }}
+platform:
+{% if openshift_api_vips is defined and openshift_api_vips | length > 0 %}
+  baremetal:
+    apiVIPs:
+{% for vip in openshift_api_vips %}
+      - {{ vip }}
+{% endfor %}
+    ingressVIPs:
+{% for vip in openshift_ingress_vips %}
+      - {{ vip }}
+{% endfor %}
+{% else %}
+  none: {}
+{% endif %}
+pullSecret: '{{ openshift_pull_secret | to_json }}'
+sshKey: '{{ bcm_ssh_keys | first }}'

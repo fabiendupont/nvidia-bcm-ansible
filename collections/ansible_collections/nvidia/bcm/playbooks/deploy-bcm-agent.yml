@@ -1,0 +1,63 @@
+---
+# Deploy BCM Agent to compute nodes
+#
+# Usage:
+#   ansible-playbook -i inventory.yml deploy-bcm-agent.yml
+#
+# Deploy to specific host:
+#   ansible-playbook -i inventory.yml deploy-bcm-agent.yml --limit node001
+#
+# Enable debug mode:
+#   ansible-playbook -i inventory.yml deploy-bcm-agent.yml -e bcm_agent_debug=true
+
+- name: Deploy BCM Agent
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Override these variables as needed
+    bcm_agent_bcm_host: "{{ bcm_head_node | default('bcmhead') }}"
+    bcm_agent_image_tag: "1.0.0"
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "Deploying BCM Agent to: {{ ansible_hostname }}"
+          - "BCM Host: {{ bcm_agent_bcm_host }}"
+          - "Image: {{ bcm_agent_image_repository }}:{{ bcm_agent_image_tag }}"
+
+  roles:
+    - role: nvidia.bcm.bcm_agent
+
+  post_tasks:
+    - name: Wait for service to be active
+      ansible.builtin.wait_for:
+        timeout: 15
+      when: bcm_agent_started | default(true) | bool
+
+    - name: Verify service is running
+      ansible.builtin.systemd:
+        name: bcm-agent.service
+      register: service_status
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "BCM Agent deployed successfully on {{ ansible_hostname }}"
+          - "Service status: {{ service_status.status.ActiveState }}"
+          - "Metrics: http://{{ ansible_default_ipv4.address }}:{{ bcm_agent_metrics_port }}/metrics"
+
+    - name: Check if metrics are available
+      ansible.builtin.uri:
+        url: "http://localhost:{{ bcm_agent_metrics_port }}/metrics"
+        return_content: false
+        status_code: 200
+      register: metrics_check
+      failed_when: false
+      changed_when: false
+
+    - name: Display metrics status
+      ansible.builtin.debug:
+        msg: "{{ 'Metrics endpoint is responding' if metrics_check.status == 200 else 'Metrics endpoint not yet available (service may still be starting)' }}"

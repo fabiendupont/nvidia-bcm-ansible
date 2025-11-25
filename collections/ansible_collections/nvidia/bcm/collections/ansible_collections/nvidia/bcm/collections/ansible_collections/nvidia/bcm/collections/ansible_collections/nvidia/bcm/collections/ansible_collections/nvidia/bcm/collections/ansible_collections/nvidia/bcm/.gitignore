@@ -1,0 +1,48 @@
+# Ansible
+*.retry
+.ansible/
+ansible.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.log
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# Build artifacts
+*.tar.gz
+!releases/*.tar.gz
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Certificates and secrets
+*.pem
+*.key
+*.crt
+!docs/**/*.pem
+inventory-*.yml
+!playbooks/*inventory*.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/

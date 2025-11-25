@@ -1,0 +1,174 @@
+---
+# Join Existing OpenShift Cluster to BCM
+#
+# This playbook integrates an existing OpenShift cluster with BCM by:
+#   1. Registering cluster nodes as LiteNodes in BCM
+#   2. Building BCM agent container image (if needed)
+#   3. Deploying BCM agent DaemonSet to the cluster
+#
+# This playbook is for clusters that were deployed manually or through
+# other automation, and now need to be managed by BCM.
+#
+# Prerequisites:
+#   - OpenShift cluster is deployed and accessible
+#   - Kubeconfig available and accessible from BCM head node
+#   - Cluster nodes defined in inventory with MAC addresses and IPs
+#   - Bootstrap certificates created (run playbooks/setup_bcm_bootstrap_certs.yml)
+#
+# Usage:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/join_openshift_cluster.yml
+#
+# Required inventory variables:
+#   - cluster_name: Name of the OpenShift cluster
+#   - kubeconfig_path: Path to kubeconfig on BCM head node
+#   - cluster_nodes: List of nodes with name, mac, ip, role
+#   - node_roles: List of role definitions with categories
+#
+# Example inventory:
+#   all:
+#     hosts:
+#       bcm_headnode:
+#         ansible_host: 192.168.122.204
+#     vars:
+#       cluster_name: "existing-ocp"
+#       kubeconfig_path: "/path/to/kubeconfig"
+#       cluster_nodes:
+#         - name: master-0
+#           mac: "52:54:00:AA:BB:01"
+#           ip: "10.141.160.50"
+#           role: master
+
+- name: Join Existing OpenShift Cluster to BCM
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - kubeconfig_path is defined
+          - cluster_nodes is defined
+          - cluster_nodes | length > 0
+          - node_roles is defined
+          - node_roles | length > 0
+        fail_msg: |
+          Missing required variables. Please ensure inventory defines:
+            - cluster_name
+            - kubeconfig_path
+            - cluster_nodes (with name, mac, ip, role)
+            - node_roles (with name, category)
+
+    - name: Verify cluster is accessible
+      kubernetes.core.k8s_cluster_info:
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: cluster_info
+      failed_when: false
+
+    - name: Fail if cluster is not accessible
+      ansible.builtin.fail:
+        msg: |
+          Cannot access OpenShift cluster at {{ kubeconfig_path }}.
+          Please ensure:
+            1. Kubeconfig is available on BCM head node
+            2. Cluster API is accessible from BCM head node
+            3. Kubeconfig path is correct
+      when: cluster_info.failed | default(false)
+
+    - name: Display cluster information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Joining Existing OpenShift Cluster to BCM"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Kubernetes version: {{ cluster_info.version.server.kubernetes.gitVersion }}"
+          - "OpenShift version: {{ cluster_info.version.server.gitVersion | default('N/A') }}"
+          - "Nodes to register: {{ cluster_nodes | length }}"
+          - "Kubeconfig: {{ kubeconfig_path }}"
+          - "================================================================"
+
+  tasks:
+    - name: Create BCM categories for cluster
+      brightcomputing.bcm110.category:
+        name: "{{ item.category }}"
+        state: present
+        partition: "base"
+        bootLoader: "{{ bootloader }}"
+        bootLoaderProtocol: "{{ bootloader_protocol }}"
+        installMode: "{{ install_mode }}"
+        newnodeInstallMode: "{{ newnode_install_mode }}"
+        kernelOutputConsole: "{{ kernel_output_console }}"
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+
+    - name: Build node category mapping
+      ansible.builtin.set_fact:
+        node_category_map: >-
+          {{
+            dict(cluster_nodes | map(attribute='name') |
+            zip(cluster_nodes | map('community.general.json_query', 'role') |
+            map('extract', node_roles_by_name, 'category')))
+          }}
+      vars:
+        node_roles_by_name: "{{ dict(node_roles | map(attribute='name') | zip(node_roles)) }}"
+
+    - name: Register cluster nodes as LiteNodes in BCM
+      brightcomputing.bcm110.lite_node:
+        hostname: "{{ item.name }}"
+        state: present
+        mac: "{{ item.mac }}"
+        partition: "base"
+        category: "{{ node_category_map[item.name] }}"
+        interfaces_NetworkPhysicalInterface:
+          - name: "BOOTIF"
+            ip: "{{ item.ip }}"
+            network: "internalnet"
+      loop: "{{ cluster_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Display LiteNode registration status
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Nodes Registered as LiteNodes"
+          - "================================================================"
+          - "Registered: {{ cluster_nodes | length }} nodes"
+          - ""
+          - "Verify in BCM:"
+          - "  cmsh -c 'device; list -L'"
+          - "================================================================"
+
+    - name: Deploy BCM agent to cluster
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: deploy_bcm_daemon
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "OpenShift Cluster Successfully Joined to BCM"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Nodes registered as LiteNodes: {{ cluster_nodes | length }}"
+          - "BCM agent deployed: {{ bcm_agent_namespace }} namespace"
+          - ""
+          - "Verify deployment:"
+          - "  export KUBECONFIG={{ kubeconfig_path }}"
+          - "  oc get nodes"
+          - "  oc get pods -n {{ bcm_agent_namespace }}"
+          - ""
+          - "Verify LiteNode status in BCM:"
+          - "  cmsh -c 'device; list -L'"
+          - "  cmsh -c 'device; use {{ cluster_nodes[0].name }}; show'"
+          - ""
+          - "Monitor BCM agent logs:"
+          - "  oc logs -n {{ bcm_agent_namespace }} -l app.kubernetes.io/name=bcm-agent -f"
+          - "================================================================"

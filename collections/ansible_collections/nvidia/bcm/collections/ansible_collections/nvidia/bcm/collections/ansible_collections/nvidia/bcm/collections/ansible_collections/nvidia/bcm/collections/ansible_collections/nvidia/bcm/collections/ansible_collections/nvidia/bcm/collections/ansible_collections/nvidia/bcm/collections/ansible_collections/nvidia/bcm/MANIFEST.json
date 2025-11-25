@@ -1,0 +1,39 @@
+{
+ "collection_info": {
+  "namespace": "nvidia",
+  "name": "bcm",
+  "version": "0.1.0",
+  "authors": [
+   "NVIDIA Corporation"
+  ],
+  "readme": "README.md",
+  "tags": [
+   "nvidia",
+   "bcm",
+   "base_command_manager",
+   "cluster",
+   "hpc",
+   "infrastructure"
+  ],
+  "description": "Ansible collection for managing NVIDIA Base Command Manager (BCM)",
+  "license": [
+   "GPL-3.0-or-later"
+  ],
+  "license_file": null,
+  "dependencies": {
+   "containers.podman": ">=1.10.0"
+  },
+  "repository": "https://github.com/fabiendupont/nvidia-bcm-ansible",
+  "documentation": "https://github.com/fabiendupont/nvidia-bcm-ansible",
+  "homepage": "https://github.com/fabiendupont/nvidia-bcm-ansible",
+  "issues": "https://github.com/fabiendupont/nvidia-bcm-ansible/issues"
+ },
+ "file_manifest_file": {
+  "name": "FILES.json",
+  "ftype": "file",
+  "chksum_type": "sha256",
+  "chksum_sha256": "55211706a120517e70cfe50e3987c48c54aa9ee6807b39898de2a45a552d4365",
+  "format": 1
+ },
+ "format": 1
+}

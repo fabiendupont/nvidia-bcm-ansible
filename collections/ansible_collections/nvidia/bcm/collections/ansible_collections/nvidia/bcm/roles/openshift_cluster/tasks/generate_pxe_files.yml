@@ -1,0 +1,217 @@
+---
+# Generate OpenShift PXE boot files on BCM head node
+
+- name: Install nmstate for network configuration validation
+  ansible.builtin.package:
+    name: nmstate
+    state: present
+  become: yes
+
+- name: Create OpenShift tools directory structure
+  ansible.builtin.file:
+    path: "/openshift/tools/{{ openshift_version }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if openshift-install exists for this version
+  ansible.builtin.stat:
+    path: "/openshift/tools/{{ openshift_version }}/openshift-install"
+  register: openshift_install_binary
+
+- name: Determine if openshift-install needs download
+  ansible.builtin.set_fact:
+    need_openshift_install_update: "{{ not openshift_install_binary.stat.exists }}"
+
+- name: Check if oc exists for this version
+  ansible.builtin.stat:
+    path: "/openshift/tools/{{ openshift_version }}/oc"
+  register: oc_binary
+
+- name: Download and install openshift-install client
+  when: need_openshift_install_update | bool
+  block:
+    - name: Create temporary directory for download
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _openshift_install
+      register: openshift_temp_dir
+
+    - name: Download openshift-install tarball
+      ansible.builtin.get_url:
+        url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/openshift-install-linux.tar.gz"
+        dest: "{{ openshift_temp_dir.path }}/openshift-install-linux.tar.gz"
+        mode: '0644'
+
+    - name: Extract openshift-install
+      ansible.builtin.unarchive:
+        src: "{{ openshift_temp_dir.path }}/openshift-install-linux.tar.gz"
+        dest: "{{ openshift_temp_dir.path }}"
+        remote_src: yes
+
+    - name: Install openshift-install to tools directory
+      ansible.builtin.copy:
+        src: "{{ openshift_temp_dir.path }}/openshift-install"
+        dest: "/openshift/tools/{{ openshift_version }}/openshift-install"
+        mode: '0755'
+        remote_src: yes
+
+    - name: Clean up temporary directory
+      ansible.builtin.file:
+        path: "{{ openshift_temp_dir.path }}"
+        state: absent
+
+- name: Download and install oc client
+  when: not oc_binary.stat.exists
+  block:
+    - name: Create temporary directory for oc download
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: _oc_install
+      register: oc_temp_dir
+
+    - name: Download oc tarball
+      ansible.builtin.get_url:
+        url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/openshift-client-linux.tar.gz"
+        dest: "{{ oc_temp_dir.path }}/openshift-client-linux.tar.gz"
+        mode: '0644'
+
+    - name: Extract oc
+      ansible.builtin.unarchive:
+        src: "{{ oc_temp_dir.path }}/openshift-client-linux.tar.gz"
+        dest: "{{ oc_temp_dir.path }}"
+        remote_src: yes
+
+    - name: Install oc to tools directory
+      ansible.builtin.copy:
+        src: "{{ oc_temp_dir.path }}/oc"
+        dest: "/openshift/tools/{{ openshift_version }}/oc"
+        mode: '0755'
+        remote_src: yes
+
+    - name: Clean up oc temporary directory
+      ansible.builtin.file:
+        path: "{{ oc_temp_dir.path }}"
+        state: absent
+
+- name: Verify openshift-install version
+  ansible.builtin.command: "/openshift/tools/{{ openshift_version }}/openshift-install version"
+  register: openshift_install_version
+  changed_when: false
+
+- name: Display openshift-install version
+  ansible.builtin.debug:
+    msg: "{{ openshift_install_version.stdout_lines }}"
+
+- name: Create cluster workspace directory
+  ansible.builtin.file:
+    path: "/openshift/clusters/{{ cluster_name }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if pull secret is provided
+  ansible.builtin.stat:
+    path: "{{ openshift_pull_secret_path }}"
+  register: pull_secret_check
+  delegate_to: localhost
+  when: openshift_pull_secret_path is defined
+
+- name: Set pull secret fact from file
+  ansible.builtin.set_fact:
+    openshift_pull_secret: "{{ lookup('file', openshift_pull_secret_path) | trim }}"
+  delegate_to: localhost
+  when:
+    - openshift_pull_secret_path is defined
+    - pull_secret_check.stat.exists
+
+- name: Fail if pull secret not provided
+  ansible.builtin.fail:
+    msg: |
+      OpenShift pull secret is required but not found at {{ openshift_pull_secret_path | default('undefined') }}.
+
+      To get your pull secret:
+      1. Visit https://console.redhat.com/openshift/install/pull-secret
+      2. Download the pull secret
+      3. Set openshift_pull_secret_path in your inventory to point to the file
+
+      Example:
+        openshift_pull_secret_path: "/path/to/pull-secret.json"
+  when: openshift_pull_secret is not defined
+
+- name: Read BCM SSH public keys
+  ansible.builtin.shell: |
+    cat /root/.ssh/id_*.pub 2>/dev/null || true
+  register: bcm_ssh_keys_raw
+  changed_when: false
+
+- name: Set BCM SSH keys fact
+  ansible.builtin.set_fact:
+    bcm_ssh_keys: "{{ bcm_ssh_keys_raw.stdout_lines | select('match', '^ssh-') | list }}"
+
+- name: Display BCM SSH keys count
+  ansible.builtin.debug:
+    msg: "Found {{ bcm_ssh_keys | length }} SSH public key(s) from BCM head node"
+
+- name: Generate install-config.yaml
+  ansible.builtin.template:
+    src: install-config.yaml.j2
+    dest: "/openshift/clusters/{{ cluster_name }}/install-config.yaml"
+    mode: '0600'
+
+- name: Generate agent-config.yaml
+  ansible.builtin.template:
+    src: agent-config.yaml.j2
+    dest: "/openshift/clusters/{{ cluster_name }}/agent-config.yaml"
+    mode: '0600'
+
+- name: Display configuration files location
+  ansible.builtin.debug:
+    msg:
+      - "Install config: /openshift/clusters/{{ cluster_name }}/install-config.yaml"
+      - "Agent config: /openshift/clusters/{{ cluster_name }}/agent-config.yaml"
+
+- name: Check if PXE files already exist
+  ansible.builtin.stat:
+    path: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-rootfs.img"
+  register: pxe_files_check
+
+- name: Generate PXE boot files using openshift-install
+  ansible.builtin.shell:
+    cmd: "/openshift/tools/{{ openshift_version }}/openshift-install agent create pxe-files"
+    chdir: "/openshift/clusters/{{ cluster_name }}"
+  environment:
+    PATH: "/openshift/tools/{{ openshift_version }}:{{ ansible_env.PATH }}"
+  when: not pxe_files_check.stat.exists
+  register: pxe_creation
+
+- name: Display PXE files creation output
+  ansible.builtin.debug:
+    msg: "{{ pxe_creation.stdout_lines }}"
+  when: pxe_creation is defined and pxe_creation.changed
+
+- name: Verify PXE vmlinuz was created
+  ansible.builtin.stat:
+    path: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-vmlinuz"
+  register: pxe_vmlinuz
+  failed_when: not pxe_vmlinuz.stat.exists
+
+- name: Verify PXE initrd was created
+  ansible.builtin.stat:
+    path: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-initrd.img"
+  register: pxe_initrd
+  failed_when: not pxe_initrd.stat.exists
+
+- name: Verify PXE rootfs was created
+  ansible.builtin.stat:
+    path: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-rootfs.img"
+  register: pxe_rootfs
+  failed_when: not pxe_rootfs.stat.exists
+
+- name: Display PXE boot artifacts information
+  ansible.builtin.debug:
+    msg:
+      - "PXE boot files generated successfully on BCM head node"
+      - "Location: /openshift/clusters/{{ cluster_name }}/boot-artifacts/"
+      - "vmlinuz: {{ (pxe_vmlinuz.stat.size / 1024 / 1024) | round(2) }} MB"
+      - "initrd: {{ (pxe_initrd.stat.size / 1024 / 1024) | round(2) }} MB (with agent installer)"
+      - "rootfs: {{ (pxe_rootfs.stat.size / 1024 / 1024) | round(2) }} MB"
+      - "Kubeconfig will be at: /openshift/clusters/{{ cluster_name }}/auth/kubeconfig"

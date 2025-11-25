@@ -1,0 +1,29 @@
+---
+# Main tasks for pxe_setup role
+
+- name: Ensure base directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+  loop:
+    - "{{ repos_path }}"
+    - "{{ images_path }}"
+    - "{{ ks_path }}"
+    - "{{ ignition_path }}"
+
+- name: Include RHEL setup tasks
+  ansible.builtin.include_tasks: setup_rhel.yml
+  when: rhel_iso_path is defined and rhel_iso_path | length > 0
+
+- name: Include OpenShift setup tasks
+  ansible.builtin.include_tasks: setup_openshift.yml
+  when: openshift_iso_path is defined and openshift_iso_path | length > 0
+
+- name: Include boot file symlink tasks
+  ansible.builtin.include_tasks: create_symlinks.yml
+  when: pxe_categories is defined
+
+- name: Verify HTTP access to boot files
+  ansible.builtin.include_tasks: verify_http.yml
+  when: verify_http_access | bool

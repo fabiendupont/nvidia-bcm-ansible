@@ -1,0 +1,35 @@
+---
+# Example playbook demonstrating user management with nvidia.bcm collection
+
+- name: BCM User Management Examples
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Query user information
+      nvidia.bcm.bcm_user:
+        name: cmsupport
+        state: query
+      register: user_info
+
+    - name: Display user information
+      debug:
+        msg: |
+          User: {{ user_info.user.name }}
+          UID: {{ user_info.user.uid }}
+          Home: {{ user_info.user.home }}
+          Shell: {{ user_info.user.shell }}
+
+    # Uncomment to update user properties
+    # - name: Update user email
+    #   nvidia.bcm.bcm_user:
+    #     name: cmsupport
+    #     state: present
+    #     email: support@example.com
+    #
+    # - name: Update user shell
+    #   nvidia.bcm.bcm_user:
+    #     name: testuser
+    #     state: present
+    #     shell: /bin/zsh

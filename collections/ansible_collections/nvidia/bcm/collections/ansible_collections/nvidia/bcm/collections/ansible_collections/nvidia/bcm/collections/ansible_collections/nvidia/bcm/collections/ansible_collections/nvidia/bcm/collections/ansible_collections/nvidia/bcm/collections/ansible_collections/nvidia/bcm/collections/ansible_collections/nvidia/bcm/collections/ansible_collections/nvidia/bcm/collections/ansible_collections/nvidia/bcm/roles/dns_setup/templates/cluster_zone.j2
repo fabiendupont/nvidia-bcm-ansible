@@ -1,0 +1,27 @@
+$TTL {{ dns_min_ttl }}
+@    IN  SOA     {{ bcm_hostname }}.{{ dns_domain }}.  root.{{ dns_domain }}. (
+                  {{ dns_serial }}        ; serial number
+                  {{ dns_refresh }}    ; refresh
+                  {{ dns_retry }}    ; retry
+                  {{ dns_expire }}  ; expire
+                  {{ dns_min_ttl }} ) ; min TTL
+
+                         IN NS {{ bcm_hostname }}.{{ dns_domain }}.
+
+; Nameserver address
+{{ bcm_hostname }}           IN A {{ bcm_internal_ip }}
+
+; OpenShift cluster DNS records
+; API endpoints - point to rendezvous host (first master)
+api.{{ cluster_name }}             IN A {{ cluster_nodes[0].ip }}
+api-int.{{ cluster_name }}         IN A {{ cluster_nodes[0].ip }}
+
+; Apps wildcard - point to all master nodes for load distribution
+{% for node in cluster_nodes %}
+*.apps.{{ cluster_name }}          IN A {{ node.ip }}
+{% endfor %}
+
+; Cluster nodes
+{% for node in cluster_nodes %}
+{{ node.name }}.{{ cluster_name }}    IN A {{ node.ip }}
+{% endfor %}

@@ -1,0 +1,125 @@
+---
+# Cleanup playbook for BCM cluster resources
+# This playbook removes BCM-managed resources (nodes, categories, images, artifacts)
+#
+# Usage: ansible-playbook -i inventory/openshift_test_cluster.yml playbooks/cleanup_bcm_cluster.yml
+
+- name: Cleanup BCM cluster resources
+  hosts: bcm_headnode
+  gather_facts: false
+
+  tasks:
+    # ================================================================
+    # Phase 1: Remove LiteNodes from BCM
+    # ================================================================
+    - name: Remove LiteNodes for cluster nodes
+      brightcomputing.bcm110.lite_node:
+        hostname: "{{ item.name }}"
+        state: absent
+      loop: "{{ cluster_nodes }}"
+      register: litenode_removal
+
+    # ================================================================
+    # Phase 2: Remove PhysicalNodes from BCM
+    # ================================================================
+    - name: Remove PhysicalNodes for cluster nodes
+      brightcomputing.bcm110.physical_node:
+        hostname: "{{ item.name }}"
+        state: absent
+      loop: "{{ cluster_nodes }}"
+      register: physicalnode_removal
+
+    # ================================================================
+    # Phase 3: Remove BCM categories
+    # ================================================================
+    - name: Build list of cluster-specific categories
+      ansible.builtin.set_fact:
+        cluster_categories: "{{ node_roles | map(attribute='category') | list }}"
+
+    - name: Remove BCM categories
+      brightcomputing.bcm110.category:
+        name: "{{ item }}"
+        state: absent
+      loop: "{{ cluster_categories }}"
+      register: category_removal
+
+    # ================================================================
+    # Phase 4: Remove software images
+    # ================================================================
+    - name: Remove OpenShift installer software image
+      brightcomputing.bcm110.software_image:
+        name: "installer-openshift-{{ openshift_version }}"
+        state: absent
+      when: cluster_type == 'openshift'
+      register: openshift_image_removal
+
+    - name: Remove RHEL installer software image
+      brightcomputing.bcm110.software_image:
+        name: "installer-rhel-{{ rhel_version }}"
+        state: absent
+      when: cluster_type == 'rhel'
+      register: rhel_image_removal
+
+    # ================================================================
+    # Phase 5: Clean up cluster artifacts on BCM head node
+    # ================================================================
+    - name: Remove OpenShift kubeconfig directory
+      ansible.builtin.file:
+        path: "/root/openshift"
+        state: absent
+      when: cluster_type == 'openshift'
+      ignore_errors: true
+
+    - name: Remove OpenShift agent ISO
+      ansible.builtin.file:
+        path: "{{ openshift_iso_path }}"
+        state: absent
+      when:
+        - cluster_type == 'openshift'
+        - openshift_iso_path is defined
+      ignore_errors: true
+
+    - name: Remove temporary install-config.yaml
+      ansible.builtin.file:
+        path: "/tmp/install-config-{{ cluster_name }}.yaml"
+        state: absent
+      ignore_errors: true
+
+    - name: Remove temporary agent-config.yaml
+      ansible.builtin.file:
+        path: "/tmp/agent-config-{{ cluster_name }}.yaml"
+        state: absent
+      when: cluster_type == 'openshift'
+      ignore_errors: true
+
+    - name: Remove PXE boot symlinks
+      ansible.builtin.file:
+        path: "/cm/local/apps/cmd/data/tftpboot/images/{{ item.category }}"
+        state: absent
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+      ignore_errors: true
+
+    - name: Remove kickstart files
+      ansible.builtin.file:
+        path: "/cm/local/apps/cmd/data/tftpboot/ks/{{ item.category }}.cfg"
+        state: absent
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+      when: cluster_type == 'rhel'
+      ignore_errors: true
+
+    - name: Display BCM cleanup summary
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          BCM Cleanup completed for cluster: {{ cluster_name }}
+          ========================================
+          - LiteNodes: {{ cluster_nodes | length }} removed
+          - PhysicalNodes: {{ cluster_nodes | length }} removed
+          - Categories: {{ cluster_categories | length }} removed
+          - Software images: 1 removed
+          - Artifacts: Cleaned
+          ========================================

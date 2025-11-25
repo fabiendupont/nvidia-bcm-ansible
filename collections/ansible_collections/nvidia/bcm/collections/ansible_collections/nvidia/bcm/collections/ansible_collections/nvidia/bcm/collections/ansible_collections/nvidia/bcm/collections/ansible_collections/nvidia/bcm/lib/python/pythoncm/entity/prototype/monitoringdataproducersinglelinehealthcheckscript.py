@@ -1,0 +1,5 @@
+from pythoncm.entity import MonitoringDataProducerSingleLineScript
+
+
+class MonitoringDataProducerSingleLineHealthCheckScript(MonitoringDataProducerSingleLineScript):
+    pass

@@ -1,0 +1,89 @@
+---
+# Main tasks for network optimization
+
+- name: Query current network configuration
+  nvidia.bcm.bcm_network:
+    name: "{{ network_name }}"
+    state: query
+  register: current_network
+
+- name: Display current network settings
+  debug:
+    msg: |
+      Current Network Configuration:
+        Name: {{ current_network.network.name }}
+        MTU: {{ current_network.network.mtu }}
+        Domain: {{ current_network.network.domain_name }}
+        Type: {{ current_network.network.type }}
+
+- name: Check if MTU optimization is needed
+  set_fact:
+    mtu_needs_update: "{{ current_network.network.mtu != network_mtu }}"
+
+- name: Check if domain optimization is needed
+  set_fact:
+    domain_needs_update: "{{ current_network.network.domain_name != network_domain }}"
+
+- name: Optimize network MTU for HPC workloads
+  nvidia.bcm.bcm_network:
+    name: "{{ network_name }}"
+    state: present
+    mtu: "{{ network_mtu }}"
+  when:
+    - enable_jumbo_frames | bool
+    - mtu_needs_update | bool
+  register: mtu_result
+
+- name: Update domain name
+  nvidia.bcm.bcm_network:
+    name: "{{ network_name }}"
+    state: present
+    domain_name: "{{ network_domain }}"
+  when: domain_needs_update | bool
+  register: domain_result
+
+- name: Display MTU optimization result
+  debug:
+    msg: "✓ Network MTU updated to {{ network_mtu }} (Jumbo Frames enabled)"
+  when:
+    - mtu_result is defined
+    - mtu_result.changed | default(false)
+
+- name: Display domain update result
+  debug:
+    msg: "✓ Network domain updated to {{ network_domain }}"
+  when:
+    - domain_result is defined
+    - domain_result.changed | default(false)
+
+- name: Query optimized network configuration
+  nvidia.bcm.bcm_network:
+    name: "{{ network_name }}"
+    state: query
+  register: optimized_network
+
+- name: Display optimization summary
+  debug:
+    msg: |
+      Network Optimization Summary:
+        Network: {{ optimized_network.network.name }}
+        MTU: {{ optimized_network.network.mtu }} {{ '(Jumbo Frames)' if optimized_network.network.mtu >= 9000 else '(Standard)' }}
+        Domain: {{ optimized_network.network.domain_name }}
+        Changes Applied:
+          - MTU: {{ 'Updated' if (mtu_result.changed | default(false)) else 'No change needed' }}
+          - Domain: {{ 'Updated' if (domain_result.changed | default(false)) else 'No change needed' }}
+
+- name: Performance recommendations
+  debug:
+    msg: |
+      Performance Recommendations:
+        {% if optimized_network.network.mtu >= 9000 %}
+        ✓ Jumbo frames enabled - optimal for HPC and GPU workloads
+        {% else %}
+        ⚠️  Consider enabling jumbo frames (MTU 9000) for better performance
+        {% endif %}
+
+        Additional optimizations to consider:
+        - Ensure switch infrastructure supports MTU {{ optimized_network.network.mtu }}
+        - Verify all nodes in the cluster use consistent MTU settings
+        - For GPU Direct RDMA, ensure InfiniBand/RoCE is properly configured

@@ -1,0 +1,31 @@
+---
+# Register nodes in BCM via cmsh
+
+- name: Generate node registration script
+  ansible.builtin.template:
+    src: register_node.sh.j2
+    dest: "/tmp/register_{{ node.name }}.sh"
+    mode: '0755'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    loop_var: node
+    label: "{{ node.name }}"
+
+- name: Execute node registration script
+  ansible.builtin.command: "/tmp/register_{{ node.name }}.sh"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    loop_var: node
+    label: "{{ node.name }}"
+  register: node_result
+  changed_when: "'committed' in node_result.stdout"
+  failed_when: node_result.rc != 0 and 'already exists' not in node_result.stderr
+
+- name: Clean up registration scripts
+  ansible.builtin.file:
+    path: "/tmp/register_{{ node.name }}.sh"
+    state: absent
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    loop_var: node
+    label: "{{ node.name }}"

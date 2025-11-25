@@ -1,0 +1,17 @@
+# Python dependencies for NVIDIA BCM Ansible Collection
+# Install these on the Ansible control node
+
+# Core Ansible requirement
+ansible-core>=2.14
+
+# BCM pythoncm package (installed via dnf/rpm from BCM repository)
+# dnf install cmdaemon-pythoncm
+
+# System Python dependencies (install via dnf on RHEL 9)
+# dnf install python3-lxml python3-passlib python3-tabulate python3-pyOpenSSL
+
+# Or install via pip:
+lxml>=4.6.5
+passlib>=1.7.4
+tabulate>=0.8.10
+pyOpenSSL>=21.0.0

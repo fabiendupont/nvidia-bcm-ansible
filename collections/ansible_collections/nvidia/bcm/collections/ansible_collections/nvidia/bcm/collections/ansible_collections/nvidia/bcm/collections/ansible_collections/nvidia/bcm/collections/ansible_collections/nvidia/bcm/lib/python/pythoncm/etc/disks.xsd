@@ -1,0 +1,368 @@
+<?xml version='1.0'?>
+
+<!--
+#
+# SPDX-FileCopyrightText: Copyright (c) 2023 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: LicenseRef-NvidiaProprietary
+#
+# NVIDIA CORPORATION, its affiliates and licensors retain all intellectual
+# property and proprietary rights in and to this material, related
+# documentation and any modifications thereto. Any use, reproduction,
+# disclosure or distribution of this material and related documentation
+# without an express license agreement from NVIDIA CORPORATION or
+# its affiliates is strictly prohibited.
+#
+
+This is the XML schema description of the partition layout XML file.
+It can be used by software to validate partitioning XML files.
+There are however a few things the schema does not check:
+- There should be exactly one root mountpoint (/), unless diskless.
+- There can only be one partition with a 'max' size on a particular device.
+- Something similar applies to logical volumes.
+- The 'auto' size can only be used for a swap partition.
+- Partitions of type 'linux swap' should not have a filesystem.
+- Partitions of type 'linux raid' should not have a filesystem.
+- Partitions of type 'linux lvm' should not have a filesystem.
+- Partitions of type 'unspecified' should not have a filesystem.
+- If a raid is a member of another raid then it can not have a filesystem.
+- Partitions, which are listed as raid members, should be of type 'linux raid'.
+- If diskless is not set, there should be at least one device.
+- The priority tag is only valid for partitions which have type set to
+  "linux swap".
+-->
+
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' elementFormDefault='qualified'>
+
+  <xs:element name='diskSetup'>
+
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name='diskless' type='diskless' minOccurs='0' maxOccurs='1'/>
+        <xs:element name='device' type='device' minOccurs='0' maxOccurs='unbounded'/>
+        <xs:element name='raid' type='raid' minOccurs='0' maxOccurs='unbounded'/>
+        <xs:element name='volumeGroup' type='volumeGroup' minOccurs='0' maxOccurs='unbounded'/>
+        <xs:element name='subVolumes' type='subVolumes' minOccurs='0' maxOccurs='unbounded'/>
+      </xs:sequence>
+    </xs:complexType>
+
+    <xs:key name='partitionAndRaidIds'>
+      <xs:selector xpath='.//raid|.//partition'/>
+      <xs:field xpath='@id'/>
+    </xs:key>
+
+    <xs:keyref name='raidMemberIds' refer='partitionAndRaidIds'>
+      <xs:selector xpath='.//raid/member'/>
+      <xs:field xpath='.'/>
+    </xs:keyref>
+
+    <xs:keyref name='volumeGroupPhysicalVolumes' refer='partitionAndRaidIds'>
+      <xs:selector xpath='.//volumeGroup/physicalVolumes/member'/>
+      <xs:field xpath='.'/>
+    </xs:keyref>
+
+    <xs:keyref name='subVolumeIds' refer='partitionAndRaidIds'>
+      <xs:selector xpath='.//subVolumes'/>
+      <xs:field xpath='@parent'/>
+    </xs:keyref>
+
+    <xs:unique name='raidAndVolumeMembersUnique'>
+      <xs:selector xpath='.//member'/>
+      <xs:field xpath='.'/>
+    </xs:unique>
+
+    <xs:unique name='deviceNodesUnique'>
+      <xs:selector xpath='.//device/blockdev'/>
+      <xs:field xpath='.'/>
+      <xs:field xpath='@mode'/>
+    </xs:unique>
+
+    <xs:unique name='mountPointsUnique'>
+      <xs:selector xpath='.//mountPoint'/>
+      <xs:field xpath='.'/>
+    </xs:unique>
+
+    <xs:unique name='assertNamesUnique'>
+      <xs:selector xpath='.//assert'/>
+      <xs:field xpath='@name'/>
+    </xs:unique>
+
+  </xs:element>
+
+  <xs:complexType name='diskless'>
+    <xs:attribute name='maxMemSize' type='memSize' use='required'/>
+    <xs:attribute name='mountOptions' type='xs:string'/>
+  </xs:complexType>
+
+  <xs:simpleType name='memSize'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='([0-9]+[MG])|100%|[0-9][0-9]%|[0-9]%|0'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name='stripeSize'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='4|8|16|32|64|128|256|512|1024|1K|2048|2K|4096|4K'/>
+      <xs:pattern value='8192|8K|16384|16K|32768|32K|65536|64K|131072|128K'/>
+      <xs:pattern value='262144|256K|524288|512K|1048576|1024K|1M'/>
+      <xs:pattern value='2097152|2048K|2M|4194304|4096K|4M'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name='size'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='max|auto|[0-9]+[MGT]'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name='relativeOrAbsoluteSize'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='max|auto|[0-9]+[MGT]|[0-9]+([.][0-9]+)?%|[0-9]+/[0-9]+'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name='extentSize'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='([0-9])+M'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name='blockdevName'>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='/dev/.+'/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name='blockdev'>
+    <xs:simpleContent>
+      <xs:extension base="blockdevName">
+        <xs:attribute name="mode" default='normal'>
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:pattern value="normal|cloud|both"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name='device'>
+    <xs:sequence>
+      <xs:element name='blockdev' type='blockdev' minOccurs='1' maxOccurs='unbounded'/>
+      <xs:element name='vendor' type='xs:string' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='requiredSize' type='size' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='assert' minOccurs='0' maxOccurs='unbounded'>
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base='xs:string'>
+              <xs:attribute name='name' use='required'>
+                <xs:simpleType>
+                  <xs:restriction base='xs:string'>
+                    <xs:pattern value='[a-zA-Z0-9-_]+'/>
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:attribute>
+              <xs:attribute name='args' type='xs:string'/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name='alignMiB' type='xs:boolean' minOccurs='0' maxOccurs='1'/>
+      <xs:element name="partitionTable" minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:pattern value="gpt|msdos"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='partition' type='partition' minOccurs='1' maxOccurs='unbounded'/>
+    </xs:sequence>
+    <xs:attribute name='origin' type='xs:string'/>
+  </xs:complexType>
+
+  <xs:complexType name='partition'>
+    <xs:sequence>
+      <xs:element name='size' type='relativeOrAbsoluteSize'/>
+      <xs:element name='type'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:enumeration value='linux'/>
+            <xs:enumeration value='linux swap'/>
+            <xs:enumeration value='linux raid'/>
+            <xs:enumeration value='linux lvm'/>
+            <xs:enumeration value='unspecified'/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='encryption' type='encryption' minOccurs='0' maxOccurs='1'/>
+      <xs:group ref='filesystem' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='priority' minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="32767"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name='id' type='xs:string' use='required'/>
+    <xs:attribute name='partitiontype' type='xs:string'/>
+  </xs:complexType>
+
+  <xs:complexType name='encryption' mixed="true">
+    <xs:sequence>
+      <xs:element name='type' minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:enumeration value='luks2'/>
+            <xs:enumeration value='luks1'/>
+            <!-- rest of this enum is intentionally left blank -->
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='cipher' minOccurs='0' maxOccurs='1' type='xs:string'/>
+      <xs:element name='hash' minOccurs='0' maxOccurs='1' type='xs:string'/>
+      <xs:element name='keySize' minOccurs='0' maxOccurs='1' type='xs:integer'/>
+      <xs:element name='name' minOccurs='0' maxOccurs='1' type='xs:string'/>
+      <xs:element name='allowDiscards' minOccurs='0' maxOccurs='1' type='xs:boolean' default='true'/>
+      <xs:element name='custom' minOccurs='0' maxOccurs='1' type='xs:string'/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:group name='filesystem'>
+    <xs:sequence>
+      <xs:element name='filesystem'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:enumeration value='ext2'/>
+            <xs:enumeration value='ext3'/>
+            <xs:enumeration value='ext4'/>
+            <xs:enumeration value='xfs'/>
+            <xs:enumeration value='btrfs'/>
+            <xs:enumeration value='zfs'/>
+            <xs:enumeration value='fat32'/>
+            <xs:enumeration value='fat'/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='mkfsFlags' type='xs:string' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='mountPoint' type='xs:string' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='mountOptions' type='xs:string' default='defaults' minOccurs='0'/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:complexType name='raid'>
+    <xs:sequence>
+      <xs:element name='member' type='xs:string' minOccurs='2' maxOccurs='unbounded'/>
+      <xs:element name='level' type='xs:int'/>
+      <xs:element name='metaData' minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base='xs:string'>
+            <xs:enumeration value='0'/>
+            <xs:enumeration value='0.9'/>
+            <xs:enumeration value='0.90'/>
+            <xs:enumeration value='1'/>
+            <xs:enumeration value='1.0'/>
+            <xs:enumeration value='1.1'/>
+            <xs:enumeration value='1.2'/>
+            <xs:enumeration value='default'/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='encryption' type='encryption' minOccurs='0' maxOccurs='1'/>
+      <xs:choice minOccurs='0' maxOccurs='1'>
+        <xs:group ref='filesystem'/>
+        <xs:sequence>
+          <xs:element name='swap'><xs:complexType /></xs:element>
+          <xs:element name='priority' minOccurs='0' maxOccurs='1'>
+            <xs:simpleType>
+              <xs:restriction base="xs:integer">
+                <xs:minInclusive value="0"/>
+                <xs:maxInclusive value="32767"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name='id' type='xs:string' use='required'/>
+  </xs:complexType>
+
+  <xs:complexType name='volumeGroup'>
+    <xs:sequence>
+      <xs:element name='name' type='xs:string'/>
+      <xs:element name='extentSize' type='extentSize'/>      
+      <xs:element name='physicalVolumes'>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name='member' type='xs:string' minOccurs='1' maxOccurs='unbounded'/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name='logicalVolumes'>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name='volume' type='logicalVolume' minOccurs='1' maxOccurs='unbounded'/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name='logicalVolume'>
+    <xs:sequence>
+      <xs:element name='name' type='xs:string'/>
+      <xs:element name='size' type='size'/>
+      <xs:element name='pool' type='xs:string' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='stripes' minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="1"/>
+            <xs:maxInclusive value="32768"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name='stripeSize' type='stripeSize' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='encryption' type='encryption' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='swap' minOccurs='0' maxOccurs='1'/>
+      <xs:element name='priority' minOccurs='0' maxOccurs='1'>
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:minInclusive value="0"/>
+            <xs:maxInclusive value="32767"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:group ref='filesystem' minOccurs='0' maxOccurs='1'/>
+    </xs:sequence>
+    <xs:attribute name="thinpool">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="1"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+    <xs:attribute name="metadatasize">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:pattern value="([1-9][MGT])|([1-9][0-9]+[MGT])"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name='subVolumes'>
+    <xs:sequence>
+      <xs:element name='subVolume' type='subVolume' minOccurs='1' maxOccurs='unbounded'/>
+    </xs:sequence>
+    <xs:attribute name='parent' type='xs:string' use='required'/>
+  </xs:complexType>
+
+  <xs:complexType name='subVolume'>
+    <xs:sequence>
+      <xs:element name='mountPoint' type='xs:string'/>
+      <xs:element name='mountOptions' type='xs:string'/>
+    </xs:sequence>
+  </xs:complexType>
+
+</xs:schema>

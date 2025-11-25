@@ -1,0 +1,60 @@
+---
+# Cleanup playbook for test VMs
+# This playbook removes local libvirt VMs used for testing
+#
+# Usage: ansible-playbook -i inventory/openshift_test_cluster.yml playbooks/cleanup_test_vms.yml
+
+- name: Cleanup test VMs on local libvirt
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    cluster_nodes: "{{ hostvars[groups['bcm_headnode'][0]]['cluster_nodes'] }}"
+
+  tasks:
+    - name: Check if VMs exist
+      community.libvirt.virt:
+        command: list_vms
+        uri: "qemu:///system"
+      register: existing_vms
+
+    - name: Stop running VMs for cluster nodes
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        state: destroyed
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - existing_vms is defined
+        - existing_vms.list_vms is defined
+        - item.name in existing_vms.list_vms
+      ignore_errors: true
+
+    - name: Delete VMs for cluster nodes
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        command: undefine
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - existing_vms is defined
+        - existing_vms.list_vms is defined
+        - item.name in existing_vms.list_vms
+      ignore_errors: true
+
+    - name: Delete VM disk images
+      ansible.builtin.file:
+        path: "/var/lib/libvirt/images/{{ item.name }}.qcow2"
+        state: absent
+      loop: "{{ cluster_nodes }}"
+      become: true
+      ignore_errors: true
+
+    - name: Display VM cleanup summary
+      ansible.builtin.debug:
+        msg: |
+          ========================================
+          VM Cleanup completed
+          ========================================
+          - VMs: {{ cluster_nodes | length }} node(s) processed
+          ========================================

@@ -1,0 +1,181 @@
+---
+# Build BCM agent container image locally on BCM head node
+# This step is infrequent - only rebuilds when base image, repository, or cm-lite-daemon changes
+# Image is built as localhost/bcm-agent:latest for later push to cluster registries
+
+- name: Display BCM agent build configuration
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "BCM Agent Image Build"
+      - "============================================"
+      - "Repository: {{ bcm_agent_repo_url }}"
+      - "Version: {{ bcm_agent_repo_version }}"
+      - "Local image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+      - "Force rebuild: {{ bcm_agent_force_rebuild }}"
+      - "============================================"
+
+# Step 1: Clone/update repository
+
+- name: Check if nvidia-bcm-lite-daemon directory is a git repository
+  ansible.builtin.stat:
+    path: /root/nvidia-bcm-lite-daemon/.git
+  register: git_dir_check
+
+- name: Remove non-git directory if exists
+  ansible.builtin.file:
+    path: /root/nvidia-bcm-lite-daemon
+    state: absent
+  when: not git_dir_check.stat.exists
+
+- name: Clone nvidia-bcm-lite-daemon repository to BCM head node
+  ansible.builtin.git:
+    repo: "{{ bcm_agent_repo_url }}"
+    dest: /root/nvidia-bcm-lite-daemon
+    version: "{{ bcm_agent_repo_version }}"
+    update: yes
+  register: repo_clone
+
+# Step 2: Check rebuild triggers
+
+- name: Get base image name from Containerfile
+  ansible.builtin.shell:
+    cmd: "grep '^FROM' /root/nvidia-bcm-lite-daemon/Containerfile | head -1 | awk '{print $2}'"
+  register: base_image_name
+  changed_when: false
+
+- name: Pull base image (required for build)
+  containers.podman.podman_image:
+    name: "{{ base_image_name.stdout }}"
+    state: present
+  register: base_image_pull
+
+- name: Get current repository commit from local clone
+  ansible.builtin.command:
+    cmd: "git -C /root/nvidia-bcm-lite-daemon rev-parse HEAD"
+  register: local_commit
+  changed_when: false
+
+- name: Get latest repository commit from remote
+  ansible.builtin.command:
+    cmd: "git ls-remote {{ bcm_agent_repo_url }} HEAD"
+  register: remote_commit
+  changed_when: false
+
+- name: Get cm-lite-daemon.zip checksum
+  ansible.builtin.stat:
+    path: /cm/shared/apps/cm-lite-daemon-dist/cm-lite-daemon.zip
+    checksum_algorithm: sha256
+  register: cm_lite_daemon_zip
+
+- name: Get stored checksum from last build
+  ansible.builtin.slurp:
+    src: /root/.bcm-agent-build-checksum
+  register: last_build_checksum
+  ignore_errors: yes
+
+- name: Determine rebuild triggers
+  ansible.builtin.set_fact:
+    base_image_changed: "{{ base_image_pull is changed }}"
+    repo_changed: "{{ local_commit.stdout | default('') != remote_commit.stdout.split()[0] | default('x') }}"
+    zip_changed: "{{ last_build_checksum is failed or cm_lite_daemon_zip.stat.checksum != (last_build_checksum.content | b64decode | trim) }}"
+
+- name: Decide if rebuild is needed
+  ansible.builtin.set_fact:
+    rebuild_needed: >-
+      {{
+        bcm_agent_force_rebuild | default(false) or
+        base_image_changed or
+        repo_changed or
+        zip_changed
+      }}
+
+- name: Display rebuild decision
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "BCM Agent Image Rebuild Decision"
+      - "============================================"
+      - "Rebuild: {{ 'YES' if rebuild_needed else 'NO (using cached image)' }}"
+      - ""
+      - "Triggers:"
+      - "  • Force rebuild flag: {{ bcm_agent_force_rebuild | default(false) }}"
+      - "  • Base image updated: {{ base_image_changed }} ({{ base_image_name.stdout }})"
+      - "  • Repository changed: {{ repo_changed }}"
+      - "  • cm-lite-daemon.zip changed: {{ zip_changed }}"
+      - "============================================"
+
+# Step 3: Build image if needed
+
+- name: Build BCM agent container image
+  when: rebuild_needed
+  block:
+    - name: Copy cm-lite-daemon.zip to build context
+      ansible.builtin.copy:
+        src: /cm/shared/apps/cm-lite-daemon-dist/cm-lite-daemon.zip
+        dest: /root/nvidia-bcm-lite-daemon/cm-lite-daemon.zip
+        remote_src: yes
+        mode: '0644'
+
+    - name: Build bcm-agent container image
+      containers.podman.podman_image:
+        name: "{{ bcm_agent_local_image }}"
+        tag: "{{ bcm_agent_local_tag }}"
+        path: /root/nvidia-bcm-lite-daemon
+        state: build
+        build:
+          file: /root/nvidia-bcm-lite-daemon/Containerfile
+          format: oci
+          cache: yes
+          rm: yes
+          force_rm: yes
+      register: image_build
+
+    - name: Remove cm-lite-daemon.zip from build context
+      ansible.builtin.file:
+        path: /root/nvidia-bcm-lite-daemon/cm-lite-daemon.zip
+        state: absent
+
+    - name: Store build metadata for future checks
+      when: image_build is changed
+      block:
+        - name: Store cm-lite-daemon.zip checksum
+          ansible.builtin.copy:
+            content: "{{ cm_lite_daemon_zip.stat.checksum }}"
+            dest: /root/.bcm-agent-build-checksum
+            mode: '0644'
+
+        - name: Store repository commit hash
+          ansible.builtin.copy:
+            content: "{{ local_commit.stdout }}"
+            dest: /root/.bcm-agent-repo-commit
+            mode: '0644'
+
+        - name: Store build timestamp
+          ansible.builtin.copy:
+            content: "{{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%S') }}"
+            dest: /root/.bcm-agent-last-build
+            mode: '0644'
+
+    - name: Display build success
+      ansible.builtin.debug:
+        msg:
+          - "============================================"
+          - "BCM Agent Image Built Successfully"
+          - "============================================"
+          - "Image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+          - "Build time: {{ now(utc=true, fmt='%Y-%m-%dT%H:%M:%S') }}"
+          - "Base image: {{ base_image_name.stdout }}"
+          - "Repository commit: {{ local_commit.stdout[:8] }}"
+          - "============================================"
+
+- name: Display build skipped message
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "BCM Agent Image Build Skipped"
+      - "============================================"
+      - "Using cached image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+      - "No changes detected - image is up to date"
+      - "============================================"
+  when: not rebuild_needed

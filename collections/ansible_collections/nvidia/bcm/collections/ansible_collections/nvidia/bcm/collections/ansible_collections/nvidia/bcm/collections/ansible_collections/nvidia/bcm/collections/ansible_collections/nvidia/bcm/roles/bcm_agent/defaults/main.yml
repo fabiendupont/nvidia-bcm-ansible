@@ -1,0 +1,54 @@
+---
+# Default variables for BCM Agent deployment
+
+# Container image configuration
+bcm_agent_image_repository: "quay.io/nvidia/bcm-agent"
+bcm_agent_image_tag: "1.0.0"
+bcm_agent_image: "{{ bcm_agent_image_repository }}:{{ bcm_agent_image_tag }}"
+bcm_agent_pull_policy: "always"
+
+# BCM head node configuration
+bcm_agent_bcm_host: "bcmhead"
+bcm_agent_bcm_port: 8081
+
+# Certificate configuration
+bcm_agent_cert_source: "/cm/local/apps/cm-lite-daemon/etc"
+bcm_agent_cert_dest: "/etc/bcm-agent/certs"
+bcm_agent_cert_method: "symlink"  # Options: copy, symlink
+
+# Monitoring configuration
+bcm_agent_sync_interval: 300  # seconds
+bcm_agent_label_prefix: "bcm.nvidia.com"
+bcm_agent_metrics_port: 9100
+
+# Logging configuration
+bcm_agent_log_level: "info"  # Options: debug, info, warning, error
+bcm_agent_log_dir: "/var/log/bcm-agent"
+bcm_agent_debug: false
+
+# Resource limits
+bcm_agent_memory_high: "488M"
+bcm_agent_memory_max: "512M"
+bcm_agent_tasks_max: 128
+
+# Service configuration
+bcm_agent_restart_policy: "always"
+bcm_agent_restart_sec: 10
+bcm_agent_timeout_start_sec: 300
+bcm_agent_timeout_stop_sec: 45
+
+# State management
+bcm_agent_state: "present"  # Options: present, absent
+bcm_agent_enabled: true
+bcm_agent_started: true
+
+# Podman configuration
+bcm_agent_podman_min_version: "4.4"
+
+# Health check configuration
+bcm_agent_health_interval: "60s"
+bcm_agent_health_timeout: "10s"
+bcm_agent_health_retries: 3
+
+# Auto-update configuration
+bcm_agent_auto_update: false  # Enable Podman auto-update

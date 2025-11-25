@@ -1,0 +1,42 @@
+---
+# Inventory for bcm-rhel VM registration and BCM Agent deployment
+
+all:
+  vars:
+    # BCM head node (where cmsh commands run)
+    bcm_head_node: "localhost"
+
+    # BCM Agent configuration
+    bcm_agent_bcm_host: "bcmhead"
+    bcm_agent_bcm_host_ip: "10.141.255.254"
+    bcm_agent_bcm_port: 8081
+    bcm_agent_image_repository: "quay.io/nvidia/bcm-agent"
+    bcm_agent_image_tag: "1.0.0"
+    # Certificates need to be copied to bcm-rhel first
+    bcm_agent_cert_source: "/etc/bcm-agent-certs"
+    bcm_agent_cert_method: "copy"
+    # Disable K8s labeling for bare metal deployment
+    bcm_agent_disable_labeling: true
+    # Enable debug mode
+    bcm_agent_debug: true
+
+    # BCM node configuration
+    bcm_category: "default"
+    bcm_network: "internalnet"
+    bcm_partition: "defaultPartition"
+
+  hosts:
+    bcm-rhel:
+      ansible_host: 10.141.255.253
+      ansible_user: root
+
+      # VM details (gathered from SSH)
+      vm_hostname: "bcm-rhel"
+      vm_ip: "10.141.255.253"
+      vm_mac: "52:54:00:08:db:92"
+
+      # BCM node settings
+      bcm_node_name: "bcm-rhel"
+      bcm_node_category: "default"
+      bcm_node_roles:
+        - compute

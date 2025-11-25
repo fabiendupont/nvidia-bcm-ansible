@@ -1,0 +1,43 @@
+---
+# Test playbook for pxe_setup role
+
+- name: Test PXE Setup Role
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  vars:
+    # Test with mock paths - adjust for real testing
+    rhel_iso_path: ""  # Set to actual ISO path for testing
+    openshift_iso_path: ""  # Set to actual ISO path for testing
+
+    # Override for testing
+    verify_http_access: false
+    cleanup_iso_after_copy: false
+
+    # Test categories
+    pxe_categories:
+      - name: slurm-test-compute
+        installer_source: installer-rhel-9.6
+      - name: openshift-416-test-worker
+        installer_source: installer-openshift-4.16
+
+  tasks:
+    - name: Include pxe_setup role
+      ansible.builtin.include_role:
+        name: pxe_setup
+
+    - name: Verify base directories were created
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: dir_check
+      failed_when: not dir_check.stat.exists or not dir_check.stat.isdir
+      loop:
+        - /tftpboot/repos
+        - /tftpboot/images
+        - /tftpboot/ks
+        - /tftpboot/ignition
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: "PXE setup role test completed successfully"

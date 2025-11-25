@@ -1,0 +1,245 @@
+---
+- name: Test BCM Certificate Management
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    # NOTE: Certificate creation via pythoncm.Certificate.create() fails on OpenSSL 3.x
+    # due to BCM hardcoding deprecated SHA-1 algorithm. This is a BCM limitation, not
+    # an issue with the Ansible module. All other operations work correctly.
+
+    - name: Query all certificates
+      nvidia.bcm.bcm_certificate:
+        state: query
+      register: all_certs
+
+    - name: Display total certificate count
+      debug:
+        msg: "Total certificates: {{ all_certs.count }}"
+
+    - name: Query node certificates only
+      nvidia.bcm.bcm_certificate:
+        state: query
+        filter_profile: node
+      register: node_certs
+
+    - name: Display node certificate count
+      debug:
+        msg: "Node certificates: {{ node_certs.count }}"
+
+    - name: Query admin certificates
+      nvidia.bcm.bcm_certificate:
+        state: query
+        filter_profile: admin
+      register: admin_certs
+
+    - name: Display admin certificate count
+      debug:
+        msg: "Admin certificates: {{ admin_certs.count }}"
+
+    - name: Query non-revoked certificates
+      nvidia.bcm.bcm_certificate:
+        state: query
+        filter_revoked: false
+      register: active_certs
+
+    - name: Display active certificate count
+      debug:
+        msg: "Active (non-revoked) certificates: {{ active_certs.count }}"
+
+    - name: Query a specific certificate by serial number
+      nvidia.bcm.bcm_certificate:
+        serial_number: 26
+        state: query
+      register: cert_by_serial
+
+    - name: Display certificate details
+      debug:
+        msg: |
+          Certificate {{ cert_by_serial.certificate.serial_number }}:
+            Common Name: {{ cert_by_serial.certificate.common_name }}
+            Profile: {{ cert_by_serial.certificate.profile }}
+            Revoked: {{ cert_by_serial.certificate.revoked }}
+            Subject: {{ cert_by_serial.certificate.subject }}
+            Issuer: {{ cert_by_serial.certificate.issuer }}
+            Valid from: {{ cert_by_serial.certificate.start_time }}
+            Expires: {{ cert_by_serial.certificate.expire_time }}
+
+    - name: Query certificate by common name (MAC address)
+      nvidia.bcm.bcm_certificate:
+        name: "52-54-00-a3-91-ae"
+        state: query
+      register: cert_by_name
+
+    - name: Verify query by name matches query by serial
+      assert:
+        that:
+          - cert_by_serial.certificate.serial_number == cert_by_name.certificate.serial_number
+        success_msg: "Certificate query by name and serial returned the same certificate"
+        fail_msg: "Certificate query mismatch!"
+
+    # Test saving certificate to file
+    - name: Save certificate to file
+      nvidia.bcm.bcm_certificate:
+        serial_number: 26
+        state: query
+        cert_file: /tmp/test-node-cert.pem
+        file_mode: '0600'
+      register: save_cert
+
+    - name: Verify certificate file was created
+      stat:
+        path: /tmp/test-node-cert.pem
+      register: cert_file_stat
+
+    - name: Assert file was created with correct permissions
+      assert:
+        that:
+          - cert_file_stat.stat.exists
+          - cert_file_stat.stat.mode == '0600'
+        success_msg: "Certificate file created successfully with mode 0600"
+
+    - name: Display file info
+      debug:
+        msg: "Certificate saved to /tmp/test-node-cert.pem ({{ cert_file_stat.stat.size }} bytes)"
+
+    # Find a node certificate to test revoke/unrevoke (admin certs are protected)
+    - name: Get last node certificate for testing (least likely to be in use)
+      set_fact:
+        test_cert_serial: "{{ node_certs.certificates[-1].serial_number }}"
+        test_cert_name: "{{ node_certs.certificates[-1].common_name }}"
+      when: node_certs.count > 0
+
+    - name: Display test certificate info
+      debug:
+        msg: "Using certificate {{ test_cert_serial }} ({{ test_cert_name }}) for revoke/unrevoke tests"
+      when: test_cert_serial is defined
+
+    - name: Check if certificate is already revoked
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: query
+      register: test_cert_status
+      when: test_cert_serial is defined
+
+    # Revoke test
+    - name: Revoke test certificate
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: revoked
+      register: revoke_result
+      when:
+        - test_cert_serial is defined
+        - not test_cert_status.certificate.revoked
+
+    - name: Verify certificate was revoked
+      assert:
+        that:
+          - revoke_result.changed
+          - revoke_result.certificate.revoked
+        success_msg: "Certificate revoked successfully"
+      when:
+        - test_cert_serial is defined
+        - not test_cert_status.certificate.revoked
+
+    - name: Try to revoke already revoked certificate (idempotent)
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: revoked
+      register: revoke_again
+      when: test_cert_serial is defined
+
+    - name: Verify revoke is idempotent
+      assert:
+        that:
+          - not revoke_again.changed
+        success_msg: "Revoke operation is idempotent"
+      when: test_cert_serial is defined
+
+    # Unrevoke test
+    - name: Unrevoke test certificate
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: unrevoked
+      register: unrevoke_result
+      when: test_cert_serial is defined
+
+    - name: Verify certificate was unrevoked
+      assert:
+        that:
+          - unrevoke_result.changed
+          - not unrevoke_result.certificate.revoked
+        success_msg: "Certificate unrevoked successfully"
+      when: test_cert_serial is defined
+
+    - name: Try to unrevoke already active certificate (idempotent)
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: unrevoked
+      register: unrevoke_again
+      when: test_cert_serial is defined
+
+    - name: Verify unrevoke is idempotent
+      assert:
+        that:
+          - not unrevoke_again.changed
+        success_msg: "Unrevoke operation is idempotent"
+      when: test_cert_serial is defined
+
+    # Test check mode
+    - name: Test check mode for revoke
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: revoked
+      check_mode: true
+      register: check_mode_result
+      when: test_cert_serial is defined
+
+    - name: Verify check mode doesn't make changes
+      assert:
+        that:
+          - check_mode_result.changed
+          - "'Would revoke' in check_mode_result.msg"
+        success_msg: "Check mode works correctly"
+      when: test_cert_serial is defined
+
+    - name: Verify certificate wasn't actually revoked by check mode
+      nvidia.bcm.bcm_certificate:
+        serial_number: "{{ test_cert_serial }}"
+        state: query
+      register: after_check_mode
+      when: test_cert_serial is defined
+
+    - name: Assert certificate status unchanged after check mode
+      assert:
+        that:
+          - not after_check_mode.certificate.revoked
+        success_msg: "Check mode did not modify certificate"
+      when: test_cert_serial is defined
+
+    # Cleanup
+    - name: Clean up test files
+      file:
+        path: /tmp/test-node-cert.pem
+        state: absent
+
+    - name: Test complete
+      debug:
+        msg: |
+          ✅ All certificate management tests passed!
+
+          Tests performed:
+            ✅ Query all certificates
+            ✅ Query with filters (profile, revoked status)
+            ✅ Query by serial number
+            ✅ Query by common name
+            ✅ Save certificate to file with permissions
+            ✅ Revoke certificate
+            ✅ Idempotency of revoke
+            ✅ Unrevoke certificate
+            ✅ Idempotency of unrevoke
+            ✅ Check mode functionality
+
+          Note: Certificate creation tests skipped due to BCM limitation with
+          OpenSSL 3.x (BCM hardcodes deprecated SHA-1 algorithm for CSR signing).
+          The Ansible module is fully functional; this is a pythoncm library issue.

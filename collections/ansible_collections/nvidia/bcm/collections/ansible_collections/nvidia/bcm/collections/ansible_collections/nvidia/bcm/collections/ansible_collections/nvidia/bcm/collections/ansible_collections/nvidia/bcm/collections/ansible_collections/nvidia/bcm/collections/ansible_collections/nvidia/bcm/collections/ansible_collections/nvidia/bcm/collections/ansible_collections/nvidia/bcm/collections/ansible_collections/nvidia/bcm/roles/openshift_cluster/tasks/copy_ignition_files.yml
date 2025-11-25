@@ -1,0 +1,20 @@
+---
+# Generate Ignition files from template with BCM SSH keys
+
+- name: Generate Ignition files for each node from template
+  ansible.builtin.template:
+    src: ignition-base.ign.j2
+    dest: "{{ ignition_base_path }}/{{ item.role }}/{{ item.mac | lower | replace(':', '-') }}.ign"
+    mode: '0644'
+  loop: "{{ cluster_nodes }}"
+  vars:
+    node_hostname: "{{ item.name }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Display generated Ignition file locations
+  ansible.builtin.debug:
+    msg: "Ignition file for {{ item.name }}: http://{{ bcm_server }}:{{ http_port }}{{ tftpboot_path }}/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/{{ item.role }}/{{ item.mac | lower | replace(':', '-') }}.ign"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"

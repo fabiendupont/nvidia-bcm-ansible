@@ -1,0 +1,109 @@
+---
+# Convert PhysicalNode nodes to LiteNode after OpenShift installation
+# This allows PXE boot during install, then agent-based management post-install
+
+- name: Wait for OpenShift nodes to be reachable via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    timeout: 1800  # 30 minutes for OpenShift installation
+    state: started
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.ip }})"
+
+- name: Verify nodes are accessible via SSH
+  ansible.builtin.command:
+    cmd: "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 core@{{ item.ip }} hostname"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ssh_check
+  changed_when: false
+  retries: 3
+  delay: 10
+
+- name: Display SSH check results
+  ansible.builtin.debug:
+    msg: "Node {{ item.item.name }}: {{ item.stdout }}"
+  loop: "{{ ssh_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Wait for OpenShift cluster to be ready
+  ansible.builtin.shell: |
+    export KUBECONFIG=/openshift/clusters/{{ cluster_name }}/auth/kubeconfig
+    /openshift/tools/{{ openshift_version }}/oc get nodes --no-headers 2>/dev/null | grep -c " Ready" || echo "0"
+  register: ready_node_count
+  until: ready_node_count.stdout | int == cluster_nodes | length
+  retries: 60
+  delay: 30
+  changed_when: false
+
+- name: Display cluster readiness status
+  ansible.builtin.debug:
+    msg: "OpenShift cluster has {{ ready_node_count.stdout }} nodes Ready (expected {{ cluster_nodes | length }})"
+
+- name: Remove PhysicalNode registration
+  ansible.builtin.command:
+    cmd: "cmsh -c 'device; remove {{ item.name }}; commit'"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: remove_result
+  failed_when:
+    - remove_result.rc != 0
+    - '"does not exist" not in remove_result.stderr'
+
+- name: Generate LiteNode registration script
+  ansible.builtin.template:
+    src: convert_to_litenode.sh.j2
+    dest: "/tmp/convert_{{ item.name }}.sh"
+    mode: '0755'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Execute LiteNode conversion script
+  ansible.builtin.command: "/tmp/convert_{{ item.name }}.sh"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: litenode_result
+  changed_when: "'committed' in litenode_result.stdout"
+  failed_when:
+    - litenode_result.rc != 0
+    - '"License exceeded" not in litenode_result.stderr'
+    - '"already exists" not in litenode_result.stderr'
+
+- name: Clean up conversion scripts
+  ansible.builtin.file:
+    path: "/tmp/convert_{{ item.name }}.sh"
+    state: absent
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Display conversion results
+  ansible.builtin.debug:
+    msg: "Converted {{ cluster_nodes | length }} nodes from PhysicalNode to LiteNode"
+
+- name: Pause to allow BCM to update device list
+  ansible.builtin.pause:
+    seconds: 10
+
+- name: Verify LiteNode status in BCM
+  ansible.builtin.command:
+    cmd: "cmsh -c 'device; list' | grep {{ item.name }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: litenode_status
+  changed_when: false
+
+- name: Display LiteNode status
+  ansible.builtin.debug:
+    msg: "{{ item.stdout }}"
+  loop: "{{ litenode_status.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

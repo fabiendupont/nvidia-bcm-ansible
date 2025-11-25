@@ -1,0 +1,17 @@
+---
+# Container setup tasks for BCM Agent
+
+- name: Ensure BCM Agent container image is present
+  containers.podman.podman_image:
+    name: "{{ bcm_agent_image }}"
+    pull: false
+    state: present
+  register: image_check_result
+
+- name: Create log directory
+  ansible.builtin.file:
+    path: "{{ bcm_agent_log_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root

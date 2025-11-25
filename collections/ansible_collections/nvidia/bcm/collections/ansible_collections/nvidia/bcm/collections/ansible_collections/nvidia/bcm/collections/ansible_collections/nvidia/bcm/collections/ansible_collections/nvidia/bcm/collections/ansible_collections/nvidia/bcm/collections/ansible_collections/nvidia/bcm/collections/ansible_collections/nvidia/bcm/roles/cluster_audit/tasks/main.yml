@@ -1,0 +1,145 @@
+---
+# Main tasks for cluster audit
+
+- name: Create audit report directory
+  file:
+    path: "{{ audit_report_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Initialize audit report
+  copy:
+    content: |
+      ================================================================================
+      NVIDIA Base Command Manager - Cluster Audit Report
+      Generated: {{ ansible_date_time.iso8601 }}
+      ================================================================================
+
+    dest: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    mode: '0644'
+
+- name: Audit head node
+  nvidia.bcm.bcm_node:
+    name: bcm11-headnode
+    state: query
+  register: headnode
+  when: audit_nodes | bool
+
+- name: Add head node to report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      HEAD NODE:
+        Hostname: {{ headnode.node.hostname }}
+        Type: {{ headnode.node.type }}
+        UUID: {{ headnode.node.uuid }}
+        MAC: {{ headnode.node.mac }}
+        IP: {{ headnode.node.ip }}
+    insertafter: EOF
+  when: audit_nodes | bool and headnode.node is defined
+
+- name: Audit default category
+  nvidia.bcm.bcm_category:
+    name: default
+    state: query
+  register: category
+  when: audit_categories | bool
+
+- name: Add category to report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      DEFAULT CATEGORY:
+        Name: {{ category.category.name }}
+        UUID: {{ category.category.uuid }}
+        Software Image: {{ category.category.software_image }}
+        Management Network: {{ category.category.management_network }}
+        Notes: {{ category.category.notes | default('None') }}
+    insertafter: EOF
+  when: audit_categories | bool and category.category is defined
+
+- name: Audit software image
+  nvidia.bcm.bcm_software_image:
+    name: default-image
+    state: query
+  register: image
+  when: audit_images | bool
+
+- name: Add image to report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      SOFTWARE IMAGE:
+        Name: {{ image.image.name }}
+        UUID: {{ image.image.uuid }}
+        Path: {{ image.image.path }}
+        Kernel Version: {{ image.image.kernel_version }}
+        Kernel Parameters: {{ image.image.kernel_parameters }}
+        Creation Time: {{ image.image.creation_time }}
+    insertafter: EOF
+  when: audit_images | bool and image.image is defined
+
+- name: Audit internal network
+  nvidia.bcm.bcm_network:
+    name: internalnet
+    state: query
+  register: network
+  when: audit_networks | bool
+
+- name: Add network to report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      INTERNAL NETWORK:
+        Name: {{ network.network.name }}
+        UUID: {{ network.network.uuid }}
+        Type: {{ network.network.type }}
+        Domain: {{ network.network.domain_name }}
+        MTU: {{ network.network.mtu }}
+    insertafter: EOF
+  when: audit_networks | bool and network.network is defined
+
+- name: Audit configuration overlay
+  nvidia.bcm.bcm_overlay:
+    name: slurm-submit
+    state: query
+  register: overlay
+  when: audit_overlays | bool
+  ignore_errors: true
+
+- name: Add overlay to report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      CONFIGURATION OVERLAY (slurm-submit):
+        Name: {{ overlay.overlay.name }}
+        UUID: {{ overlay.overlay.uuid }}
+        Categories: {{ overlay.overlay.num_categories }}
+        Roles: {{ overlay.overlay.num_roles }}
+        Files: {{ overlay.overlay.num_files }}
+        Priority: {{ overlay.overlay.priority }}
+    insertafter: EOF
+  when: audit_overlays | bool and overlay.overlay is defined
+
+- name: Finalize report
+  lineinfile:
+    path: "{{ audit_report_dir }}/{{ audit_report_filename }}"
+    line: |
+
+      ================================================================================
+      End of Report
+      ================================================================================
+    insertafter: EOF
+
+- name: Display report location
+  debug:
+    msg: "✓ Audit report saved to: {{ audit_report_dir }}/{{ audit_report_filename }}"
+
+- name: Display report
+  debug:
+    msg: "{{ lookup('file', audit_report_dir + '/' + audit_report_filename).split('\n') }}"

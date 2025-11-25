@@ -1,0 +1,20 @@
+---
+# Main tasks for BCM Agent deployment
+
+- name: Include version checks
+  ansible.builtin.include_tasks: validate.yml
+
+- name: Include certificate setup
+  ansible.builtin.include_tasks: certificates.yml
+
+- name: Include container setup
+  ansible.builtin.include_tasks: container.yml
+  when: bcm_agent_state == 'present'
+
+- name: Include service configuration
+  ansible.builtin.include_tasks: service.yml
+  when: bcm_agent_state == 'present'
+
+- name: Include removal tasks
+  ansible.builtin.include_tasks: absent.yml
+  when: bcm_agent_state == 'absent'

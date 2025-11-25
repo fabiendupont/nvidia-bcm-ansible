@@ -1,0 +1,72 @@
+---
+# Default variables for rhel_cluster role
+
+# Cluster configuration
+cluster_name: "hpc01"
+cluster_type: "slurm"
+
+# BCM server configuration
+bcm_server: "{{ ansible_default_ipv4.address }}"  # External/management IP
+bcm_internal_ip: "{{ ansible_default_ipv4.address }}"  # Internal provisioning network IP (override in inventory)
+http_port: 8080
+
+# Base paths
+tftpboot_path: /tftpboot
+ks_path: "{{ tftpboot_path }}/ks"
+images_path: "{{ tftpboot_path }}/images"
+repos_path: "{{ tftpboot_path }}/repos"
+
+# RHEL configuration
+rhel_version: "9.6"
+rhel_repo_name: "rhel-{{ rhel_version }}"
+installer_name: "installer-{{ rhel_repo_name }}"
+
+# Default root password (should be overridden)
+root_password: "changeme123"
+
+# Network configuration defaults
+network_bootproto: "dhcp"
+network_device: "link"
+network_onboot: true
+
+# Disk configuration defaults
+disk_device: "sda"
+disk_clearpart: true
+disk_autopart_type: "lvm"
+
+# Timezone and locale
+timezone: "UTC"
+lang: "en_US.UTF-8"
+keyboard: "us"
+
+# Security settings
+selinux_mode: "enforcing"
+firewall_enabled: true
+firewall_services:
+  - ssh
+
+# BCM category settings
+bootloader: "syslinux"
+bootloader_protocol: "HTTP"
+# IMPORTANT: Use SKIP for external Kickstart installation
+# BCM does NOT manage the OS - Kickstart handles it
+install_mode: "SKIP"
+newnode_install_mode: "SKIP"
+kernel_output_console: "tty0"
+
+# Kickstart template defaults
+kickstart_skipx: true
+kickstart_reboot: true
+
+# Node role definitions (should be overridden)
+node_roles: []
+# Example:
+# node_roles:
+#   - name: compute
+#     category: "slurm-{{ cluster_name }}-compute"
+#     packages:
+#       - "@^minimal-environment"
+#       - "@development-tools"
+#       - slurm-slurmd
+#     post_script: |
+#       echo "Compute node configured"

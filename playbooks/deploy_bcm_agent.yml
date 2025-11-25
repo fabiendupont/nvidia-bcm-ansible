@@ -1,0 +1,109 @@
+---
+# Deploy BCM Agent to Existing OpenShift Cluster
+#
+# This playbook deploys the BCM Lite Daemon to an existing OpenShift cluster.
+# It builds the container image (if needed) and deploys it via Helm.
+#
+# Prerequisites:
+#   - OpenShift cluster is deployed and accessible
+#   - Kubeconfig available at {{ kubeconfig_path }}
+#   - Bootstrap certificates created (run playbooks/setup_bcm_bootstrap_certs.yml)
+#   - Nodes registered as LiteNodes in BCM (or use join_openshift_cluster.yml)
+#
+# Use cases:
+#   - Retry failed BCM agent deployment
+#   - Update BCM agent version
+#   - Deploy agent after manual cluster installation
+#
+# Usage:
+#   # Deploy with automatic build (if needed):
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_bcm_agent.yml
+#
+#   # Deploy without rebuilding image:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_bcm_agent.yml \
+#     -e skip_build=true
+#
+#   # Deploy with forced rebuild:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_bcm_agent.yml \
+#     -e bcm_agent_force_rebuild=true
+#
+# The deployment process:
+#   1. Build image locally (if skip_build=false and changes detected)
+#   2. Create namespace (nvidia-bcm-agent by default)
+#   3. Push image to OpenShift internal registry
+#   4. Create bootstrap certificate Secret
+#   5. Deploy Helm chart with DaemonSet
+#   6. Wait for rollout to complete
+
+- name: Deploy BCM Agent to OpenShift Cluster
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - kubeconfig_path is defined
+          - cluster_nodes is defined
+          - cluster_nodes | length > 0
+        fail_msg: |
+          Missing required variables. Please ensure inventory defines:
+            - cluster_name
+            - kubeconfig_path
+            - cluster_nodes
+
+    - name: Verify cluster is accessible
+      kubernetes.core.k8s_cluster_info:
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: cluster_info
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Deploying BCM Agent"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Kubernetes version: {{ cluster_info.version.server.kubernetes.gitVersion }}"
+          - "Namespace: {{ bcm_agent_namespace }}"
+          - "Nodes: {{ cluster_nodes | length }}"
+          - "Skip build: {{ skip_build | default(false) }}"
+          - "================================================================"
+
+  tasks:
+    - name: Include BCM agent deployment tasks
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: deploy_bcm_daemon
+      when: not (skip_build | default(false))
+
+    - name: Include BCM agent deployment tasks (skip build)
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: deploy_agent
+      when: skip_build | default(false)
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "BCM Agent Deployment Complete"
+          - "================================================================"
+          - "Namespace: {{ bcm_agent_namespace }}"
+          - "Image: image-registry.openshift-image-registry.svc:5000/{{ bcm_agent_namespace }}/bcm-agent:{{ bcm_agent_local_tag }}"
+          - ""
+          - "Verify deployment:"
+          - "  export KUBECONFIG={{ kubeconfig_path }}"
+          - "  oc get pods -n {{ bcm_agent_namespace }}"
+          - "  oc logs -n {{ bcm_agent_namespace }} -l app.kubernetes.io/name=bcm-agent"
+          - ""
+          - "Verify LiteNode status in BCM:"
+          - "  cmsh -c 'device; list -L'"
+          - "================================================================"
