@@ -1,0 +1,34 @@
+---
+# Deploy only the BCM Lite Daemon to existing OpenShift cluster
+# Run this after the cluster is already deployed and nodes are LiteNodes
+
+- name: Deploy BCM Lite Daemon to OpenShift cluster
+  hosts: bcm_headnode
+  become: true
+  gather_facts: false
+
+  vars:
+    cluster_name: "{{ lookup('env', 'CLUSTER_NAME') | default('test-ocp', true) }}"
+    openshift_version: "{{ lookup('env', 'OPENSHIFT_VERSION') | default('4.20', true) }}"
+    kubeconfig_path: "/openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+
+  tasks:
+    - name: Load cluster nodes from inventory
+      ansible.builtin.set_fact:
+        cluster_nodes: "{{ cluster_nodes }}"
+
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Deploying BCM Lite Daemon"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Nodes: {{ cluster_nodes | length }}"
+          - "Kubeconfig: {{ kubeconfig_path }}"
+          - "================================================================"
+
+    - name: Include BCM daemon deployment tasks
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: deploy_bcm_daemon

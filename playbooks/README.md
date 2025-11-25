@@ -1,171 +1,223 @@
-# BCM Ansible Playbook Examples
+# BCM Ansible Playbooks
 
-This directory contains example playbooks demonstrating how to use the NVIDIA BCM Ansible Collection.
+This directory contains purpose-specific playbooks for different deployment scenarios. Each playbook is designed to be run independently for maximum flexibility.
 
-## Available Playbooks
+## Quick Reference
 
-### kickstart-deployment.yml
+| Playbook | Use Case | Prerequisites |
+|----------|----------|---------------|
+| `deploy_openshift_cluster.yml` | Deploy new OpenShift cluster from scratch | Pull secret, inventory |
+| `join_openshift_cluster.yml` | Integrate existing cluster with BCM | Running cluster, kubeconfig |
+| `deploy_bcm_agent.yml` | Deploy/retry BCM agent only | Cluster deployed, LiteNodes registered |
+| `build_bcm_agent_image.yml` | Build container image only | None |
+| `cleanup_bcm_cluster.yml` | Remove cluster from BCM | None |
+| `cleanup_test_vms.yml` | Remove local test VMs | None |
+| `setup_bcm_bootstrap_certs.yml` | Generate bootstrap certificates | None |
 
-**Purpose**: Deploy RHEL/Rocky Linux using Kickstart + iPXE with BCM category-based PXE boot configuration.
+## OpenShift Deployment Playbooks
 
-**What it does**:
-1. Creates BCM categories for different OS versions
-2. Generates kickstart configuration files
-3. Creates iPXE boot scripts
-4. Configures category-specific PXE boot menus
-5. Assigns nodes to appropriate categories
+### deploy_openshift_cluster.yml
+**Purpose:** Full OpenShift cluster deployment via PXE
 
-**Key Features**:
-- ✅ Uses only BCM Ansible modules for BCM configuration
-- ✅ Category-based PXE boot (no per-node pxelabel needed)
-- ✅ Supports multiple OS versions simultaneously
-- ✅ Fully automated deployment workflow
-- ✅ Works with GenericDevice nodes
+**When to use:**
+- Deploying a brand new OpenShift cluster
+- Need automated PXE boot setup
+- Want full integration with BCM from start
 
-**Quick Start**:
+**What it does:**
+1. Sets up PXE infrastructure on BCM
+2. Creates test VMs (optional)
+3. Waits for OpenShift installation
+4. Converts nodes to LiteNodes
+5. Deploys BCM agent DaemonSet
+
+**Usage:**
 ```bash
-# Edit variables in the playbook (mirror URLs, node names, etc.)
-vim kickstart-deployment.yml
+# With VM creation (testing):
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_openshift_cluster.yml \
+  -e "create_test_vms=true openshift_pull_secret_path=/path/to/pull-secret.json"
 
-# Deploy everything
-ansible-playbook kickstart-deployment.yml
+# Physical hardware (no VMs):
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_openshift_cluster.yml \
+  -e "openshift_pull_secret_path=/path/to/pull-secret.json"
 
-# Verify deployment
-ansible-playbook kickstart-deployment.yml --tags verify
+# Skip BCM agent:
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_openshift_cluster.yml \
+  -e "skip_bcm_agent=true"
 ```
 
-**Architecture**:
-```
-Node → Assigned to Category → Category PXE Config → iPXE Script → Kickstart → OS Install
-```
+---
 
-**Example**: Deploy RHEL 9.6 to node001 and node002:
-1. Creates category `rhel96-kickstart`
-2. Creates PXE config `/tftpboot/pxelinux.cfg/category.rhel96-kickstart`
-3. PXE config loads iPXE script `/tftpboot/ipxe/rhel96-kickstart.ipxe`
-4. iPXE script loads kernel and kickstart from mirror
-5. Kickstart installs RHEL 9.6 automatically
+### join_openshift_cluster.yml
+**Purpose:** Join an existing OpenShift cluster to BCM
 
-**Prerequisites**:
-- BCM head node with TFTP/HTTP services
-- Access to RHEL/Rocky Linux mirrors (remote or local)
-- Nodes must be able to PXE boot
+**When to use:**
+- Cluster deployed manually or via other automation
+- OpenShift Installer deployed cluster
+- Want to add BCM management to existing cluster
 
-**Customization Points**:
-- `vars.deployments`: Define OS versions and node assignments
-- `vars.os_mirror_url`: Set to local or remote mirror
-- Kickstart templates: Customize package selection, partitioning, etc.
-- iPXE scripts: Add custom boot parameters
-- PXE menus: Customize boot options and timeouts
+**What it does:**
+1. Registers cluster nodes as LiteNodes in BCM
+2. Builds BCM agent image (if needed)
+3. Deploys BCM agent DaemonSet
 
-## Directory Structure
-
-```
-playbooks/
-├── README.md                      # This file
-├── kickstart-deployment.yml       # Kickstart deployment example
-└── (future playbooks)
-    ├── bcm-cluster-setup.yml      # Full cluster initialization
-    ├── network-configuration.yml  # Network management
-    └── node-provisioning.yml      # BCM native provisioning
-```
-
-## Common Tasks
-
-### Deploy Single OS Version
+**Usage:**
 ```bash
-# RHEL 9.6 only
-ansible-playbook kickstart-deployment.yml --tags rhel96
-
-# Rocky 9.5 only
-ansible-playbook kickstart-deployment.yml --tags rocky95
+ansible-playbook -i inventory/existing_cluster.yml \
+  playbooks/join_openshift_cluster.yml
 ```
 
-### Update Configuration Files
+**Example inventory:**
+```yaml
+all:
+  hosts:
+    bcm_headnode:
+      ansible_host: 192.168.122.204
+  vars:
+    cluster_name: "prod-ocp"
+    kubeconfig_path: "/root/prod-ocp/auth/kubeconfig"
+    openshift_version: "4.20"
+    cluster_nodes:
+      - name: master-0
+        mac: "52:54:00:AA:BB:01"
+        ip: "10.141.160.50"
+        role: master
+```
+
+---
+
+### deploy_bcm_agent.yml
+**Purpose:** Deploy or retry BCM agent deployment
+
+**When to use:**
+- BCM agent deployment failed during full deployment
+- Want to update BCM agent version
+- Cluster already has LiteNodes registered
+
+**Usage:**
 ```bash
-# Update kickstart files only
-ansible-playbook kickstart-deployment.yml --tags kickstart
+# Deploy with automatic build:
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_bcm_agent.yml
 
-# Update iPXE scripts only
-ansible-playbook kickstart-deployment.yml --tags ipxe
-
-# Update PXE configs only
-ansible-playbook kickstart-deployment.yml --tags pxe
+# Redeploy without rebuilding:
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_bcm_agent.yml \
+  -e skip_build=true
 ```
 
-### Manage BCM Configuration
+---
+
+### build_bcm_agent_image.yml
+**Purpose:** Build BCM agent container image only
+
+**When to use:**
+- Pre-build image before deploying to clusters
+- Update image after CVE fixes
+- Repository updates available
+
+**Usage:**
 ```bash
-# Update BCM categories and node assignments
-ansible-playbook kickstart-deployment.yml --tags bcm
+# Normal build (only if changes detected):
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/build_bcm_agent_image.yml
+
+# Force rebuild:
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/build_bcm_agent_image.yml \
+  -e bcm_agent_force_rebuild=true
 ```
 
-## Integration with BCM Modules
+---
 
-The playbooks demonstrate how to use BCM Ansible modules alongside standard Ansible modules:
+## Common Workflows
 
-**BCM Modules Used**:
-- `nvidia.bcm.bcm_category`: Create and manage categories
-- `nvidia.bcm.bcm_node`: Assign nodes to categories
-- `nvidia.bcm.bcm_network`: (future) Network configuration
-- `nvidia.bcm.bcm_software_image`: (future) Manage OS images
+### Fresh OpenShift Deployment with VMs
+```bash
+# 1. Generate bootstrap certificates
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/setup_bcm_bootstrap_certs.yml
 
-**Standard Ansible Modules Used**:
-- `ansible.builtin.file`: Create directories
-- `ansible.builtin.copy`: Deploy kickstart and iPXE files
-- `ansible.builtin.debug`: Display information
+# 2. Full deployment
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_openshift_cluster.yml \
+  -e "create_test_vms=true openshift_pull_secret_path=/path/to/pull-secret.json"
+```
+
+### Join Existing Cluster
+```bash
+# 1. Generate bootstrap certificates
+ansible-playbook -i inventory/existing_cluster.yml \
+  playbooks/setup_bcm_bootstrap_certs.yml
+
+# 2. Join cluster to BCM
+ansible-playbook -i inventory/existing_cluster.yml \
+  playbooks/join_openshift_cluster.yml
+```
+
+### Retry Failed BCM Agent Deployment
+```bash
+# Just redeploy agent (uses cached image)
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_bcm_agent.yml \
+  -e skip_build=true
+```
+
+### Update BCM Agent Version
+```bash
+# 1. Build new image
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/build_bcm_agent_image.yml \
+  -e bcm_agent_force_rebuild=true
+
+# 2. Deploy to clusters
+ansible-playbook -i inventory/cluster1.yml \
+  playbooks/deploy_bcm_agent.yml -e skip_build=true
+```
+
+### Clean Up and Redeploy
+```bash
+# 1. Clean up VMs
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/cleanup_test_vms.yml
+
+# 2. Clean up BCM
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/cleanup_bcm_cluster.yml
+
+# 3. Fresh deployment
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/deploy_openshift_cluster.yml \
+  -e "create_test_vms=true openshift_pull_secret_path=/path/to/pull-secret.json"
+```
 
 ## Troubleshooting
 
-### Nodes not PXE booting
+### "Cannot access OpenShift cluster"
 ```bash
-# Check category assignment
-ansible-playbook kickstart-deployment.yml --tags verify
-
-# Check PXE config exists
-ls -la /tftpboot/pxelinux.cfg/category.*
-
-# Verify TFTP service
-systemctl status tftpd.service
+# Verify kubeconfig and accessibility
+ssh root@bcm-headnode "export KUBECONFIG=/path/to/kubeconfig && oc get nodes"
 ```
 
-### Kickstart installation fails
+### "Bootstrap certificate not found"
 ```bash
-# Check kickstart syntax
-ksvalidator /var/www/html/ks/rhel96-minimal.cfg
-
-# Verify mirror accessibility
-curl -I http://mirror.rockylinux.org/pub/rocky/9.5/BaseOS/x86_64/os/images/pxeboot/vmlinuz
-
-# Check kickstart file accessibility
-curl http://10.141.255.254:8080/ks/rhel96-minimal.cfg
+# Run bootstrap certificate setup
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/setup_bcm_bootstrap_certs.yml
 ```
 
-### iPXE boot fails
+### "BCM agent pods not starting"
 ```bash
-# Verify iPXE script syntax
-cat /tftpboot/ipxe/rhel96-kickstart.ipxe
-
-# Check undionly.kpxe exists
-ls -la /tftpboot/undionly.kpxe
-
-# Test iPXE script manually (from node console):
-# iPXE> dhcp
-# iPXE> chain tftp://10.141.255.254/ipxe/rhel96-kickstart.ipxe
+# Check pod status and logs
+ssh root@bcm-headnode "export KUBECONFIG=/path/to/kubeconfig && oc get pods -n nvidia-bcm-agent"
+ssh root@bcm-headnode "export KUBECONFIG=/path/to/kubeconfig && oc logs -n nvidia-bcm-agent <pod-name>"
 ```
 
-## Contributing
-
-When adding new playbooks:
-1. Follow the existing structure and documentation style
-2. Use BCM modules for all BCM-related configuration
-3. Include comprehensive comments and examples
-4. Add tags for granular execution
-5. Include verification tasks
-6. Update this README
-
-## References
-
-- [BCM Module Documentation](../docs/)
-- [Kickstart Documentation](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/9/html/performing_an_advanced_rhel_9_installation/kickstart-commands-and-options-reference_installing-rhel-as-an-experienced-user)
-- [iPXE Documentation](https://ipxe.org/docs)
-- [Ansible Best Practices](https://docs.ansible.com/ansible/latest/tips_tricks/ansible_tips_tricks.html)
+### "LiteNode not showing in BCM"
+```bash
+# Verify LiteNode registration
+ssh root@bcm-headnode "cmsh -c 'device; list -L'"
+```

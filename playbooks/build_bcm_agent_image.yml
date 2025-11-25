@@ -1,0 +1,67 @@
+---
+# Build BCM Agent Container Image
+#
+# This playbook only builds the BCM agent container image on the BCM head node.
+# It does NOT deploy the image to any cluster.
+#
+# The image is built as localhost/bcm-agent:latest and can be pushed to multiple
+# clusters later using deploy_bcm_agent.yml or join_openshift_cluster.yml
+#
+# Use cases:
+#   - Pre-build image before deploying to clusters
+#   - Force rebuild after base image updates or CVE fixes
+#   - Update image when nvidia-bcm-lite-daemon repository changes
+#
+# Usage:
+#   # Normal build (only rebuilds if changes detected):
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/build_bcm_agent_image.yml
+#
+#   # Force rebuild:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/build_bcm_agent_image.yml \
+#     -e bcm_agent_force_rebuild=true
+#
+# The build process checks three triggers:
+#   1. Base image updated (pulls from registry, detects CVE fixes)
+#   2. Repository changed (compares local vs remote commit)
+#   3. cm-lite-daemon.zip changed (checksum comparison)
+#
+# Build metadata is stored in /root/.bcm-agent-* files for future comparisons.
+
+- name: Build BCM Agent Container Image
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Display build information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Building BCM Agent Container Image"
+          - "================================================================"
+          - "Repository: {{ bcm_agent_repo_url }}"
+          - "Version: {{ bcm_agent_repo_version }}"
+          - "Target image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+          - "Force rebuild: {{ bcm_agent_force_rebuild | default(false) }}"
+          - "================================================================"
+
+    - name: Include BCM agent image build tasks
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: build_bcm_agent_image
+
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "BCM Agent Image Build Complete"
+          - "================================================================"
+          - "Image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+          - ""
+          - "Next steps:"
+          - "  - Deploy to existing cluster: playbooks/deploy_bcm_agent.yml"
+          - "  - Join existing cluster: playbooks/join_openshift_cluster.yml"
+          - "  - Full deployment: playbooks/deploy_openshift_cluster.yml"
+          - "================================================================"

@@ -1,0 +1,83 @@
+---
+# Test inventory for RHEL+Slurm deployment using BCM's existing image
+#
+# This test uses the existing default-image in BCM instead of needing a RHEL ISO
+
+all:
+  children:
+    bcm_headnode:
+      hosts:
+        bcm-headnode:
+          ansible_host: 192.168.122.204
+          ansible_user: root
+          # Use SSH key authentication (configured already)
+
+      vars:
+        # ================================================================
+        # Cluster Configuration
+        # ================================================================
+        cluster_name: test-hpc
+        cluster_type: slurm
+
+        # ================================================================
+        # RHEL Configuration
+        # ================================================================
+        rhel_version: "9.6"
+        rhel_iso_path: "/root/rhel-9.6-x86_64-dvd.iso"  # Path on BCM headnode
+        # rhel_iso_local_path: "/path/to/local/rhel.iso"  # Uncomment if copying from local
+
+        # Root password for installed systems (CHANGE THIS!)
+        root_password: "changeme123"
+
+        # BCM server IP (internal network)
+        bcm_server: "10.141.255.254"
+
+        # ================================================================
+        # Network Configuration
+        # ================================================================
+        network_bootproto: dhcp
+        network_device: link
+        network_onboot: true
+
+        # ================================================================
+        # Disk Configuration
+        # ================================================================
+        disk_device: vda  # VMs typically use virtio (vda) instead of sda
+        disk_clearpart: true
+        disk_autopart_type: lvm
+
+        # ================================================================
+        # Node Roles
+        # ================================================================
+        node_roles:
+          # Test compute node
+          - name: compute
+            category: "slurm-{{ cluster_name }}-compute"
+            packages:
+              - "@^minimal-environment"
+              - "@development-tools"
+              - nfs-utils
+              - vim-enhanced
+            post_script: |
+              # Test post-installation script
+              echo "Test compute node configured at $(date)" > /root/test-install.log
+              # Configure basic NFS (will fail gracefully if no NFS server)
+              echo "# bcm-headnode:/home /home nfs defaults,_netdev 0 0" >> /etc/fstab
+              echo "Installation completed successfully" >> /root/test-install.log
+
+        # ================================================================
+        # Test Cluster Nodes (Virtual Machines)
+        # ================================================================
+        # Note: These are test VMs - adjust MAC/IP based on your VM setup
+        cluster_nodes:
+          - name: test-compute-01
+            mac: "52:54:00:AA:01:01"
+            ip: "10.141.100.101"
+            category: "slurm-{{ cluster_name }}-compute"
+            hostname: "test-compute-01.{{ cluster_name }}.local"
+
+          - name: test-compute-02
+            mac: "52:54:00:AA:01:02"
+            ip: "10.141.100.102"
+            category: "slurm-{{ cluster_name }}-compute"
+            hostname: "test-compute-02.{{ cluster_name }}.local"

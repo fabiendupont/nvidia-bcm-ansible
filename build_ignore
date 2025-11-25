@@ -1,0 +1,15 @@
+bcm-headnode
+*.tar.gz
+.git
+.github
+tests/output
+.pytest_cache
+__pycache__
+*.pyc
+.vscode
+.idea
+collections
+tmp
+*.log
+.ansible
+.claude

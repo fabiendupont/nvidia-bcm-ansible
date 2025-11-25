@@ -1,0 +1,206 @@
+---
+# Test RHEL+Slurm deployment using BCM's existing default-image
+#
+# This playbook tests the deployment without requiring a RHEL ISO,
+# using BCM's existing software image instead.
+#
+# Usage:
+#   ansible-playbook -i inventory/test_rhel_vm.yml playbooks/test_rhel_vm_deployment.yml
+
+- name: Test RHEL+Slurm Deployment on BCM VMs
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    deployment_log_file: "/var/log/bcm-test-deployment-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+  pre_tasks:
+    - name: Display test deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "TEST DEPLOYMENT - RHEL {{ rhel_version }} + Slurm"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Using existing BCM image: default-image"
+          - "Roles: {{ node_roles | map(attribute='name') | list }}"
+          - "Nodes: {{ cluster_nodes | map(attribute='name') | list }}"
+          - "================================================================"
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - node_roles is defined
+          - node_roles | length > 0
+          - cluster_nodes is defined
+          - cluster_nodes | length > 0
+        fail_msg: "Missing required variables"
+
+    - name: Create test deployment log
+      ansible.builtin.copy:
+        content: |
+          RHEL+Slurm Test Deployment Log
+          ================================
+          Cluster Name: {{ cluster_name }}
+          RHEL Version: {{ rhel_version }}
+          Start Time: {{ ansible_date_time.iso8601 }}
+          Using BCM Image: default-image
+
+          Roles:
+          {% for role in node_roles %}
+            - {{ role.name }} ({{ role.category }})
+          {% endfor %}
+
+          Nodes:
+          {% for node in cluster_nodes %}
+            - {{ node.name }} ({{ node.mac }}, {{ node.ip }}, {{ node.category }})
+          {% endfor %}
+
+        dest: "{{ deployment_log_file }}"
+        mode: '0644'
+
+  tasks:
+    # Phase 0: Copy RHEL ISO from local machine to BCM headnode
+    - name: Copy RHEL ISO to BCM headnode
+      ansible.builtin.copy:
+        src: "{{ rhel_iso_local_path }}"
+        dest: "{{ rhel_iso_path }}"
+        mode: '0644'
+
+    # Phase 1: Setup PXE environment (extract ISO, create software image)
+    - name: Include pxe_setup role
+      ansible.builtin.include_role:
+        name: nvidia.bcm.pxe_setup
+
+    # Phase 2: Deploy RHEL cluster
+    - name: Include rhel_cluster role
+      ansible.builtin.include_role:
+        name: nvidia.bcm.rhel_cluster
+
+  post_tasks:
+    - name: Check created categories
+      ansible.builtin.command: cmsh -c 'category; list'
+      register: category_list
+      changed_when: false
+
+    - name: Display created categories
+      ansible.builtin.debug:
+        msg: "{{ category_list.stdout_lines }}"
+
+    - name: Check registered nodes
+      ansible.builtin.command: cmsh -c 'device; list'
+      register: device_list
+      changed_when: false
+
+    - name: Display registered nodes
+      ansible.builtin.debug:
+        msg: "{{ device_list.stdout_lines }}"
+
+    - name: Verify kickstart files were created
+      ansible.builtin.stat:
+        path: "/tftpboot/ks/{{ item.category }}.cfg"
+      register: kickstart_check
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+
+    - name: Display kickstart file status
+      ansible.builtin.debug:
+        msg: "Kickstart for {{ item.item.category }}: {{ 'EXISTS' if item.stat.exists else 'MISSING' }}"
+      loop: "{{ kickstart_check.results }}"
+      loop_control:
+        label: "{{ item.item.category }}"
+
+    - name: Display test deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Test Deployment Complete!"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Categories: {{ node_roles | map(attribute='category') | list }}"
+          - "Nodes registered: {{ cluster_nodes | map(attribute='name') | list }}"
+          - ""
+          - "Next steps for testing:"
+          - "  1. Verify categories: cmsh -c 'category; list'"
+          - "  2. Verify nodes: cmsh -c 'device; list'"
+          - "  3. Check kickstart: cat /tftpboot/ks/{{ node_roles[0].category }}.cfg"
+          - "  4. View PXE config: cat /tftpboot/pxelinux.cfg/category.{{ node_roles[0].category }}"
+          - ""
+          - "To test with VMs:"
+          - "{% for node in cluster_nodes %}  cmsh -c 'device use {{ node.name }}; power on'{% if not loop.last %}\n{% endif %}{% endfor %}"
+          - "================================================================"
+
+    - name: Save test results
+      ansible.builtin.copy:
+        content: |
+          # Test Deployment Results
+
+          ## Configuration
+          - Cluster: {{ cluster_name }}
+          - RHEL: {{ rhel_version }}
+          - Image: default-image
+          - Deployed: {{ ansible_date_time.iso8601 }}
+
+          ## Categories Created
+          ```
+          {{ category_list.stdout }}
+          ```
+
+          ## Devices Registered
+          ```
+          {{ device_list.stdout }}
+          ```
+
+          ## Kickstart Files
+          {% for role in node_roles %}
+          - `/tftpboot/ks/{{ role.category }}.cfg`
+          {% endfor %}
+
+          ## Commands to Verify
+
+          ### View category details
+          ```bash
+          cmsh -c 'category use {{ node_roles[0].category }}; show'
+          ```
+
+          ### View node details
+          ```bash
+          cmsh -c 'device use {{ cluster_nodes[0].name }}; show'
+          ```
+
+          ### View kickstart
+          ```bash
+          cat /tftpboot/ks/{{ node_roles[0].category }}.cfg
+          ```
+
+          ### View PXE config (auto-generated by BCM)
+          ```bash
+          cat /tftpboot/pxelinux.cfg/category.{{ node_roles[0].category }}
+          ```
+
+          ## Test with VMs
+
+          If you have test VMs with the configured MAC addresses:
+          ```bash
+          {% for node in cluster_nodes %}
+          cmsh -c 'device use {{ node.name }}; power on'
+          {% endfor %}
+          ```
+
+          Then monitor installation:
+          ```bash
+          cmsh -c 'device; status'
+          ```
+        dest: "/root/test-deployment-results.md"
+        mode: '0644'
+
+    - name: Update deployment log
+      ansible.builtin.lineinfile:
+        path: "{{ deployment_log_file }}"
+        line: |
+
+          Test deployment completed at {{ ansible_date_time.iso8601 }}
+        state: present

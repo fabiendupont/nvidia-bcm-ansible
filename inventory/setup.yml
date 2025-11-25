@@ -1,0 +1,12 @@
+---
+# Minimal inventory for setup tasks only
+# Used by setup_pythoncm.yml to download pythoncm from BCM head node
+
+all:
+  children:
+    bcm_headnode:
+      hosts:
+        bcm-headnode:
+          ansible_host: 192.168.122.204
+          ansible_user: root
+          ansible_python_interpreter: /cm/local/apps/python312/bin/python3.12

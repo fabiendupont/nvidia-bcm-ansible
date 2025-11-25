@@ -1,0 +1,60 @@
+---
+# Generate BCM bootstrap certificates for LiteNode agent authentication
+# These certificates allow LiteNode agents to connect to BCM with limited permissions
+
+- name: Generate BCM bootstrap certificates
+  hosts: bcm_headnode
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Create bootstrap certificate directory
+      ansible.builtin.file:
+        path: /cm/local/apps/cmd/etc/bootstrap
+        state: directory
+        mode: '0700'
+        owner: root
+        group: root
+
+    - name: Check if bootstrap certificate already exists
+      ansible.builtin.stat:
+        path: /cm/local/apps/cmd/etc/bootstrap/cert.pem
+      register: bootstrap_cert_stat
+
+    - name: Create bootstrap certificate using cmsh
+      ansible.builtin.shell: |
+        cmsh -c "cert; createcertificate bcm-bootstrap /cm/local/apps/cmd/etc/bootstrap/cert.pem /cm/local/apps/cmd/etc/bootstrap/cert.key"
+      when: not bootstrap_cert_stat.stat.exists
+      register: cert_creation
+      failed_when: false
+
+    - name: Copy BCM CA certificate to bootstrap directory
+      ansible.builtin.copy:
+        src: /cm/local/apps/cmd/etc/cacert.pem
+        dest: /cm/local/apps/cmd/etc/bootstrap/cacert.pem
+        remote_src: true
+        mode: '0644'
+
+    - name: Set bootstrap certificate permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0600'
+        owner: root
+        group: root
+      loop:
+        - /cm/local/apps/cmd/etc/bootstrap/cert.key
+        - /cm/local/apps/cmd/etc/bootstrap/cert.pem
+
+    - name: Verify bootstrap certificates exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - /cm/local/apps/cmd/etc/bootstrap/cert.pem
+        - /cm/local/apps/cmd/etc/bootstrap/cert.key
+        - /cm/local/apps/cmd/etc/bootstrap/cacert.pem
+      register: cert_files
+
+    - name: Display certificate setup result
+      ansible.builtin.debug:
+        msg: "Bootstrap certificates configured successfully"
+      when: cert_files.results | selectattr('stat.exists') | list | length == 3

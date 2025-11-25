@@ -1,0 +1,24 @@
+---
+# Dynamic inventory from BCM using official brightcomputing.bcm110.bright_nodes plugin
+# This connects to cmdaemon via pythoncm to discover all nodes in BCM
+
+plugin: brightcomputing.bcm110.bright_nodes
+
+# Connection settings (required when not running on head node)
+head_node: 192.168.122.204
+port: 8081
+cert_file: .bcm/certs/cert.pem
+key_file: .bcm/certs/cert.key
+ca_file: .bcm/certs/cacert.pem
+
+# Group nodes by category and device type
+group_by:
+  - category
+  - device_type
+
+# Add interface information to host vars
+interfaces: true
+
+# Set ansible_host to the provisioning interface IP
+compose:
+  ansible_host: provisioning_interface.ip

@@ -1,0 +1,33 @@
+---
+# Setup playbook to install pythoncm dependencies and library
+# This enables the brightcomputing.bcm110.bright_nodes inventory plugin
+#
+# Usage: ansible-playbook -i inventory/setup.yml playbooks/setup_pythoncm.yml
+
+- name: Install pythoncm dependencies on local machine
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+
+  tasks:
+    - name: Install pythoncm Python dependencies via DNF
+      ansible.builtin.dnf:
+        name:
+          - python3-cryptography
+          - python3-passlib
+          - python3-pyOpenSSL
+          - python3-ply
+          - python3-lxml
+          - python3-pyyaml
+          - python3-tabulate
+          - python3-humanfriendly
+          - python3-natsort
+        state: present
+
+- name: Setup pythoncm for dynamic inventory
+  hosts: bcm_headnode
+  gather_facts: false
+
+  roles:
+    - nvidia.bcm.pythoncm_setup

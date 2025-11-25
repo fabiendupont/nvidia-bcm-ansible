@@ -16,6 +16,12 @@ __pycache__/
 venv/
 ENV/
 env/
+.venv/
+
+# Local configuration
+.envrc
+.bcm/
+lib/python/
 
 # Build artifacts
 *.tar.gz

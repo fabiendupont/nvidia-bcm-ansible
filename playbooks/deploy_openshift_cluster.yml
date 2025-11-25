@@ -1,0 +1,334 @@
+---
+# Deploy OpenShift Cluster on BCM via PXE with Agent-Based Installer
+#
+# This playbook automates the FULL deployment of an OpenShift cluster.
+# For specific use cases, see these alternative playbooks:
+#
+#   join_openshift_cluster.yml      - Join existing OpenShift cluster to BCM
+#   deploy_bcm_agent.yml             - Deploy/retry BCM agent only
+#   build_bcm_agent_image.yml        - Build BCM agent image only
+#   cleanup_cluster.yml              - Remove cluster from BCM
+#   cleanup_test_vms.yml             - Remove local test VMs
+#
+# This playbook includes three phases:
+#
+# PHASE 1: PXE Infrastructure Setup (on BCM head node)
+#   1. Install OpenShift tools (oc, openshift-install) for specified version
+#   2. Generate cluster boot artifacts (agent-config with node MAC addresses)
+#   3. Setup BCM software image (version-specific, reusable)
+#   4. Install PXE boot files (cluster-specific rootfs)
+#   5. Create BCM categories and register nodes as PhysicalNode
+#
+# PHASE 2: VM/Node Boot (on local machine or physical hardware)
+#   1. Create VMs with predefined MAC addresses (optional, for testing)
+#   2. VMs PXE boot and install OpenShift from ready infrastructure
+#
+# PHASE 3: Post-Installation (on BCM head node)
+#   1. Wait for OpenShift cluster installation to complete
+#   2. Convert nodes from PhysicalNode to LiteNode
+#   3. Deploy BCM Lite Daemon Helm chart (DaemonSet)
+#
+# Usage Examples:
+#
+#   # Full deployment with VM creation (for testing):
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_openshift_cluster.yml \
+#     -e "create_test_vms=true openshift_pull_secret_path=/path/to/pull-secret.json"
+#
+#   # Full deployment on physical hardware (no VMs):
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_openshift_cluster.yml \
+#     -e "openshift_pull_secret_path=/path/to/pull-secret.json"
+#
+#   # Skip BCM agent deployment:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_openshift_cluster.yml \
+#     -e "skip_bcm_agent=true"
+#
+#   # Skip LiteNode conversion and BCM agent:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/deploy_openshift_cluster.yml \
+#     -e "skip_litenode_conversion=true skip_bcm_agent=true"
+#
+# Skip Variables:
+#   create_test_vms: false            # Set to true to create VMs (default: false)
+#   skip_litenode_conversion: false   # Skip PhysicalNode→LiteNode conversion
+#   skip_bcm_agent: false             # Skip BCM agent deployment
+#
+# Prerequisites:
+#   - Inventory file with cluster definition (MAC addresses must match VMs/hardware)
+#   - BCM head node accessible
+#   - OpenShift pull secret
+#   - For VM creation: libvirt on local machine
+#   - For BCM agent: Bootstrap certificates (run setup_bcm_bootstrap_certs.yml)
+
+- name: PHASE 1 - Setup PXE Infrastructure on BCM
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    deployment_log_file: "/var/log/bcm-deployment-openshift-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 1: Setting up PXE Infrastructure"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "OpenShift Version: {{ openshift_version }}"
+          - "Roles: {{ node_roles | map(attribute='name') | list }}"
+          - "Nodes: {{ cluster_nodes | length }}"
+          - "================================================================"
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - openshift_version is defined
+          - node_roles is defined
+          - node_roles | length > 0
+          - cluster_nodes is defined
+          - cluster_nodes | length > 0
+        fail_msg: "Missing required variables. Check inventory configuration."
+
+    - name: Generate OpenShift PXE Boot Files
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: generate_pxe_files
+
+    - name: Create deployment log
+      ansible.builtin.copy:
+        content: |
+          OpenShift Cluster Deployment Log
+          =================================
+          Cluster Name: {{ cluster_name }}
+          OpenShift Version: {{ openshift_version }}
+          Start Time: {{ ansible_date_time.iso8601 }}
+
+          Roles:
+          {% for role in node_roles %}
+            - {{ role.name }} ({{ role.category }})
+          {% endfor %}
+
+          Nodes:
+          {% for node in cluster_nodes %}
+            - {{ node.name }} ({{ node.mac }}, {{ node.ip }}, {{ node.role }})
+          {% endfor %}
+
+        dest: "{{ deployment_log_file }}"
+        mode: '0644'
+
+  roles:
+    # Setup DNS for cluster domain
+    - role: nvidia.bcm.dns_setup
+
+    # Setup PXE infrastructure
+    - role: nvidia.bcm.pxe_setup
+      vars:
+        verify_http_access: true
+        verify_boot_files: true
+
+    # Register nodes and create categories
+    - role: nvidia.bcm.openshift_cluster
+
+  post_tasks:
+    - name: Verify software image exists
+      ansible.builtin.command:
+        cmd: "cmsh -c 'softwareimage; list' | grep 'installer-openshift-{{ openshift_version }}'"
+      register: softwareimage_check
+      changed_when: false
+
+    - name: Display Phase 1 completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 1 COMPLETE: PXE Infrastructure Ready"
+          - "================================================================"
+          - "Software Image: installer-openshift-{{ openshift_version }}"
+          - "PXE Files: /tftpboot/repos/{{ cluster_name }}/"
+          - "Kubeconfig (after install): /openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+          - "Categories: {{ node_roles | map(attribute='category') | list }}"
+          - "Nodes registered as PhysicalNode: {{ cluster_nodes | length }}"
+          - ""
+          - "Next: VMs/nodes will PXE boot and install OpenShift"
+          - "================================================================"
+
+- name: PHASE 2 - Create and Boot VMs
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    create_test_vms: false  # Set to true to create VMs
+    cluster_nodes: "{{ hostvars[groups['bcm_headnode'][0]]['cluster_nodes'] }}"
+    vm_vcpus: 8
+    vm_memory_mb: 32768  # 32 GB
+    vm_disk_gb: 120
+    vm_network: "nvidia-bcm-internal"
+
+  tasks:
+    - name: Check if VM creation is requested
+      ansible.builtin.set_fact:
+        skip_vm_creation: "{{ not (create_test_vms | bool) }}"
+
+    - name: Display VM creation status
+      ansible.builtin.debug:
+        msg: "{{ 'PHASE 2: Creating and booting test VMs...' if not skip_vm_creation else 'PHASE 2: Skipping VM creation - expecting physical hardware or pre-existing VMs' }}"
+
+    - name: Check if VMs already exist
+      community.libvirt.virt:
+        command: list_vms
+        uri: "qemu:///system"
+      register: existing_vms
+      when: not skip_vm_creation
+
+    - name: Create VM disk images
+      ansible.builtin.command:
+        cmd: "qemu-img create -f qcow2 /var/lib/libvirt/images/{{ item.name }}.qcow2 {{ vm_disk_gb }}G"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - not skip_vm_creation
+        - item.name not in existing_vms.list_vms
+      become: true
+      register: disk_creation
+      changed_when: "'Formatting' in disk_creation.stdout"
+
+    - name: Define VMs (but do not start yet)
+      community.libvirt.virt:
+        command: define
+        xml: |
+          <domain type='kvm'>
+            <name>{{ item.name }}</name>
+            <memory unit='MiB'>{{ vm_memory_mb }}</memory>
+            <vcpu>{{ vm_vcpus }}</vcpu>
+            <os>
+              <type arch='x86_64' machine='q35'>hvm</type>
+              <boot dev='hd'/>
+              <boot dev='network'/>
+            </os>
+            <features>
+              <acpi/>
+              <apic/>
+            </features>
+            <cpu mode='host-passthrough'/>
+            <clock offset='utc'/>
+            <on_poweroff>destroy</on_poweroff>
+            <on_reboot>restart</on_reboot>
+            <on_crash>destroy</on_crash>
+            <devices>
+              <emulator>/usr/bin/qemu-system-x86_64</emulator>
+              <disk type='file' device='disk'>
+                <driver name='qemu' type='qcow2'/>
+                <source file='/var/lib/libvirt/images/{{ item.name }}.qcow2'/>
+                <target dev='vda' bus='virtio'/>
+              </disk>
+              <interface type='network'>
+                <mac address='{{ item.mac }}'/>
+                <source network='{{ vm_network }}'/>
+                <model type='virtio'/>
+              </interface>
+              <console type='pty'>
+                <target type='serial' port='0'/>
+              </console>
+              <channel type='spicevmc'>
+                <target type='virtio' name='com.redhat.spice.0'/>
+              </channel>
+              <graphics type='spice' autoport='yes'>
+                <listen type='address' address='127.0.0.1'/>
+              </graphics>
+              <video>
+                <model type='qxl'/>
+              </video>
+            </devices>
+          </domain>
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - not skip_vm_creation
+        - item.name not in existing_vms.list_vms
+
+    - name: Start VMs for PXE boot
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        state: running
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when: not skip_vm_creation
+
+    - name: Display Phase 2 completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 2 COMPLETE: VMs Created and Booting"
+          - "================================================================"
+          - "VMs: {{ cluster_nodes | length }} created and started"
+          - "VMs are now PXE booting from BCM and installing OpenShift"
+          - "Monitor VM consoles: virt-manager or virsh console <vm-name>"
+          - "================================================================"
+      when: not skip_vm_creation
+
+- name: PHASE 3 - Wait for Installation and Convert to LiteNode
+  hosts: bcm_headnode
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Display Phase 3 start
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 3: Waiting for OpenShift Installation"
+          - "================================================================"
+          - "Monitoring cluster readiness via kubeconfig..."
+          - "================================================================"
+
+    - name: Include convert_to_litenode tasks
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: convert_to_litenode
+      when: not (skip_litenode_conversion | default(false))
+
+    - name: Display LiteNode conversion skipped
+      ansible.builtin.debug:
+        msg: "Skipping LiteNode conversion (skip_litenode_conversion=true)"
+      when: skip_litenode_conversion | default(false)
+
+    - name: Deploy BCM Lite Daemon DaemonSet
+      ansible.builtin.include_role:
+        name: nvidia.bcm.openshift_cluster
+        tasks_from: deploy_bcm_daemon
+      when: not (skip_bcm_agent | default(false))
+
+    - name: Display BCM agent deployment skipped
+      ansible.builtin.debug:
+        msg: "Skipping BCM agent deployment (skip_bcm_agent=true)"
+      when: skip_bcm_agent | default(false)
+
+    - name: Display final completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "OPENSHIFT CLUSTER DEPLOYMENT COMPLETE!"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Version: {{ openshift_version }}"
+          - "Kubeconfig: /openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+          - "Nodes converted to LiteNode: {{ cluster_nodes | length }}"
+          - "BCM Lite Daemon: Deployed and running on all nodes"
+          - ""
+          - "API VIP: {{ openshift_api_vips[0] if openshift_api_vips is defined else 'N/A' }}"
+          - "Ingress VIP: {{ openshift_ingress_vips[0] if openshift_ingress_vips is defined else 'N/A' }}"
+          - ""
+          - "Access cluster:"
+          - "  export KUBECONFIG=/openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+          - "  /openshift/tools/{{ openshift_version }}/oc get nodes"
+          - ""
+          - "View BCM agent status:"
+          - "  /openshift/tools/{{ openshift_version }}/oc get ds,pods -l app=bcm-agent"
+          - "  cmsh -c 'device; list litenodes'"
+          - ""
+          - "Add future nodes: Generate boot ISO from /openshift/clusters/{{ cluster_name }}/"
+          - "================================================================"

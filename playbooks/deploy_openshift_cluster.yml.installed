@@ -1,0 +1,352 @@
+---
+# Deploy OpenShift cluster on BCM via PXE with Ignition (Two-Phase Approach)
+#
+# This playbook automates the deployment of an OpenShift cluster using a two-phase approach:
+#
+# PHASE 1: Installation (GenericDevice with PXE)
+#   1. Extract and setup OpenShift agent ISO for PXE boot
+#   2. Generate MAC-based Ignition files with BCM SSH keys
+#   3. Create BCM categories for each node role
+#   4. Register nodes as GenericDevice with per-node Ignition URLs
+#   5. Power on nodes to trigger PXE boot and OpenShift installation
+#
+# PHASE 2: Agent Management (Convert to LiteNode)
+#   1. Wait for OpenShift installation to complete
+#   2. Convert nodes from GenericDevice to LiteNode
+#   3. Deploy bcm-agent via Helm chart (DaemonSet)
+#   4. Verify agent connectivity to BCM
+#
+# This approach allows:
+#   - PXE boot capability during installation (requires category)
+#   - Persistent agent-based management post-installation (requires LiteNode)
+#   - Categories persist for future node additions
+#
+# Usage:
+#   ansible-playbook -i inventory/openshift_cluster.yml playbooks/deploy_openshift_cluster.yml
+#
+# Prerequisites:
+#   - OpenShift agent ISO generated via openshift-install
+#   - Inventory file with cluster definition
+#   - BCM head node accessible
+#   - BCM bootstrap certificate at /cm/local/apps/cmd/etc/bootstrap/
+#   - bcm-agent Helm chart available at {{ bcm_agent_helm_chart_path }}
+
+- name: Deploy OpenShift Cluster on BCM
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    # These variables should be defined in inventory or group_vars
+    # cluster_name: prod
+    # openshift_version: "4.16"
+    # openshift_iso_path: /root/agent.x86_64.iso
+    # node_roles: [...]
+    # cluster_nodes: [...]
+
+    deployment_log_file: "/var/log/bcm-deployment-openshift-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+  pre_tasks:
+    - name: Display deployment information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Deploying OpenShift {{ openshift_version }} Cluster: {{ cluster_name }}"
+          - "================================================================"
+          - "Deployment Mode: Two-Phase (PXE Install → LiteNode Agent)"
+          - "Roles to be configured: {{ node_roles | map(attribute='name') | list }}"
+          - "Nodes to be registered: {{ cluster_nodes | map(attribute='name') | list | length }}"
+          - "Deployment log: {{ deployment_log_file }}"
+          - "================================================================"
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - node_roles is defined
+          - node_roles | length > 0
+          - cluster_nodes is defined
+          - cluster_nodes | length > 0
+          - bcm_agent_helm_chart_path is defined
+          - kubeconfig_path is defined
+        fail_msg: "Missing required variables. Check inventory configuration."
+
+    - name: Generate OpenShift PXE Boot Files
+      ansible.builtin.include_role:
+        name: openshift_cluster
+        tasks_from: generate_pxe_files
+
+    - name: Create deployment log
+      ansible.builtin.copy:
+        content: |
+          OpenShift Cluster Deployment Log
+          =================================
+          Cluster Name: {{ cluster_name }}
+          OpenShift Version: {{ openshift_version }}
+          Start Time: {{ ansible_date_time.iso8601 }}
+
+          Roles:
+          {% for role in node_roles %}
+            - {{ role.name }} ({{ role.category }})
+          {% endfor %}
+
+          Nodes:
+          {% for node in cluster_nodes %}
+            - {{ node.name }} ({{ node.mac }}, {{ node.ip }}, {{ node.role }})
+          {% endfor %}
+
+        dest: "{{ deployment_log_file }}"
+        mode: '0644'
+
+  roles:
+    # Phase 1: Setup PXE infrastructure
+    - role: nvidia.bcm.pxe_setup
+      vars:
+        verify_http_access: true
+        cleanup_iso_after_copy: false  # Keep ISO for potential reuse
+        pxe_categories: "{{ node_roles }}"
+        local_installer_workdir: "{{ lookup('env', 'HOME') }}/openshift/{{ cluster_name }}"
+
+    # Phase 2: Deploy OpenShift cluster
+    - role: nvidia.bcm.openshift_cluster
+
+  post_tasks:
+    - name: Verify softwareimage exists
+      ansible.builtin.command:
+        cmd: "cmsh -c 'softwareimage; list' | grep 'installer-openshift-{{ openshift_version }}'"
+      register: softwareimage_check
+      changed_when: false
+      failed_when: softwareimage_check.rc != 0
+
+    - name: Verify category softwareimage configuration
+      ansible.builtin.command:
+        cmd: "cmsh -c 'category; use {{ item.category }}; show' | grep 'Software image'"
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+      register: category_softwareimage_check
+      changed_when: false
+      failed_when: false
+
+    - name: Display Phase 1 completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 1 COMPLETE: PXE Infrastructure Ready"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "OpenShift Version: {{ openshift_version }}"
+          - "Categories created: {{ node_roles | map(attribute='category') | list }}"
+          - "Nodes registered as GenericDevice: {{ cluster_nodes | map(attribute='name') | list | length }}"
+          - ""
+          - "Now powering on nodes to start OpenShift installation..."
+          - "================================================================"
+
+    - name: Power cycle nodes to boot OpenShift installer
+      ansible.builtin.command:
+        cmd: "cmsh -c 'device use {{ item.name }}; power reset'"
+      loop: "{{ cluster_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: power_reset_result
+      failed_when: false
+
+    - name: Display installation monitoring instructions
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Nodes are now booting and installing OpenShift..."
+          - "================================================================"
+          - "Monitor OpenShift installation:"
+          - "  export KUBECONFIG={{ kubeconfig_path }}"
+          - "  oc get nodes -w"
+          - ""
+          - "Or wait for bootstrap completion:"
+          - "  openshift-install agent wait-for bootstrap-complete --dir /path/to/install-dir"
+          - ""
+          - "Phase 2 will start after installation completes..."
+          - "================================================================"
+
+    # PHASE 2: Convert to LiteNode and deploy agent
+    - name: Include convert_to_litenode tasks
+      ansible.builtin.include_role:
+        name: openshift_cluster
+        tasks_from: convert_to_litenode
+
+    - name: Display Phase 2a completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 2a COMPLETE: Nodes converted to LiteNode"
+          - "================================================================"
+          - "Deploying bcm-agent via Helm chart..."
+          - "================================================================"
+
+    - name: Include deploy_agent tasks
+      ansible.builtin.include_role:
+        name: openshift_cluster
+        tasks_from: deploy_agent
+
+    - name: Display final deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "DEPLOYMENT COMPLETE!"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "OpenShift Version: {{ openshift_version }}"
+          - "Categories created (persist for future nodes): {{ node_roles | map(attribute='category') | list }}"
+          - "Nodes converted to LiteNode: {{ cluster_nodes | map(attribute='name') | list | length }}"
+          - "BCM Agent deployed: Yes (DaemonSet in bcm-agent namespace)"
+          - ""
+          - "Verification commands:"
+          - "  # Check BCM LiteNode status"
+          - "  cmsh -c 'device; list'"
+          - ""
+          - "  # Check OpenShift nodes"
+          - "  export KUBECONFIG={{ kubeconfig_path }}"
+          - "  oc get nodes"
+          - ""
+          - "  # Check bcm-agent DaemonSet"
+          - "  oc get daemonset -n bcm-agent"
+          - "  oc get pods -n bcm-agent"
+          - ""
+          - "  # Check node labels from BCM agent"
+          - "  oc get nodes --show-labels | grep bcm.nvidia.com"
+          - "================================================================"
+
+    - name: Verify Ignition files are accessible
+      ansible.builtin.uri:
+        url: "http://{{ bcm_server | default(ansible_default_ipv4.address) }}:8080/tftpboot/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/{{ item.role }}/{{ item.mac | lower | replace(':', '-') }}.ign"
+        method: HEAD
+        status_code: 200
+      loop: "{{ cluster_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      ignore_errors: true
+      register: ignition_http_check
+
+    - name: Display Ignition HTTP check results
+      ansible.builtin.debug:
+        msg: "Ignition file for {{ item.item.name }}: {{ 'ACCESSIBLE' if item.status == 200 else 'NOT ACCESSIBLE' }}"
+      loop: "{{ ignition_http_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Update deployment log with completion
+      ansible.builtin.lineinfile:
+        path: "{{ deployment_log_file }}"
+        line: |
+
+          Deployment completed successfully at {{ ansible_date_time.iso8601 }}
+        state: present
+
+    - name: Save deployment summary
+      ansible.builtin.copy:
+        content: |
+          # {{ cluster_name }} OpenShift Deployment Summary (Two-Phase Approach)
+
+          ## Cluster Configuration
+          - Name: {{ cluster_name }}
+          - Type: OpenShift {{ openshift_version }}
+          - Deployed: {{ ansible_date_time.iso8601 }}
+          - Deployment Mode: Two-Phase (PXE Install → LiteNode Agent)
+
+          ## Deployment Architecture
+
+          ### Phase 1: Installation (GenericDevice with PXE)
+          - Nodes registered as GenericDevice (enables PXE boot via categories)
+          - PXE boot → CoreOS agent installer
+          - Ignition deploys BCM SSH keys
+          - OpenShift cluster installation completes
+
+          ### Phase 2: Agent Management (LiteNode)
+          - Nodes converted from GenericDevice to LiteNode
+          - bcm-agent deployed via Helm chart (DaemonSet)
+          - Agents connect to BCM for persistent management
+          - Node labels applied with hardware inventory
+
+          ## Categories (Persist for Future Nodes)
+          {% for role in node_roles %}
+          - {{ role.category }}
+            - Role: {{ role.name }}
+            - Boot files: /tftpboot/images/{{ role.category }}/ -> installer-openshift-{{ openshift_version }}/
+            - Ignition: /tftpboot/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/{{ role.name }}/
+          {% endfor %}
+
+          ## Nodes (Registered as LiteNode)
+          {% for node in cluster_nodes %}
+          - {{ node.name }}
+            - MAC: {{ node.mac }}
+            - IP: {{ node.ip }}
+            - Role: {{ node.role }}
+            - Device Type: LiteNode (converted from GenericDevice)
+            - BCM Agent: Running (DaemonSet pod on node)
+          {% endfor %}
+
+          ## Verification Commands
+
+          ### Check BCM LiteNode status
+          ```bash
+          cmsh -c 'device; list'
+          cmsh -c 'device; show <node-name>'
+          ```
+
+          ### Check OpenShift cluster
+          ```bash
+          export KUBECONFIG={{ kubeconfig_path }}
+          oc get nodes
+          oc get clusteroperators
+          ```
+
+          ### Check bcm-agent DaemonSet
+          ```bash
+          oc get daemonset -n bcm-agent
+          oc get pods -n bcm-agent -o wide
+          oc logs -n bcm-agent -l app.kubernetes.io/name=bcm-agent
+          ```
+
+          ### Check node labels from BCM agent
+          ```bash
+          oc get nodes --show-labels | grep bcm.nvidia.com
+          ```
+
+          ### Check Prometheus metrics
+          ```bash
+          oc port-forward -n bcm-agent daemonset/bcm-agent 9100:9100
+          curl http://localhost:9100/metrics
+          ```
+
+          ## Adding Nodes Later
+
+          To add additional nodes to this cluster:
+
+          1. Add node to inventory:
+          ```yaml
+          cluster_nodes:
+            - name: worker-5
+              mac: "52:54:00:EE:FF:01"
+              ip: "10.141.160.65"
+              role: worker
+          ```
+
+          2. Run the openshift_cluster role again (categories will be reused):
+          ```bash
+          ansible-playbook -i inventory/openshift_cluster.yml playbooks/deploy_openshift_cluster.yml
+          ```
+
+          3. The playbook will:
+             - Register new node as GenericDevice with existing category
+             - Power on node to trigger PXE installation
+             - Wait for OpenShift installation to complete
+             - Convert to LiteNode (agent already running on all nodes)
+
+          ## Architecture Benefits
+
+          - **PXE Installation**: GenericDevice registration enables PXE boot via categories
+          - **Agent Management**: LiteNode provides persistent connection to BCM
+          - **Category Persistence**: Categories remain for future node additions
+          - **Clean Separation**: Installation and management concerns are separate
+          - **Scalable**: Adding nodes reuses existing PXE infrastructure
+        dest: "/root/deployment-summary-openshift-{{ cluster_name }}.md"
+        mode: '0644'
