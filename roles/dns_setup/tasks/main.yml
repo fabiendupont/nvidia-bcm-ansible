@@ -1,0 +1,69 @@
+---
+# Setup DNS zone for OpenShift cluster on BCM head node
+
+- name: Get BCM head node hostname
+  ansible.builtin.command: hostname -s
+  register: bcm_hostname_result
+  changed_when: false
+
+- name: Set BCM hostname fact
+  ansible.builtin.set_fact:
+    bcm_hostname: "{{ bcm_hostname_result.stdout }}"
+
+- name: Check if DNS zone file already exists
+  ansible.builtin.stat:
+    path: "{{ dns_zone_dir }}/{{ dns_domain }}.zone"
+  register: dns_zone_stat
+
+- name: Create DNS zone file for cluster domain
+  ansible.builtin.template:
+    src: cluster_zone.j2
+    dest: "{{ dns_zone_dir }}/{{ dns_domain }}.zone"
+    owner: "{{ dns_zone_owner }}"
+    group: "{{ dns_zone_group }}"
+    mode: "{{ dns_zone_mode }}"
+  register: dns_zone_created
+
+- name: Check if zone is already configured in named.conf.include
+  ansible.builtin.shell: |
+    grep -q 'zone "{{ dns_domain }}"' {{ dns_include_file }}
+  register: zone_configured
+  changed_when: false
+  failed_when: false
+
+- name: Add zone configuration to named.conf.include
+  ansible.builtin.blockinfile:
+    path: "{{ dns_include_file }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ dns_domain }}"
+    block: |
+      zone "{{ dns_domain }}" in {
+        type master;
+        file "{{ dns_domain }}.zone";
+      };
+    create: yes
+  when: zone_configured.rc != 0
+  register: zone_config_added
+
+- name: Validate named configuration
+  ansible.builtin.command: named-checkconf
+  changed_when: false
+
+- name: Validate zone file
+  ansible.builtin.command: named-checkzone {{ dns_domain }} {{ dns_zone_dir }}/{{ dns_domain }}.zone
+  changed_when: false
+
+- name: Reload named service
+  ansible.builtin.systemd:
+    name: named
+    state: reloaded
+  when: dns_zone_created.changed or zone_config_added.changed
+
+- name: Verify DNS resolution for API endpoint
+  ansible.builtin.command: dig +short @{{ bcm_internal_ip }} api.{{ cluster_name }}.{{ dns_domain }}
+  register: dns_verify
+  changed_when: false
+  failed_when: dns_verify.stdout == ""
+
+- name: Display DNS verification result
+  ansible.builtin.debug:
+    msg: "DNS resolution verified: api.{{ cluster_name }}.{{ dns_domain }} -> {{ dns_verify.stdout }}"

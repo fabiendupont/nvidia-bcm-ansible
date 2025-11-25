@@ -1,0 +1,65 @@
+---
+# Default variables for openshift_cluster role
+
+# Cluster configuration
+cluster_name: "prod"
+cluster_type: "openshift"
+openshift_version: "4.16"
+
+# BCM server configuration
+bcm_server: "{{ ansible_default_ipv4.address }}"
+bcm_internal_ip: "10.141.255.254"  # BCM head node internal IP (also used as DNS/gateway)
+http_port: 8080
+
+# Base paths
+tftpboot_path: /tftpboot
+ignition_path: "{{ tftpboot_path }}/ignition"
+images_path: "{{ tftpboot_path }}/images"
+repos_path: "{{ tftpboot_path }}/repos"
+
+# OpenShift paths
+openshift_repo_name: "openshift-{{ openshift_version }}"
+installer_name: "installer-{{ openshift_repo_name }}"
+ignition_base_path: "{{ ignition_path }}/openshift-{{ openshift_version }}/{{ cluster_name }}"
+
+# Local installer paths (on Ansible control node)
+local_installer_workdir: "{{ lookup('env', 'HOME') }}/openshift/{{ cluster_name }}"
+
+# OpenShift ISO path on BCM head node (should be set in inventory)
+openshift_iso_path: ""
+
+# OpenShift pull secret path (on Ansible control node)
+# openshift_pull_secret_path: "/path/to/pull-secret.json"
+
+# BCM category settings
+bootloader: "syslinux"
+bootloader_protocol: "HTTP"
+install_mode: "SKIP"  # Don't install - nodes boot PXE and self-install OpenShift
+newnode_install_mode: "NOSYNC"  # Don't sync - OpenShift manages its own installation
+kernel_output_console: "tty0"
+
+# CoreOS installation settings
+install_device: "/dev/sda"
+
+# Node role definitions (should be overridden)
+node_roles: []
+# Example:
+# node_roles:
+#   - name: master
+#     category: "openshift-{{ openshift_version | replace('.', '') }}-{{ cluster_name }}-master"
+#   - name: worker
+#     category: "openshift-{{ openshift_version | replace('.', '') }}-{{ cluster_name }}-worker"
+
+# Cluster nodes (should be overridden)
+cluster_nodes: []
+# Example:
+# cluster_nodes:
+#   - name: master-0
+#     mac: "52:54:00:AA:BB:01"
+#     ip: "10.141.160.50"
+#     role: master
+#     ignition_file: ""  # Path to ignition file or will be auto-generated
+
+# Ignition file management
+generate_ignition_files: false
+ignition_template_path: ""

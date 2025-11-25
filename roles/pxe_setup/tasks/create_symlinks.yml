@@ -1,0 +1,13 @@
+---
+# Create symlinks for category boot files
+
+- name: Create symlinks for PXE categories
+  ansible.builtin.file:
+    src: "{{ images_path }}/{{ item.installer_source }}"
+    dest: "{{ images_path }}/{{ item.name }}"
+    state: link
+    force: true
+  loop: "{{ pxe_categories }}"
+  when: item.installer_source is defined
+  loop_control:
+    label: "{{ item.name }}"

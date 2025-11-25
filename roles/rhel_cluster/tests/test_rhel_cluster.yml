@@ -1,0 +1,66 @@
+---
+# Test playbook for rhel_cluster role
+
+- name: Test RHEL Cluster Role
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  vars:
+    cluster_name: test-hpc
+    rhel_version: "9.6"
+
+    # Define test node roles
+    node_roles:
+      - name: compute
+        category: "slurm-{{ cluster_name }}-compute"
+        packages:
+          - "@^minimal-environment"
+          - "@development-tools"
+        post_script: |
+          echo "Test compute node"
+
+      - name: gpu
+        category: "slurm-{{ cluster_name }}-gpu"
+        packages:
+          - "@^minimal-environment"
+          - kernel-devel
+        post_script: |
+          echo "Test GPU node"
+
+    # Define test cluster nodes
+    cluster_nodes:
+      - name: test-compute-01
+        mac: "52:54:00:TEST:01"
+        ip: "10.141.100.99"
+        category: "slurm-{{ cluster_name }}-compute"
+
+  pre_tasks:
+    - name: Ensure test directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /tftpboot/ks
+        - /tftpboot/images
+        - /tftpboot/repos/rhel-9.6
+
+  tasks:
+    - name: Include rhel_cluster role
+      ansible.builtin.include_role:
+        name: rhel_cluster
+
+  post_tasks:
+    - name: Verify kickstart files were created
+      ansible.builtin.stat:
+        path: "/tftpboot/ks/{{ item.category }}.cfg"
+      register: kickstart_check
+      failed_when: not kickstart_check.stat.exists
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.category }}"
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: "RHEL cluster role test completed successfully"

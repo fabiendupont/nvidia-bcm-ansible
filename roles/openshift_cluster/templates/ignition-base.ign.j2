@@ -1,0 +1,32 @@
+{
+  "ignition": {
+    "version": "3.2.0"
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": {{ bcm_ssh_keys | to_json }}
+      }
+    ]
+  },
+  "storage": {
+    "files": [
+      {
+        "path": "/etc/hostname",
+        "mode": 420,
+        "overwrite": true,
+        "contents": {
+          "source": "data:,{{ node_hostname }}"
+        }
+      },
+      {
+        "path": "/etc/install-complete",
+        "mode": 420,
+        "contents": {
+          "source": "data:text/plain;charset=utf-8;base64,{{ ('Installed at ' + ansible_date_time.iso8601) | b64encode }}"
+        }
+      }
+    ]
+  }
+}

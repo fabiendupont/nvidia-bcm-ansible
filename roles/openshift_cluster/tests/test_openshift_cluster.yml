@@ -1,0 +1,92 @@
+---
+# Test playbook for openshift_cluster role
+
+- name: Test OpenShift Cluster Role
+  hosts: localhost
+  become: true
+  gather_facts: true
+
+  vars:
+    cluster_name: test
+    openshift_version: "4.16"
+
+    node_roles:
+      - name: master
+        category: "openshift-{{ openshift_version | replace('.', '') }}-{{ cluster_name }}-master"
+      - name: worker
+        category: "openshift-{{ openshift_version | replace('.', '') }}-{{ cluster_name }}-worker"
+
+    cluster_nodes:
+      - name: test-master-0
+        mac: "52:54:00:TEST:M1"
+        ip: "10.141.160.99"
+        role: master
+        ignition_file: ""  # Empty for test - would need actual file
+
+  pre_tasks:
+    - name: Ensure test directories exist
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /tftpboot/ignition
+        - /tftpboot/images
+        - /tftpboot/repos/openshift-4.16
+
+    - name: Create test Ignition file
+      ansible.builtin.copy:
+        content: |
+          {
+            "ignition": {"version": "3.2.0"},
+            "storage": {
+              "files": [{
+                "path": "/etc/hostname",
+                "mode": 420,
+                "contents": {"source": "data:,test-master-0"}
+              }]
+            }
+          }
+        dest: /tmp/test-master-0.ign
+        mode: '0644'
+
+    - name: Update cluster_nodes with test Ignition file
+      ansible.builtin.set_fact:
+        cluster_nodes:
+          - name: test-master-0
+            mac: "52:54:00:TEST:M1"
+            ip: "10.141.160.99"
+            role: master
+            ignition_file: /tmp/test-master-0.ign
+
+  tasks:
+    - name: Include openshift_cluster role
+      ansible.builtin.include_role:
+        name: openshift_cluster
+
+  post_tasks:
+    - name: Verify ignition directories were created
+      ansible.builtin.stat:
+        path: "/tftpboot/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/{{ item.name }}"
+      register: ignition_dir_check
+      failed_when: not ignition_dir_check.stat.exists or not ignition_dir_check.stat.isdir
+      loop: "{{ node_roles }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Verify Ignition file was copied
+      ansible.builtin.stat:
+        path: "/tftpboot/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/master/52-54-00-test-m1.ign"
+      register: ignition_file_check
+      failed_when: not ignition_file_check.stat.exists
+
+    - name: Display test results
+      ansible.builtin.debug:
+        msg: "OpenShift cluster role test completed successfully"
+
+    - name: Cleanup test files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/test-master-0.ign

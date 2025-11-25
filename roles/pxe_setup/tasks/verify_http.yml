@@ -1,0 +1,38 @@
+---
+# Verify HTTP access to boot files
+
+- name: Verify HTTP access to RHEL boot files
+  ansible.builtin.uri:
+    url: "http://{{ bcm_server }}:{{ http_port }}{{ item }}"
+    method: HEAD
+    status_code: 200
+  loop:
+    - "{{ tftpboot_path }}/images/installer-{{ rhel_repo_name }}/vmlinuz"
+    - "{{ tftpboot_path }}/images/installer-{{ rhel_repo_name }}/initrd"
+    - "{{ tftpboot_path }}/repos/{{ rhel_repo_name }}/images/pxeboot/vmlinuz"
+  when: rhel_iso_path is defined and rhel_iso_path | length > 0
+  ignore_errors: true
+  register: rhel_http_check
+
+- name: Display RHEL HTTP verification results
+  ansible.builtin.debug:
+    msg: "RHEL boot files {{ 'are' if rhel_http_check is not failed else 'are NOT' }} accessible via HTTP"
+  when: rhel_iso_path is defined and rhel_iso_path | length > 0
+
+- name: Verify HTTP access to OpenShift boot files
+  ansible.builtin.uri:
+    url: "http://{{ bcm_server }}:{{ http_port }}{{ item }}"
+    method: HEAD
+    status_code: 200
+  loop:
+    - "{{ tftpboot_path }}/images/installer-{{ openshift_repo_name }}/vmlinuz"
+    - "{{ tftpboot_path }}/images/installer-{{ openshift_repo_name }}/initrd"
+    - "{{ tftpboot_path }}/repos/{{ openshift_repo_name }}/rootfs.img"
+  when: openshift_iso_path is defined and openshift_iso_path | length > 0
+  ignore_errors: true
+  register: openshift_http_check
+
+- name: Display OpenShift HTTP verification results
+  ansible.builtin.debug:
+    msg: "OpenShift boot files {{ 'are' if openshift_http_check is not failed else 'are NOT' }} accessible via HTTP"
+  when: openshift_iso_path is defined and openshift_iso_path | length > 0

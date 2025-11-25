@@ -1,0 +1,14 @@
+---
+# Default variables for pythoncm_setup role
+
+# Python version on BCM head node
+bcm_python_path: /cm/local/apps/python312/bin/python3.12
+
+# pythoncm installation path on BCM head node
+pythoncm_site_packages: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
+
+# Local virtual environment path
+local_venv_path: "{{ playbook_dir }}/../.venv"
+
+# Temporary directory for wheel building
+temp_wheel_dir: /tmp/pythoncm-wheel-build

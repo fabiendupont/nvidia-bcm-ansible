@@ -1,0 +1,26 @@
+---
+# DNS setup role defaults
+
+# DNS domain (e.g., test.local, cluster.local)
+dns_domain: "{{ openshift_base_domain | default(base_domain | default('cluster.local')) }}"
+
+# DNS zone file location
+dns_zone_dir: "/var/named"
+
+# DNS configuration include file
+dns_include_file: "/etc/named.conf.include"
+
+# BCM head node internal IP (DNS server)
+bcm_internal_ip: "10.141.255.254"
+
+# DNS zone SOA settings
+dns_serial: 1
+dns_refresh: 86400
+dns_retry: 14400
+dns_expire: 3628800
+dns_min_ttl: 604800
+
+# DNS zone owner/group
+dns_zone_owner: "root"
+dns_zone_group: "named"
+dns_zone_mode: "0644"

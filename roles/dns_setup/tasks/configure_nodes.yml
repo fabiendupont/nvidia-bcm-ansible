@@ -1,0 +1,44 @@
+---
+# Configure OpenShift nodes to use BCM DNS server
+
+- name: Wait for nodes to become accessible
+  ansible.builtin.wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    state: started
+    timeout: 300
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  delegate_to: "{{ groups['bcm_head_node'][0] }}"
+
+- name: Update DNS configuration on OpenShift nodes
+  ansible.builtin.shell: |
+    ssh -o StrictHostKeyChecking=no core@{{ item.name }} \
+      'sudo nmcli con mod $(nmcli -t -f NAME con show --active | head -1) ipv4.dns "{{ bcm_internal_ip }}" && \
+       sudo nmcli con up $(nmcli -t -f NAME con show --active | head -1)'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  delegate_to: "{{ groups['bcm_head_node'][0] }}"
+  register: dns_update_result
+  changed_when: "'Connection successfully activated' in dns_update_result.stdout"
+
+- name: Verify DNS resolution from nodes
+  ansible.builtin.shell: |
+    ssh -o StrictHostKeyChecking=no core@{{ item.name }} \
+      'dig +short api.{{ cluster_name }}.{{ dns_domain }}'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  delegate_to: "{{ groups['bcm_head_node'][0] }}"
+  register: node_dns_verify
+  changed_when: false
+  failed_when: node_dns_verify.stdout == ""
+
+- name: Display node DNS verification results
+  ansible.builtin.debug:
+    msg: "{{ item.item.name }}: DNS resolves api.{{ cluster_name }}.{{ dns_domain }} -> {{ item.stdout }}"
+  loop: "{{ node_dns_verify.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

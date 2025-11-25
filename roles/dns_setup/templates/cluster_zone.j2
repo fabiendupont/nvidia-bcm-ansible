@@ -1,0 +1,36 @@
+$TTL {{ dns_min_ttl }}
+@    IN  SOA     {{ bcm_hostname }}.{{ dns_domain }}.  root.{{ dns_domain }}. (
+                  {{ dns_serial }}        ; serial number
+                  {{ dns_refresh }}    ; refresh
+                  {{ dns_retry }}    ; retry
+                  {{ dns_expire }}  ; expire
+                  {{ dns_min_ttl }} ) ; min TTL
+
+                         IN NS {{ bcm_hostname }}.{{ dns_domain }}.
+
+; Nameserver address
+{{ bcm_hostname }}           IN A {{ bcm_internal_ip }}
+
+; OpenShift cluster DNS records
+; API endpoints - point to Virtual IP (VIP) for HA or first master if no VIP
+{% if openshift_api_vips is defined and openshift_api_vips | length > 0 %}
+api.{{ cluster_name }}             IN A {{ openshift_api_vips[0] }}
+api-int.{{ cluster_name }}         IN A {{ openshift_api_vips[0] }}
+{% else %}
+api.{{ cluster_name }}             IN A {{ cluster_nodes[0].ip }}
+api-int.{{ cluster_name }}         IN A {{ cluster_nodes[0].ip }}
+{% endif %}
+
+; Apps wildcard - point to Ingress VIP for HA or all master nodes if no VIP
+{% if openshift_ingress_vips is defined and openshift_ingress_vips | length > 0 %}
+*.apps.{{ cluster_name }}          IN A {{ openshift_ingress_vips[0] }}
+{% else %}
+{% for node in cluster_nodes %}
+*.apps.{{ cluster_name }}          IN A {{ node.ip }}
+{% endfor %}
+{% endif %}
+
+; Cluster nodes
+{% for node in cluster_nodes %}
+{{ node.name }}.{{ cluster_name }}    IN A {{ node.ip }}
+{% endfor %}

@@ -1,0 +1,124 @@
+---
+# Deploy BCM agent via Helm chart after LiteNode conversion
+# This enables persistent agent-based management of OpenShift nodes
+
+- name: Check if bootstrap certificate exists on BCM
+  ansible.builtin.stat:
+    path: "/cm/local/apps/cmd/etc/bootstrap/cert.pem"
+  register: bootstrap_cert
+  delegate_to: localhost
+
+- name: Fail if bootstrap certificate not found
+  ansible.builtin.fail:
+    msg: |
+      Bootstrap certificate not found. Please create bootstrap certificate on BCM head node:
+      1. Generate bootstrap certificate with limited permissions (cert request only)
+      2. Place in /cm/local/apps/cmd/etc/bootstrap/
+  when: not bootstrap_cert.stat.exists
+
+- name: Read BCM CA certificate
+  ansible.builtin.slurp:
+    src: "/cm/local/apps/cmd/etc/cacert.pem"
+  register: bcm_ca_cert_b64
+  delegate_to: localhost
+
+- name: Read BCM bootstrap certificate
+  ansible.builtin.slurp:
+    src: "/cm/local/apps/cmd/etc/bootstrap/cert.pem"
+  register: bcm_bootstrap_cert_b64
+  delegate_to: localhost
+
+- name: Read BCM bootstrap key
+  ansible.builtin.slurp:
+    src: "/cm/local/apps/cmd/etc/bootstrap/cert.key"
+  register: bcm_bootstrap_key_b64
+  delegate_to: localhost
+
+- name: Create bcm-agent namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: bcm-agent
+    state: present
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Create BCM certificate Secret
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: bcm-bootstrap-cert
+        namespace: bcm-agent
+      type: Opaque
+      data:
+        cacert.pem: "{{ bcm_ca_cert_b64.content }}"
+        cert.pem: "{{ bcm_bootstrap_cert_b64.content }}"
+        cert.key: "{{ bcm_bootstrap_key_b64.content }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Deploy bcm-agent Helm chart
+  kubernetes.core.helm:
+    name: bcm-agent
+    chart_ref: "{{ bcm_agent_helm_chart_path }}"
+    release_namespace: bcm-agent
+    create_namespace: true
+    values:
+      config:
+        bcm:
+          host: "{{ bcm_server }}"
+          port: 8081
+        kubernetes:
+          syncInterval: 300
+          labelPrefix: "bcm.nvidia.com"
+          enableLabeling: true
+      certificates:
+        secretName: bcm-bootstrap-cert
+      resources:
+        requests:
+          memory: "256Mi"
+          cpu: "100m"
+        limits:
+          memory: "512Mi"
+          cpu: "500m"
+      metrics:
+        enabled: true
+        port: 9100
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Wait for bcm-agent DaemonSet to be ready
+  ansible.builtin.command:
+    cmd: "oc rollout status daemonset/bcm-agent -n bcm-agent --timeout=5m"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: daemonset_status
+  changed_when: false
+
+- name: Display agent deployment status
+  ansible.builtin.debug:
+    msg: "BCM agent deployed successfully across {{ cluster_nodes | length }} nodes"
+
+- name: Verify agent connectivity to BCM
+  ansible.builtin.pause:
+    seconds: 30
+    prompt: "Waiting for agents to connect to BCM..."
+
+- name: Check LiteNode status in BCM
+  brightcomputing.bcm110.lite_node_info:
+    name: "{{ item.name }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: litenode_connectivity
+
+- name: Display connectivity status
+  ansible.builtin.debug:
+    msg: "{{ item.item.name }}: {{ item.lite_node.status | default('unknown') }}"
+  loop: "{{ litenode_connectivity.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.lite_node is defined

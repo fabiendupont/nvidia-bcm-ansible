@@ -1,0 +1,27 @@
+#!/bin/bash
+# Register node {{ node.name }} in BCM
+
+cmsh << 'EOF'
+device
+add physicalnode {{ node.name }}
+use {{ node.name }}
+set mac {{ node.mac }}
+interfaces
+add physical BOOTIF
+use BOOTIF
+set ip {{ node.ip }}
+set network internalnet
+..
+..
+device
+use {{ node.name }}
+set provisioninginterface BOOTIF
+{% if node.rack is defined %}
+set rack {{ node.rack }}
+{% endif %}
+{% if node.rackposition is defined %}
+set rackposition {{ node.rackposition }}
+{% endif %}
+set category {{ node_category_map[node.name] }}
+commit
+EOF

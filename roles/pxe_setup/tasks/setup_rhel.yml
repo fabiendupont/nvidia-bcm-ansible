@@ -1,0 +1,233 @@
+---
+# Setup RHEL PXE boot files
+
+- name: Check if RHEL ISO exists
+  ansible.builtin.stat:
+    path: "{{ rhel_iso_path }}"
+  register: rhel_iso_stat
+
+- name: Fail if RHEL ISO not found
+  ansible.builtin.fail:
+    msg: "RHEL ISO not found at {{ rhel_iso_path }}"
+  when: not rhel_iso_stat.stat.exists
+
+- name: Create temporary mount point
+  ansible.builtin.file:
+    path: "{{ iso_mount_point }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Mount RHEL ISO
+  ansible.posix.mount:
+    path: "{{ iso_mount_point }}"
+    src: "{{ rhel_iso_path }}"
+    fstype: iso9660
+    opts: ro,loop
+    state: mounted
+
+- name: Create RHEL repository directory
+  ansible.builtin.file:
+    path: "{{ repos_path }}/{{ rhel_repo_name }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create repoconfig directory for BCM repo files
+  ansible.builtin.file:
+    path: "{{ repos_path }}/{{ rhel_repo_name }}/repoconfig"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create symlinks for BCM repo files and GPG key
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ repos_path }}/{{ rhel_repo_name }}/repoconfig/{{ item.dest }}"
+    state: link
+    force: true
+  loop:
+    - { src: '/cm/local/apps/cluster-tools/repoconfig/cm.repo.rhel9', dest: 'cm.repo' }
+    - { src: '/cm/local/apps/cluster-tools/repoconfig/cm-extra.repo.rhel9', dest: 'cm-extra.repo' }
+    - { src: '/cm/local/apps/cluster-tools/repoconfig/RPM-GPG-KEY-cm', dest: 'RPM-GPG-KEY-cm' }
+
+- name: Copy RHEL ISO contents to repository
+  ansible.posix.synchronize:
+    src: "{{ iso_mount_point }}/"
+    dest: "{{ repos_path }}/{{ rhel_repo_name }}/"
+    delete: false
+    recursive: true
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: Create installer directory for RHEL
+  ansible.builtin.file:
+    path: "{{ images_path }}/installer-{{ rhel_repo_name }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Copy RHEL kernel to installer directory
+  ansible.builtin.copy:
+    src: "{{ repos_path }}/{{ rhel_repo_name }}/images/pxeboot/vmlinuz"
+    dest: "{{ images_path }}/installer-{{ rhel_repo_name }}/vmlinuz"
+    mode: "{{ file_mode }}"
+    remote_src: true
+
+- name: Copy RHEL initrd to installer directory
+  ansible.builtin.copy:
+    src: "{{ repos_path }}/{{ rhel_repo_name }}/images/pxeboot/initrd.img"
+    dest: "{{ images_path }}/installer-{{ rhel_repo_name }}/initrd"
+    mode: "{{ file_mode }}"
+    remote_src: true
+
+# Create BCM software image with installer rootfs
+- name: Create BCM software image directory
+  ansible.builtin.file:
+    path: "/cm/images/installer-{{ rhel_repo_name }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create BCM software image boot directory
+  ansible.builtin.file:
+    path: "/cm/images/installer-{{ rhel_repo_name }}/boot"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Detect kernel version from ISO vmlinuz
+  ansible.builtin.shell: |
+    file {{ repos_path }}/{{ rhel_repo_name }}/images/pxeboot/vmlinuz | grep -oP 'version \K[^ ]+' | head -1
+  register: detected_kernel_version_early
+  changed_when: false
+
+- name: Copy kernel to BCM software image
+  ansible.builtin.copy:
+    src: "{{ repos_path }}/{{ rhel_repo_name }}/images/pxeboot/vmlinuz"
+    dest: "/cm/images/installer-{{ rhel_repo_name }}/boot/vmlinuz-{{ detected_kernel_version_early.stdout }}"
+    mode: "{{ file_mode }}"
+    remote_src: true
+
+- name: Copy initrd to BCM software image
+  ansible.builtin.copy:
+    src: "{{ repos_path }}/{{ rhel_repo_name }}/images/pxeboot/initrd.img"
+    dest: "/cm/images/installer-{{ rhel_repo_name }}/boot/initrd-{{ detected_kernel_version_early.stdout }}.img"
+    mode: "{{ file_mode }}"
+    remote_src: true
+
+- name: Check if install.img exists
+  ansible.builtin.stat:
+    path: "{{ repos_path }}/{{ rhel_repo_name }}/images/install.img"
+  register: install_img_stat
+
+- name: Extract install.img to get LiveOS
+  ansible.builtin.shell: |
+    cd /cm/images/installer-{{ rhel_repo_name }}
+    unsquashfs -f -d . {{ repos_path }}/{{ rhel_repo_name }}/images/install.img
+  args:
+    creates: "/cm/images/installer-{{ rhel_repo_name }}/LiveOS/rootfs.img"
+  when: install_img_stat.stat.exists
+
+- name: Create temporary mount point for rootfs
+  ansible.builtin.file:
+    path: /mnt/rootfs-temp
+    state: directory
+    mode: '0755'
+  when: install_img_stat.stat.exists
+
+- name: Mount LiveOS rootfs.img
+  ansible.posix.mount:
+    path: /mnt/rootfs-temp
+    src: "/cm/images/installer-{{ rhel_repo_name }}/LiveOS/rootfs.img"
+    fstype: ext4
+    opts: ro,loop
+    state: mounted
+  when: install_img_stat.stat.exists
+
+- name: Copy rootfs contents to BCM software image
+  ansible.posix.synchronize:
+    src: /mnt/rootfs-temp/
+    dest: "/cm/images/installer-{{ rhel_repo_name }}/"
+    delete: false
+    recursive: true
+  delegate_to: "{{ inventory_hostname }}"
+  when: install_img_stat.stat.exists
+
+- name: Unmount LiveOS rootfs.img
+  ansible.posix.mount:
+    path: /mnt/rootfs-temp
+    state: unmounted
+  when: install_img_stat.stat.exists
+
+- name: Remove temporary rootfs mount point
+  ansible.builtin.file:
+    path: /mnt/rootfs-temp
+    state: absent
+  when: install_img_stat.stat.exists
+
+- name: Remove LiveOS directory (no longer needed)
+  ansible.builtin.file:
+    path: "/cm/images/installer-{{ rhel_repo_name }}/LiveOS"
+    state: absent
+  when: install_img_stat.stat.exists
+
+- name: Create kernel modules directory structure
+  ansible.builtin.file:
+    path: "/cm/images/installer-{{ rhel_repo_name }}/lib/modules/{{ detected_kernel_version_early.stdout }}"
+    state: directory
+    mode: '0755'
+
+- name: Create minimal modules.dep for BCM
+  ansible.builtin.copy:
+    content: |
+      # Minimal modules.dep for installer image
+      # Actual modules loaded from initrd
+    dest: "/cm/images/installer-{{ rhel_repo_name }}/lib/modules/{{ detected_kernel_version_early.stdout }}/modules.dep"
+    mode: '0644'
+
+- name: Register BCM software image
+  brightcomputing.bcm110.software_image:
+    name: "installer-{{ rhel_repo_name }}"
+    state: present
+    path: "/cm/images/installer-{{ rhel_repo_name }}"
+    kernelVersion: "{{ detected_kernel_version_early.stdout }}"
+    notes: "RHEL {{ rhel_version }} Installer Image (Kickstart)"
+
+- name: Unmount RHEL ISO
+  ansible.posix.mount:
+    path: "{{ iso_mount_point }}"
+    state: unmounted
+
+- name: Remove temporary mount point
+  ansible.builtin.file:
+    path: "{{ iso_mount_point }}"
+    state: absent
+  when: cleanup_temp_mount | bool
+
+- name: Remove RHEL ISO file
+  ansible.builtin.file:
+    path: "{{ rhel_iso_path }}"
+    state: absent
+  when: cleanup_iso_after_copy | bool
+
+- name: Create URL-encoded symlinks for packages with special characters
+  # BCM 11.0 cmdaemon HTTP server doesn't decode percent-encoded URLs
+  # Anaconda requests packages as "gcc-c%2b%2b" but cmdaemon looks for literal "gcc-c%2b%2b" file
+  # Workaround: create symlinks with encoded names pointing to actual files
+  # Characters that need encoding: + => %2b, ^ => %5e
+  ansible.builtin.shell: |
+    cd {{ repos_path }}/{{ rhel_repo_name }}
+    find BaseOS AppStream -type f \( -name "*+*" -o -name "*^*" \) | while read file; do
+      dir=$(dirname "$file")
+      base=$(basename "$file")
+      encoded=$(echo "$base" | sed -e "s/+/%2b/g" -e "s/\^/%5e/g")
+      ln -sf "$base" "$dir/$encoded"
+    done
+  args:
+    executable: /bin/bash
+  register: symlink_result
+  changed_when: false
+
+- name: Verify RHEL boot files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: rhel_boot_files
+  failed_when: not rhel_boot_files.stat.exists
+  loop:
+    - "{{ images_path }}/installer-{{ rhel_repo_name }}/vmlinuz"
+    - "{{ images_path }}/installer-{{ rhel_repo_name }}/initrd"
+  when: verify_boot_files | bool

@@ -1,0 +1,70 @@
+---
+# Main tasks for openshift_cluster role
+
+- name: Validate node_roles variable
+  ansible.builtin.assert:
+    that:
+      - node_roles is defined
+      - node_roles | length > 0
+    fail_msg: "node_roles must be defined with at least one role"
+
+- name: Validate cluster_nodes variable
+  ansible.builtin.assert:
+    that:
+      - cluster_nodes is defined
+      - cluster_nodes | length > 0
+    fail_msg: "cluster_nodes must be defined with at least one node"
+
+- name: Read BCM head node SSH public keys
+  ansible.builtin.command: "cat {{ item }}"
+  loop:
+    - /root/.ssh/id_ecdsa.pub
+    - /root/.ssh/id_rsa.pub
+  register: bcm_ssh_keys_raw
+  changed_when: false
+
+- name: Set BCM SSH keys as list
+  ansible.builtin.set_fact:
+    bcm_ssh_keys: "{{ bcm_ssh_keys_raw.results | map(attribute='stdout') | list }}"
+
+- name: Create ignition directory structure
+  ansible.builtin.file:
+    path: "{{ ignition_base_path }}/{{ item.name }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ node_roles }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Copy Ignition files to BCM
+  ansible.builtin.include_tasks: copy_ignition_files.yml
+
+- name: Create symlinks for category boot files
+  ansible.builtin.file:
+    src: "{{ images_path }}/installer-openshift-{{ openshift_version }}"
+    dest: "{{ images_path }}/{{ item.category }}"
+    state: link
+    force: true
+  loop: "{{ node_roles }}"
+  loop_control:
+    label: "{{ item.category }}"
+
+- name: Create BCM categories
+  brightcomputing.bcm110.category:
+    name: "{{ item.category }}"
+    state: present
+    bootLoader: "{{ bootloader }}"
+    bootLoaderProtocol: "{{ bootloader_protocol }}"
+    kernelParameters: "coreos.live.rootfs_url=http://{{ bcm_server }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ cluster_name }}/agent.x86_64-rootfs.img rw ignition.firstboot ignition.platform.id=metal console={{ kernel_output_console }}"
+    kernelOutputConsole: "{{ kernel_output_console }}"
+    installMode: "{{ install_mode }}"
+    newNodeInstallMode: "{{ newnode_install_mode }}"
+    softwareImageProxy:
+      parentSoftwareImage: "installer-openshift-{{ openshift_version }}"
+    notes: "OpenShift {{ openshift_version }} - {{ cluster_name | upper }} Cluster - {{ item.name | title }} Nodes"
+  loop: "{{ node_roles }}"
+  loop_control:
+    label: "{{ item.category }}"
+
+- name: Register nodes with MAC-based Ignition URLs
+  ansible.builtin.include_tasks: register_nodes.yml

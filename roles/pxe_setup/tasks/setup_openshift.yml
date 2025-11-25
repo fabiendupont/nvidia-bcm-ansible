@@ -1,0 +1,132 @@
+---
+# Setup OpenShift PXE boot files using openshift-install agent create pxe-files
+
+- name: Detect kernel version from agent vmlinuz in boot-artifacts
+  ansible.builtin.shell: |
+    file /openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-vmlinuz | grep -oP 'version \K[^ ]+' | head -1
+  register: detected_kernel_version
+  changed_when: false
+
+- name: Check if version-specific boot files already exist in tools directory
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: tools_boot_files
+  loop:
+    - "/openshift/tools/{{ openshift_version }}/vmlinuz-{{ detected_kernel_version.stdout }}"
+    - "/openshift/tools/{{ openshift_version }}/initrd-{{ detected_kernel_version.stdout }}.img"
+
+- name: Set fact if tools boot files exist
+  ansible.builtin.set_fact:
+    tools_boot_files_exist: "{{ tools_boot_files.results | map(attribute='stat.exists') | list | min }}"
+
+# Copy boot files to tools directory (first time for this OCP version)
+- name: Copy PXE kernel to tools directory
+  ansible.builtin.copy:
+    src: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-vmlinuz"
+    dest: "/openshift/tools/{{ openshift_version }}/vmlinuz-{{ detected_kernel_version.stdout }}"
+    mode: "{{ file_mode }}"
+    remote_src: true
+  when: not tools_boot_files_exist
+
+- name: Copy PXE initrd to tools directory
+  ansible.builtin.copy:
+    src: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-initrd.img"
+    dest: "/openshift/tools/{{ openshift_version }}/initrd-{{ detected_kernel_version.stdout }}.img"
+    mode: "{{ file_mode }}"
+    remote_src: true
+  when: not tools_boot_files_exist
+
+# Create BCM software image structure (version-specific, shared across clusters)
+- name: Create BCM software image directory
+  ansible.builtin.file:
+    path: "/cm/images/installer-openshift-{{ openshift_version }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create BCM software image boot directory
+  ansible.builtin.file:
+    path: "/cm/images/installer-openshift-{{ openshift_version }}/boot"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create symlink for kernel in BCM software image
+  ansible.builtin.file:
+    src: "/openshift/tools/{{ openshift_version }}/vmlinuz-{{ detected_kernel_version.stdout }}"
+    dest: "/cm/images/installer-openshift-{{ openshift_version }}/boot/vmlinuz-{{ detected_kernel_version.stdout }}"
+    state: link
+    force: yes
+
+- name: Create symlink for initrd in BCM software image
+  ansible.builtin.file:
+    src: "/openshift/tools/{{ openshift_version }}/initrd-{{ detected_kernel_version.stdout }}.img"
+    dest: "/cm/images/installer-openshift-{{ openshift_version }}/boot/initrd-{{ detected_kernel_version.stdout }}.img"
+    state: link
+    force: yes
+
+- name: Create vmlinuz symlink for BCM PXE (agent boot file)
+  ansible.builtin.file:
+    src: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-vmlinuz"
+    dest: "/cm/images/installer-openshift-{{ openshift_version }}/vmlinuz"
+    state: link
+    force: yes
+
+- name: Create initrd symlink for BCM PXE (agent boot file)
+  ansible.builtin.file:
+    src: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-initrd.img"
+    dest: "/cm/images/installer-openshift-{{ openshift_version }}/initrd"
+    state: link
+    force: yes
+
+- name: Create symlink from images to BCM software image directory
+  ansible.builtin.file:
+    src: "/cm/images/installer-openshift-{{ openshift_version }}"
+    dest: "{{ images_path }}/installer-openshift-{{ openshift_version }}"
+    state: link
+    force: yes
+
+# Create cluster-specific PXE repo directory
+- name: Create cluster-specific PXE repository directory
+  ansible.builtin.file:
+    path: "{{ repos_path }}/{{ cluster_name }}"
+    state: directory
+    mode: "{{ dir_mode }}"
+
+- name: Create symlink for cluster-specific rootfs in repos directory
+  ansible.builtin.file:
+    src: "/openshift/clusters/{{ cluster_name }}/boot-artifacts/agent.x86_64-rootfs.img"
+    dest: "{{ repos_path }}/{{ cluster_name }}/agent.x86_64-rootfs.img"
+    state: link
+    force: yes
+
+- name: Create kernel modules directory structure
+  ansible.builtin.file:
+    path: "/cm/images/installer-openshift-{{ openshift_version }}/lib/modules/{{ detected_kernel_version.stdout }}"
+    state: directory
+    mode: '0755'
+
+- name: Create minimal modules.dep for BCM
+  ansible.builtin.copy:
+    content: |
+      # Minimal modules.dep for CoreOS installer image
+      # Actual modules loaded from initrd
+    dest: "/cm/images/installer-openshift-{{ openshift_version }}/lib/modules/{{ detected_kernel_version.stdout }}/modules.dep"
+    mode: '0644'
+
+- name: Register BCM software image
+  brightcomputing.bcm110.software_image:
+    name: "installer-openshift-{{ openshift_version }}"
+    state: present
+    path: "/cm/images/installer-openshift-{{ openshift_version }}"
+    kernelVersion: "{{ detected_kernel_version.stdout }}"
+    notes: "OpenShift {{ openshift_version }} CoreOS Installer (Agent-Based)"
+
+- name: Verify OpenShift boot files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: openshift_boot_files
+  failed_when: not openshift_boot_files.stat.exists
+  loop:
+    - "/openshift/tools/{{ openshift_version }}/vmlinuz-{{ detected_kernel_version.stdout }}"
+    - "/openshift/tools/{{ openshift_version }}/initrd-{{ detected_kernel_version.stdout }}.img"
+    - "{{ repos_path }}/{{ cluster_name }}/agent.x86_64-rootfs.img"
+  when: verify_boot_files | bool

@@ -1,0 +1,79 @@
+---
+# Main tasks for rhel_cluster role
+
+- name: Validate node_roles variable
+  ansible.builtin.assert:
+    that:
+      - node_roles is defined
+      - node_roles | length > 0
+    fail_msg: "node_roles must be defined with at least one role"
+
+- name: Ensure kickstart directory exists
+  ansible.builtin.file:
+    path: "{{ ks_path }}"
+    state: directory
+    mode: '0755'
+
+- name: Read BCM repository configuration
+  ansible.builtin.slurp:
+    src: /etc/yum.repos.d/cm.repo
+  register: bcm_cm_repo_content
+
+- name: Set BCM repo content as variable
+  ansible.builtin.set_fact:
+    bcm_cm_repo: "{{ bcm_cm_repo_content.content | b64decode }}"
+
+- name: Read BCM head node SSH public keys
+  ansible.builtin.command: "cat {{ item }}"
+  loop:
+    - /root/.ssh/id_ecdsa.pub
+    - /root/.ssh/id_rsa.pub
+  register: bcm_ssh_keys_raw
+  changed_when: false
+
+- name: Set BCM SSH keys as list
+  ansible.builtin.set_fact:
+    bcm_ssh_keys: "{{ bcm_ssh_keys_raw.results | map(attribute='stdout') | list }}"
+
+- name: Generate kickstart files for each role
+  ansible.builtin.template:
+    src: kickstart.cfg.j2
+    dest: "{{ ks_path }}/{{ role.category }}.cfg"
+    mode: '0644'
+  loop: "{{ node_roles }}"
+  loop_control:
+    loop_var: role
+    label: "{{ role.category }}"
+
+- name: Create symlinks for category boot files
+  ansible.builtin.file:
+    src: "{{ images_path }}/{{ installer_name }}"
+    dest: "{{ images_path }}/{{ role.category }}"
+    state: link
+    force: true
+  loop: "{{ node_roles }}"
+  loop_control:
+    loop_var: role
+    label: "{{ role.category }}"
+
+- name: Create BCM categories
+  brightcomputing.bcm110.category:
+    name: "{{ role.category }}"
+    state: present
+    bootLoader: "{{ bootloader }}"
+    bootLoaderProtocol: "{{ bootloader_protocol }}"
+    kernelParameters: "ip=dhcp inst.ks=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/ks/{{ role.category }}.cfg console={{ kernel_output_console }}"
+    kernelOutputConsole: "{{ kernel_output_console }}"
+    installMode: "{{ install_mode }}"
+    newNodeInstallMode: "{{ newnode_install_mode }}"
+    softwareImageProxy:
+      parentSoftwareImage: "installer-{{ rhel_repo_name }}"
+    notes: "RHEL {{ rhel_version }} - {{ cluster_name | upper }} Cluster - {{ role.name | title }} Nodes"
+  loop: "{{ node_roles }}"
+  loop_control:
+    loop_var: role
+    label: "{{ role.category }}"
+
+- name: Register nodes if defined
+  ansible.builtin.include_tasks: register_nodes.yml
+  when: cluster_nodes is defined and cluster_nodes | length > 0
