@@ -1,206 +1,288 @@
 # Sushy-Tools Redfish Emulator Setup
 
-Sushy-tools is now running as a containerized service providing Redfish API endpoints for your libvirt VMs.
+Sushy-tools provides a Redfish API emulator for libvirt VMs, allowing BCM to manage virtual machines via the standard Redfish protocol. This is useful for testing and development environments.
 
-## Service Information
+## Overview
 
-- **Status**: Running (systemd container)
-- **Port**: 8000
-- **Host IP**: 192.168.1.51
-- **Redfish API**: http://192.168.1.51:8000/redfish/v1/
-- **Container Image**: quay.io/metal3-io/sushy-tools:latest
+Sushy-tools runs as a containerized service that:
+- Exposes libvirt VMs as Redfish endpoints
+- Provides standard Redfish API for power management
+- Maps VM UUIDs to Redfish system endpoints
+- Enables BCM to manage VMs without direct libvirt access
 
-## VM to Redfish Mapping
+## Prerequisites
 
-| VM Name | UUID | Redfish Endpoint |
-|---------|------|------------------|
-| bcm-11 | 2a637948-4f17-4075-9446-468af7360697 | http://192.168.1.51:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697 |
-| iec61850-publisher | f10692c1-f9d7-44ba-ab0f-8e5570cafc10 | http://192.168.1.51:8000/redfish/v1/Systems/f10692c1-f9d7-44ba-ab0f-8e5570cafc10 |
-| iec61850-subscriber | f24f03ed-ca89-4331-9c9e-5bbef67da3d8 | http://192.168.1.51:8000/redfish/v1/Systems/f24f03ed-ca89-4331-9c9e-5bbef67da3d8 |
-| win11 | 26d68a74-6d9a-4a84-abe9-1e17cbd28b22 | http://192.168.1.51:8000/redfish/v1/Systems/26d68a74-6d9a-4a84-abe9-1e17cbd28b22 |
-| wks-fedora | 2e3d6960-50b0-4a89-8c0e-01caf739961d | http://192.168.1.51:8000/redfish/v1/Systems/2e3d6960-50b0-4a89-8c0e-01caf739961d |
+- Podman or Docker installed
+- Libvirt running with VMs
+- Access to quay.io/metal3-io/sushy-tools container image
 
-## Service Management
+## Automated Setup
 
-### Check service status
+Use the provided playbook for automated setup:
+
 ```bash
+ansible-playbook -i inventory/openshift_test_cluster.yml \
+  playbooks/setup_sushy_emulator.yml
+```
+
+The playbook will:
+1. Pull the sushy-tools container image
+2. Create systemd service unit
+3. Configure libvirt access
+4. Start and enable the service
+5. Display VM to Redfish endpoint mappings
+
+## Manual Setup
+
+### 1. Create Systemd Service
+
+Create `/etc/systemd/system/sushy-emulator.service`:
+
+```ini
+[Unit]
+Description=Sushy Redfish Emulator for Libvirt
+After=network-online.target libvirtd.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+ExecStartPre=-/usr/bin/podman kill sushy-emulator
+ExecStartPre=-/usr/bin/podman rm sushy-emulator
+ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
+  --net=host \
+  --privileged \
+  -v /var/run/libvirt:/var/run/libvirt:Z \
+  quay.io/metal3-io/sushy-tools:latest \
+  sushy-emulator --port 8000 --libvirt-uri qemu:///system
+ExecStop=/usr/bin/podman stop sushy-emulator
+
+[Install]
+WantedBy=multi-user.target
+```
+
+### 2. Enable and Start Service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable sushy-emulator
+sudo systemctl start sushy-emulator
+```
+
+### 3. Verify Service
+
+```bash
+# Check service status
 sudo systemctl status sushy-emulator
-```
 
-### View logs
-```bash
+# View logs
 sudo journalctl -u sushy-emulator -f
+
+# Test Redfish API
+curl http://localhost:8000/redfish/v1/ | python3 -m json.tool
 ```
 
-### Restart service
-```bash
-sudo systemctl restart sushy-emulator
-```
+## Usage
 
-### Stop service
-```bash
-sudo systemctl stop sushy-emulator
-```
+### List All Systems (VMs)
 
-## Testing Redfish API
-
-### List all systems (VMs)
 ```bash
 curl http://localhost:8000/redfish/v1/Systems | python3 -m json.tool
 ```
 
-### Get VM details (example: bcm-11)
+### Get VM UUID
+
+Find your VM's UUID:
+
 ```bash
-curl http://localhost:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697 | python3 -m json.tool
+virsh list --all
+virsh domuuid <vm-name>
 ```
 
-### Power operations via Redfish
+### Get VM Details via Redfish
 
-#### Power on VM
 ```bash
-curl -X POST http://localhost:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697/Actions/ComputerSystem.Reset \
+VM_UUID=$(virsh domuuid <vm-name>)
+curl http://localhost:8000/redfish/v1/Systems/${VM_UUID} | python3 -m json.tool
+```
+
+### Power Operations
+
+#### Power On
+
+```bash
+VM_UUID=$(virsh domuuid <vm-name>)
+curl -X POST http://localhost:8000/redfish/v1/Systems/${VM_UUID}/Actions/ComputerSystem.Reset \
   -H "Content-Type: application/json" \
   -d '{"ResetType": "On"}'
 ```
 
-#### Graceful shutdown
-```bash
-curl -X POST http://localhost:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697/Actions/ComputerSystem.Reset \
-  -H "Content-Type: application/json" \
-  -d '{"ResetType": "GracefulShutdown"}'
-```
+#### Power Off
 
-#### Force off
 ```bash
-curl -X POST http://localhost:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697/Actions/ComputerSystem.Reset \
+VM_UUID=$(virsh domuuid <vm-name>)
+curl -X POST http://localhost:8000/redfish/v1/Systems/${VM_UUID}/Actions/ComputerSystem.Reset \
   -H "Content-Type: application/json" \
   -d '{"ResetType": "ForceOff"}'
 ```
 
-#### Set boot device to PXE
+#### Graceful Shutdown
+
 ```bash
-curl -X PATCH http://localhost:8000/redfish/v1/Systems/2a637948-4f17-4075-9446-468af7360697 \
+VM_UUID=$(virsh domuuid <vm-name>)
+curl -X POST http://localhost:8000/redfish/v1/Systems/${VM_UUID}/Actions/ComputerSystem.Reset \
   -H "Content-Type: application/json" \
-  -d '{
-    "Boot": {
-      "BootSourceOverrideEnabled": "Once",
-      "BootSourceOverrideTarget": "Pxe"
-    }
-  }'
+  -d '{"ResetType": "GracefulShutdown"}'
 ```
 
-## BCM Integration
-
-### Configure BCM to use Redfish for out-of-band management
-
-For each VM you want BCM to manage via Redfish:
+#### Power Cycle
 
 ```bash
-# Example for bcm-11 VM
-VM_NAME="bcm-11"
-VM_UUID="2a637948-4f17-4075-9446-468af7360697"
-
-# Configure Redfish BMC in BCM (from BCM head node)
-cmsh -c "device use $VM_NAME; set bmc http://192.168.1.51:8000/redfish/v1/Systems/$VM_UUID"
+VM_UUID=$(virsh domuuid <vm-name>)
+curl -X POST http://localhost:8000/redfish/v1/Systems/${VM_UUID}/Actions/ComputerSystem.Reset \
+  -H "Content-Type: application/json" \
+  -d '{"ResetType": "ForceRestart"}'
 ```
 
-### Using bcm_power Ansible module
+## Integration with BCM
 
-Once configured in BCM, you can use the `bcm_power` module:
+### Configure BCM to Use Redfish
+
+In BCM, configure your VMs to use Redfish for power management:
+
+1. **Get VM UUID**: `virsh domuuid <vm-name>`
+2. **Redfish Endpoint**: `http://<host-ip>:8000/redfish/v1/Systems/<VM_UUID>`
+3. **Configure in BCM**: Set up chassis/power management with Redfish endpoint
+
+Example using BCM modules:
 
 ```yaml
-- name: Power on VM via BCM Redfish
-  nvidia.bcm.bcm_power:
-    name: bcm-11
-    state: on
-
-- name: Check power status
-  nvidia.bcm.bcm_power:
-    name: bcm-11
-    state: status
-  register: power_status
-
-- name: Power off VM
-  nvidia.bcm.bcm_power:
-    name: bcm-11
-    state: off
-```
-
-## Configuration Files
-
-### Container definition
-```
-/etc/containers/systemd/sushy-emulator.container
-```
-
-### Service configuration
-```
-Generated by systemd from .container file
+- name: Configure VM chassis with Redfish
+  brightcomputing.bcm110.chassis:
+    name: "vm-chassis-{{ vm_name }}"
+    state: present
+    hostname: "<host-ip>"
+    port: 8000
+    protocol: "REDFISH"
+    # Additional Redfish configuration
 ```
 
 ## Troubleshooting
 
-### VMs not showing in Redfish API
+### Service Won't Start
 
-Check libvirt connection:
-```bash
-sudo virsh list --all
-```
-
-Check container logs:
+Check logs for errors:
 ```bash
 sudo journalctl -u sushy-emulator -n 50
 ```
 
-### Permission denied errors
+Common issues:
+- **Libvirt not running**: `sudo systemctl status libvirtd`
+- **Port 8000 in use**: `sudo ss -tlnp | grep 8000`
+- **Container image pull failed**: `podman pull quay.io/metal3-io/sushy-tools:latest`
 
-Check SELinux policy (already fixed):
+### VMs Not Appearing
+
+Verify libvirt connection:
 ```bash
-sudo ausearch -m avc -ts recent | audit2allow
+# Test libvirt connection
+virsh -c qemu:///system list --all
+
+# Check if VMs are accessible to sushy
+curl http://localhost:8000/redfish/v1/Systems
 ```
 
-### Container won't start
+### Power Operations Not Working
 
-Check container status:
+Check VM state and libvirt permissions:
 ```bash
-sudo podman ps -a | grep sushy
+# Check VM state
+virsh list --all
+
+# Verify sushy container has libvirt access
+podman exec sushy-emulator ls -la /var/run/libvirt/
 ```
 
-Restart the service:
+## Configuration Options
+
+### Change Port
+
+Modify the systemd service to use a different port:
+
+```ini
+ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
+  --net=host \
+  --privileged \
+  -v /var/run/libvirt:/var/run/libvirt:Z \
+  quay.io/metal3-io/sushy-tools:latest \
+  sushy-emulator --port 8080 --libvirt-uri qemu:///system
+```
+
+Then reload and restart:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart sushy-emulator
+```
+
+### Enable Authentication
+
+For basic authentication, add environment variables:
+
+```ini
+ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
+  --net=host \
+  --privileged \
+  -v /var/run/libvirt:/var/run/libvirt:Z \
+  -e SUSHY_EMULATOR_AUTH_FILE=/etc/sushy/auth.conf \
+  quay.io/metal3-io/sushy-tools:latest \
+  sushy-emulator --port 8000 --libvirt-uri qemu:///system
+```
+
+## Service Management
+
+### Check Status
+
+```bash
+sudo systemctl status sushy-emulator
+```
+
+### View Logs
+
+```bash
+# Follow logs in real-time
+sudo journalctl -u sushy-emulator -f
+
+# View recent logs
+sudo journalctl -u sushy-emulator -n 100
+```
+
+### Restart Service
+
 ```bash
 sudo systemctl restart sushy-emulator
 ```
 
-## Notes
+### Stop Service
 
-- The Redfish emulator runs in debug mode for testing
-- No authentication is currently configured
-- For production use, consider:
-  - Adding authentication via `SUSHY_EMULATOR_AUTH_FILE`
-  - Using SSL/TLS certificates
-  - Running behind a reverse proxy
-  - Disabling debug mode
+```bash
+sudo systemctl stop sushy-emulator
+```
 
-## Adding New VMs
+### Disable Service
 
-When you create new VMs, they will automatically appear in the Redfish API:
+```bash
+sudo systemctl disable sushy-emulator
+```
 
-1. Create the VM in libvirt:
-   ```bash
-   sudo virsh define vm.xml
-   ```
+## References
 
-2. Get the VM UUID:
-   ```bash
-   sudo virsh domuuid <vm-name>
-   ```
+- [Sushy-tools Documentation](https://docs.openstack.org/sushy-tools/latest/)
+- [Redfish API Specification](https://www.dmtf.org/standards/redfish)
+- [Metal3 Sushy-tools Container](https://quay.io/repository/metal3-io/sushy-tools)
+- [BCM Power Management Guide](https://support.nvidia.com/bcm)
 
-3. The Redfish endpoint will be:
-   ```
-   http://192.168.1.51:8000/redfish/v1/Systems/<vm-uuid>
-   ```
+## Related Playbooks
 
-4. Configure in BCM:
-   ```bash
-   cmsh -c "device use <vm-name>; set bmc http://192.168.1.51:8000/redfish/v1/Systems/<vm-uuid>"
-   ```
+- `playbooks/setup_sushy_emulator.yml` - Automated setup
+- `playbooks/deploy_openshift_cluster.yml` - Uses Redfish for VM management

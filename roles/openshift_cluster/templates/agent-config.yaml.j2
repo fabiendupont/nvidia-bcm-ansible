@@ -1,0 +1,35 @@
+---
+apiVersion: v1alpha1
+kind: AgentConfig
+metadata:
+  name: {{ cluster_name }}
+rendezvousIP: {{ (cluster_nodes | selectattr('role', 'equalto', 'master') | first).ip }}
+bootArtifactsBaseURL: http://{{ bcm_server }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ openshift_repo_name }}/
+hosts:
+{% for node in cluster_nodes %}
+  - hostname: {{ node.name }}
+    role: {{ node.role }}
+    interfaces:
+      - name: {{ openshift_network_interface | default('enp1s0') }}
+        macAddress: {{ node.mac }}
+    networkConfig:
+      interfaces:
+        - name: {{ openshift_network_interface | default('enp1s0') }}
+          type: ethernet
+          state: up
+          ipv4:
+            enabled: true
+            address:
+              - ip: {{ node.ip }}
+                prefix-length: {{ openshift_network_prefix | default(16) }}
+            dhcp: false
+      dns-resolver:
+        config:
+          server:
+            - {{ openshift_dns_server | default(bcm_internal_ip | default('10.141.255.254')) }}
+      routes:
+        config:
+          - destination: 0.0.0.0/0
+            next-hop-address: {{ openshift_gateway | default('10.141.255.254') }}
+            next-hop-interface: {{ openshift_network_interface | default('enp1s0') }}
+{% endfor %}
