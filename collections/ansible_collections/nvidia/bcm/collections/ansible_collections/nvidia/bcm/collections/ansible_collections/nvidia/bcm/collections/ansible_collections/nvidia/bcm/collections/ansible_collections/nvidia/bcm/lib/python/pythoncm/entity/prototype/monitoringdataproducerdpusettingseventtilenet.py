@@ -1,5 +1,0 @@
-from pythoncm.entity import MonitoringDataProducerDPUSettingsEvent
-
-
-class MonitoringDataProducerDPUSettingsEventTilenet(MonitoringDataProducerDPUSettingsEvent):
-    pass

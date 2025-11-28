@@ -80,34 +80,67 @@ rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-9
 
-# Configure BCM repositories with credentials
-curl -s -o /etc/yum.repos.d/cm.repo http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }}/repoconfig/cm.repo
-curl -s -o /etc/yum.repos.d/cm-extra.repo http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }}/repoconfig/cm-extra.repo
+# Install podman for BCM Lite Daemon (if not already installed)
+dnf install -y podman 2>&1 | tee -a /root/podman-install.log
 
-# Import BCM GPG key
+# Create directories for BCM Lite Daemon
+mkdir -p /etc/containers/systemd
+mkdir -p /etc/bcm-agent/certs
+mkdir -p /var/log/bcm-agent
+
+# Download BCM Lite Daemon quadlet configuration
+curl -s -o /etc/containers/systemd/bcm-agent.container \
+  http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/bcm-agent.container
+
+# Fix hostname in quadlet (systemd %H specifier doesn't work in Quadlet)
+sed -i "s/%H/$(hostname)/g" /etc/containers/systemd/bcm-agent.container
+
+# Get MAC address for this node to download the correct certificate
+# The certificate is stored in a per-MAC directory on the BCM server
+# Try BOOTIF from kernel cmdline first, then fall back to network interface
+BOOTIF=$(cat /proc/cmdline | grep -oP 'BOOTIF=01-\K[0-9a-fA-F:-]+' | tr '-' ':' | tr 'A-F' 'a-f')
+if [ -z "$BOOTIF" ]; then
+    # Fall back to getting MAC from the first non-lo interface
+    BOOTIF=$(ip link show | grep -A1 '^[0-9]' | grep -v lo | grep link/ether | head -1 | awk '{print $2}')
+fi
+echo "Detected MAC address: $BOOTIF" >> /root/ks-post.log
+
+# Download per-node litenode certificate (not bootstrap!)
+# Bootstrap certificates do NOT work for LiteNode authentication
+curl -s -o /etc/bcm-agent/certs/cert.pem \
+  http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/certs/${BOOTIF}/cert.pem
+curl -s -o /etc/bcm-agent/certs/cert.key \
+  http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/certs/${BOOTIF}/cert.key
+curl -s -o /etc/bcm-agent/certs/cacert.pem \
+  http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/certs/cacert.pem
+
+# Verify certificates were downloaded
+if [ ! -s /etc/bcm-agent/certs/cert.pem ]; then
+    echo "ERROR: Failed to download certificate for MAC $BOOTIF" >> /root/ks-post.log
+    echo "Check that certificates were generated in prepare_bcm_agent.yml" >> /root/ks-post.log
+fi
+
+# Set proper permissions on certificates
+chmod 600 /etc/bcm-agent/certs/cert.key
+chmod 644 /etc/bcm-agent/certs/cert.pem
+chmod 644 /etc/bcm-agent/certs/cacert.pem
+
+# Reload systemd to pick up the new quadlet
+systemctl daemon-reload
+
+# Enable and start BCM agent service
+systemctl enable bcm-agent.service
+systemctl start bcm-agent.service
+
+# Install Slurm packages if defined for this role
+{% if role.install_slurm | default(false) %}
+# Configure BCM repositories for Slurm
+curl -s -o /etc/yum.repos.d/cm.repo http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }}/repoconfig/cm.repo
 curl -s -o /etc/pki/rpm-gpg/RPM-GPG-KEY-cm http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }}/repoconfig/RPM-GPG-KEY-cm
 rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-cm
 
-# Install BCM compute node packages (static install, no boot-time sync)
-# Core packages for inventory, monitoring/metrics, and Slurm management
-dnf install -y \
-  cm-slave \
-  cmdaemon-remotecm \
-  cmdaemon-pythoncm \
-  cm-config-nfsclient \
-  cm-config-ssh-slave \
-  cm-config-syslog-slave \
-  cm-config-xntp-slave \
-  cm-config-dhclient \
-  cm-config-dracut-slave \
-  cm-config-rootfiles-slave \
-  cm-config-systemd \
-  cm-nvnodehealth \
-  cm-prs \
-  2>&1 | tee -a /root/bcm-install.log
-
-# Install Slurm packages
 dnf install -y slurm25.05-slurmd 2>&1 | tee -a /root/slurm-install.log
+{% endif %}
 
 {% if role.post_script is defined %}
 {{ role.post_script }}

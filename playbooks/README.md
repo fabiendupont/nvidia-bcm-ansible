@@ -6,13 +6,90 @@ This directory contains purpose-specific playbooks for different deployment scen
 
 | Playbook | Use Case | Prerequisites |
 |----------|----------|---------------|
+| **RHEL Deployments** |||
+| `deploy_rhel_cluster.yml` | Deploy new RHEL cluster via PXE | RHEL ISO, inventory |
+| `join_rhel_nodes.yml` | Join existing RHEL machines to BCM | SSH access, inventory |
+| **OpenShift Deployments** |||
 | `deploy_openshift_cluster.yml` | Deploy new OpenShift cluster from scratch | Pull secret, inventory |
 | `join_openshift_cluster.yml` | Integrate existing cluster with BCM | Running cluster, kubeconfig |
 | `deploy_bcm_agent.yml` | Deploy/retry BCM agent only | Cluster deployed, LiteNodes registered |
 | `build_bcm_agent_image.yml` | Build container image only | None |
+| **Utilities** |||
 | `cleanup_bcm_cluster.yml` | Remove cluster from BCM | None |
 | `cleanup_test_vms.yml` | Remove local test VMs | None |
 | `setup_bcm_bootstrap_certs.yml` | Generate bootstrap certificates | None |
+
+## RHEL Deployment Playbooks
+
+### deploy_rhel_cluster.yml
+**Purpose:** Full RHEL cluster deployment via PXE with BCM Lite Daemon
+
+**When to use:**
+- Deploying new RHEL nodes via PXE
+- Want automated RHEL installation with BCM integration
+- Need BCM Lite Daemon deployed automatically
+
+**What it does:**
+1. Sets up PXE infrastructure for RHEL
+2. Creates BCM categories for node roles
+3. Registers nodes as PhysicalNode (for PXE boot)
+4. Waits for RHEL installation to complete
+5. Converts nodes to LiteNode
+6. Verifies BCM Lite Daemon is running (deployed via kickstart)
+
+**Usage:**
+```bash
+ansible-playbook -i inventory/rhel_cluster.yml \
+  playbooks/deploy_rhel_cluster.yml
+```
+
+**Key features:**
+- BCM Lite Daemon deployed via kickstart %post script
+- Bootstrap certificates served via HTTP during installation
+- Automatic conversion from PhysicalNode to LiteNode
+
+---
+
+### join_rhel_nodes.yml
+**Purpose:** Join existing RHEL machines to BCM
+
+**When to use:**
+- RHEL nodes already deployed manually
+- Want to add BCM management to existing RHEL systems
+- Nodes don't need PXE installation
+
+**What it does:**
+1. Registers nodes as LiteNodes in BCM (directly, no PhysicalNode)
+2. Deploys BCM Lite Daemon quadlet via Ansible
+3. Deploys bootstrap certificates
+4. Enables and starts BCM agent service
+
+**Usage:**
+```bash
+ansible-playbook -i inventory/existing_rhel_nodes.yml \
+  playbooks/join_rhel_nodes.yml
+```
+
+**Example inventory:**
+```yaml
+all:
+  hosts:
+    bcm_headnode:
+      ansible_host: 192.168.122.204
+  vars:
+    cluster_name: "rhel-prod"
+    rhel_nodes:
+      - name: rhel-node-1
+        mac: "52:54:00:AA:BB:01"
+        ip: "10.141.160.50"
+        role: compute
+      - name: rhel-node-2
+        mac: "52:54:00:AA:BB:02"
+        ip: "10.141.160.51"
+        role: compute"
+```
+
+---
 
 ## OpenShift Deployment Playbooks
 

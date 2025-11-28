@@ -1,4 +1,0 @@
----
-emulator_bin: /usr/bin/qemu-system-x86_64
-domain_info:
-  name: test_dom

@@ -1,0 +1,22 @@
+---
+# Defaults for convert_to_litenode role
+
+# SSH timeout for waiting for nodes (seconds)
+ssh_wait_timeout: 1800
+
+# File to check for installation completion (set to empty to skip)
+install_complete_file: ""
+
+# Service to verify is running (set to empty to skip)
+verify_service: ""
+
+# OpenShift-specific settings (set verify_openshift: true to enable)
+verify_openshift: false
+# openshift_version: "4.14"
+# cluster_name: "my-cluster"
+
+# Partition for LiteNode registration
+litenode_partition: "base"
+
+# Network for LiteNode interface
+litenode_network: "internalnet"

@@ -71,17 +71,19 @@ all:
         # (can also run workloads - no dedicated workers needed)
         cluster_nodes:
           - name: ocp-master-0
+            ansible_user: core
             mac: "52:54:00:0C:01:00"
             ip: "10.141.160.50"
             role: master
-            # Ignition will be auto-generated with BCM SSH keys
 
           - name: ocp-master-1
+            ansible_user: core
             mac: "52:54:00:0C:01:01"
             ip: "10.141.160.51"
             role: master
 
           - name: ocp-master-2
+            ansible_user: core
             mac: "52:54:00:0C:01:02"
             ip: "10.141.160.52"
             role: master

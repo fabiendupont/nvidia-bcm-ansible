@@ -31,6 +31,7 @@ all:
 
         # BCM server IP (internal network)
         bcm_server: "10.141.255.254"
+        bcm_internal_ip: "10.141.255.254"  # IP on internal provisioning network
 
         # ================================================================
         # Network Configuration
@@ -55,7 +56,6 @@ all:
             category: "slurm-{{ cluster_name }}-compute"
             packages:
               - "@^minimal-environment"
-              - "@development-tools"
               - nfs-utils
               - vim-enhanced
             post_script: |
@@ -66,18 +66,33 @@ all:
               echo "Installation completed successfully" >> /root/test-install.log
 
         # ================================================================
+        # VM Configuration (for test environments)
+        # ================================================================
+        vm_memory_mb: 4096
+        vm_vcpus: 2
+        vm_disk_gb: 40
+        vm_network: "bcm-internalnet"
+        skip_vm_creation: false
+
+        # ================================================================
+        # Redfish Power Management (Sushy Emulator)
+        # ================================================================
+        sushy_host: "192.168.122.1"  # Hypervisor host IP
+        sushy_port: 8000
+
+        # ================================================================
         # Test Cluster Nodes (Virtual Machines)
         # ================================================================
         # Note: These are test VMs - adjust MAC/IP based on your VM setup
         cluster_nodes:
           - name: test-compute-01
+            ansible_user: root
             mac: "52:54:00:AA:01:01"
             ip: "10.141.100.101"
             category: "slurm-{{ cluster_name }}-compute"
             hostname: "test-compute-01.{{ cluster_name }}.local"
-
-          - name: test-compute-02
-            mac: "52:54:00:AA:01:02"
-            ip: "10.141.100.102"
-            category: "slurm-{{ cluster_name }}-compute"
-            hostname: "test-compute-02.{{ cluster_name }}.local"
+            # Redfish power management via Sushy Emulator
+            redfish_enabled: true
+            redfish_host: "{{ sushy_host }}"
+            redfish_port: "{{ sushy_port }}"
+            redfish_system_id: "0c8ddfff-1592-4cfc-8d60-b430c2589957"

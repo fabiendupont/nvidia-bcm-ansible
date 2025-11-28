@@ -1,5 +1,0 @@
-from pythoncm.entity import MonitoringDataProducerDPUSettingsEvent
-
-
-class MonitoringDataProducerDPUSettingsEventL3CacheHalf(MonitoringDataProducerDPUSettingsEvent):
-    pass

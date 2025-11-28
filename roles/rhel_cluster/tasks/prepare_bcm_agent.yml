@@ -1,0 +1,72 @@
+---
+# Prepare BCM Lite Daemon files for HTTP download during kickstart
+# This makes the quadlet and per-node certificates available for nodes to download
+#
+# IMPORTANT: Bootstrap certificates do NOT work for LiteNode authentication.
+# Each LiteNode needs its own certificate with profile=litenode issued by BCM.
+# We generate these per-node certificates here and organize by MAC address
+# so the kickstart can download the correct certificate for each node.
+
+- name: Create BCM agent files directory in tftpboot
+  ansible.builtin.file:
+    path: "{{ tftpboot_path }}/bcm-agent"
+    state: directory
+    mode: '0755'
+
+- name: Create BCM agent certs directory
+  ansible.builtin.file:
+    path: "{{ tftpboot_path }}/bcm-agent/certs"
+    state: directory
+    mode: '0755'
+
+- name: Generate BCM agent quadlet configuration
+  ansible.builtin.template:
+    src: bcm-agent.container.j2
+    dest: "{{ tftpboot_path }}/bcm-agent/bcm-agent.container"
+    mode: '0644'
+
+- name: Copy CA certificate to tftpboot
+  ansible.builtin.copy:
+    src: "/cm/local/apps/cmd/etc/cacert.pem"
+    dest: "{{ tftpboot_path }}/bcm-agent/certs/cacert.pem"
+    mode: '0644'
+    remote_src: true
+
+# Generate per-node litenode certificates
+# MAC is normalized to lowercase with colons for directory naming
+- name: Create per-node certificate directories
+  ansible.builtin.file:
+    path: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.mac }})"
+
+- name: Generate litenode certificates for each node
+  ansible.builtin.shell: |
+    cmsh -c 'cert; createcertificate 2048 "{{ item.name }}" "NVIDIA Inc" "Bright Licensing" "Santa Clara" "California" US litenode "" 36500 "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.key" "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.pem"'
+  args:
+    creates: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.pem"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.mac }})"
+
+- name: Set proper permissions on certificate keys
+  ansible.builtin.file:
+    path: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.key"
+    mode: '0644'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Display BCM agent files location
+  ansible.builtin.debug:
+    msg:
+      - "BCM agent files prepared for kickstart download:"
+      - "  Quadlet: http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/bcm-agent.container"
+      - "  Per-node certificates: http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/certs/<mac>/"
+      - "  CA certificate: http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/bcm-agent/certs/cacert.pem"
+      - ""
+      - "Nodes with certificates generated:"
+      - "{% for node in cluster_nodes %}  - {{ node.name }}: {{ node.mac | lower }}\n{% endfor %}"

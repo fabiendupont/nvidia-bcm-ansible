@@ -1,5 +1,0 @@
----
-- import_role:
-    name: brightcomputing.bcm110.software_image_tunnels
-  vars:
-    software_image_tunnels_action: open

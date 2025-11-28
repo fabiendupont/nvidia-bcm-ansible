@@ -12,9 +12,18 @@ bcm_agent_bcm_host: "bcmhead"
 bcm_agent_bcm_port: 8081
 
 # Certificate configuration
-bcm_agent_cert_source: "/cm/local/apps/cm-lite-daemon/etc"
-bcm_agent_cert_dest: "/etc/bcm-agent/certs"
-bcm_agent_cert_method: "symlink"  # Options: copy, symlink
+#
+# Bootstrap certificates are shared per-cluster and used to auto-generate
+# per-node certificates on first container start. This is the recommended mode.
+#
+# Flow: Bootstrap cert (shared) -> Per-node cert (auto-generated)
+#
+bcm_agent_bootstrap_cert_source: "/cm/shared/apps/cm-lite-daemon-dist"
+bcm_agent_bootstrap_cert_dest: "/etc/bcm-bootstrap"
+bcm_agent_ca_cert_source: "/cm/local/apps/cmd/etc/cacert.pem"
+
+# Per-node certificates are auto-generated here by bcm-agent on first start
+bcm_agent_cert_dest: "/var/lib/bcm-agent/certs"
 
 # Monitoring configuration
 bcm_agent_sync_interval: 300  # seconds

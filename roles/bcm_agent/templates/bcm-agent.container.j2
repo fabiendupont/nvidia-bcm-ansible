@@ -24,9 +24,6 @@ ContainerName=bcm-agent
 Environment=NODE_NAME=%H
 Environment=BCM_HOST={{ bcm_agent_bcm_host }}
 Environment=BCM_PORT={{ bcm_agent_bcm_port }}
-Environment=CERT_FILE={{ bcm_agent_cert_dest }}/cert.pem
-Environment=KEY_FILE={{ bcm_agent_cert_dest }}/cert.key
-Environment=CA_FILE={{ bcm_agent_cert_dest }}/cacert.pem
 Environment=SYNC_INTERVAL={{ bcm_agent_sync_interval }}
 Environment=LABEL_PREFIX={{ bcm_agent_label_prefix }}
 Environment=METRICS_PORT={{ bcm_agent_metrics_port }}
@@ -54,11 +51,16 @@ AddCapability=SYS_RAWIO
 AddCapability=NET_ADMIN
 
 # Volume mounts
-Volume={{ bcm_agent_cert_dest }}:{{ bcm_agent_cert_dest }}:ro,z
+# Bootstrap certs (read-only) - used to generate per-node certs
+Volume={{ bcm_agent_bootstrap_cert_dest }}:/etc/bcm-bootstrap:ro,z
+# Per-node certs (read-write) - generated on first start, persisted
+Volume={{ bcm_agent_cert_dest }}:/var/lib/bcm-agent/certs:rw,z
+# Hardware access
 Volume=/dev:/dev:rw
 Volume=/sys:/sys:rw
 Volume=/proc:/host/proc:ro
 Volume=/lib/firmware:/lib/firmware:ro
+# Logs
 Volume={{ bcm_agent_log_dir }}:{{ bcm_agent_log_dir }}:rw,z
 
 # PID namespace

@@ -46,12 +46,13 @@ firewall_services:
   - ssh
 
 # BCM category settings
-bootloader: "syslinux"
+bootloader: "SYSLINUX"
 bootloader_protocol: "HTTP"
-# IMPORTANT: Use SKIP for external Kickstart installation
+# IMPORTANT: Use NOSYNC for external Kickstart installation
 # BCM does NOT manage the OS - Kickstart handles it
-install_mode: "SKIP"
-newnode_install_mode: "SKIP"
+# NOSYNC = No boot-time sync from BCM
+install_mode: "NOSYNC"
+newnode_install_mode: "NOSYNC"
 kernel_output_console: "tty0"
 
 # Kickstart template defaults

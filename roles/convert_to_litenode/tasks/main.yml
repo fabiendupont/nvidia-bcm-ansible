@@ -1,0 +1,138 @@
+---
+# Convert PhysicalNode nodes to LiteNode after OS installation
+# This allows PXE boot during install, then agent-based management post-install
+#
+# Required variables:
+#   cluster_nodes: list of nodes with name, ip, mac, ansible_user
+#
+# Optional variables:
+#   install_complete_file: file path to check for installation completion
+#   verify_service: service name to verify is running
+#   verify_openshift: set to true for OpenShift cluster readiness check
+#   openshift_version: OpenShift version (required if verify_openshift is true)
+#   cluster_name: cluster name (required if verify_openshift is true)
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - cluster_nodes is defined
+      - cluster_nodes | length > 0
+    fail_msg: "cluster_nodes must be defined with at least one node"
+
+- name: Wait for nodes to be reachable via SSH
+  ansible.builtin.wait_for:
+    host: "{{ item.ip }}"
+    port: 22
+    timeout: "{{ ssh_wait_timeout }}"
+    state: started
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.ip }})"
+
+- name: Verify nodes are accessible via SSH
+  ansible.builtin.command:
+    cmd: "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 {{ item.ansible_user }}@{{ item.ip }} hostname"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: ssh_check
+  changed_when: false
+  retries: 3
+  delay: 10
+
+- name: Display SSH check results
+  ansible.builtin.debug:
+    msg: "Node {{ item.item.name }}: {{ item.stdout }}"
+  loop: "{{ ssh_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Verify installation completed (file check)
+  ansible.builtin.command:
+    cmd: "ssh -o StrictHostKeyChecking=no {{ item.ansible_user }}@{{ item.ip }} test -f {{ install_complete_file }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  changed_when: false
+  retries: 3
+  delay: 10
+  when: install_complete_file | length > 0
+
+- name: Verify service is running
+  ansible.builtin.command:
+    cmd: "ssh -o StrictHostKeyChecking=no {{ item.ansible_user }}@{{ item.ip }} systemctl is-active {{ verify_service }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: service_check
+  changed_when: false
+  failed_when: false
+  when: verify_service | length > 0
+
+- name: Display service status
+  ansible.builtin.debug:
+    msg: "Node {{ item.item.name }}: {{ verify_service }} {{ item.stdout }}"
+  loop: "{{ service_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - verify_service | length > 0
+    - service_check.results is defined
+
+- name: Wait for OpenShift cluster to be ready
+  ansible.builtin.shell: |
+    export KUBECONFIG=/openshift/clusters/{{ cluster_name }}/auth/kubeconfig
+    /openshift/tools/{{ openshift_version }}/oc get nodes --no-headers 2>/dev/null | grep -c " Ready" || echo "0"
+  register: ready_node_count
+  until: ready_node_count.stdout | int == cluster_nodes | length
+  retries: 60
+  delay: 30
+  changed_when: false
+  when: verify_openshift | bool
+
+- name: Display OpenShift cluster readiness status
+  ansible.builtin.debug:
+    msg: "OpenShift cluster has {{ ready_node_count.stdout }} nodes Ready (expected {{ cluster_nodes | length }})"
+  when: verify_openshift | bool
+
+- name: Remove PhysicalNode registration
+  brightcomputing.bcm110.physical_node:
+    hostname: "{{ item.name }}"
+    state: absent
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Create LiteNode registration
+  brightcomputing.bcm110.lite_node:
+    hostname: "{{ item.name }}"
+    state: present
+    mac: "{{ item.mac }}"
+    partition: "{{ litenode_partition }}"
+    interfaces_NetworkPhysicalInterface:
+      - name: "BOOTIF"
+        ip: "{{ item.ip }}"
+        network: "{{ litenode_network }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Display conversion results
+  ansible.builtin.debug:
+    msg: "Converted {{ cluster_nodes | length }} nodes from PhysicalNode to LiteNode"
+
+- name: Pause to allow BCM to update device list
+  ansible.builtin.pause:
+    seconds: 10
+
+- name: Wait for BCM agent to report UP
+  ansible.builtin.command:
+    cmd: "cmsh -c 'device; status -n {{ item.name }}'"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: node_status
+  until: "'UP' in node_status.stdout"
+  retries: 30
+  delay: 10
+  changed_when: false

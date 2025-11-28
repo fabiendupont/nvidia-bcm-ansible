@@ -1,8 +1,0 @@
-download_url: https://galaxy.ansible.com/api/v3/plugin/ansible/content/published/collections/artifacts/brightcomputing-bcm110-30.0.52573+git4350e03.tar.gz
-format_version: 1.0.0
-name: bcm110
-namespace: brightcomputing
-server: https://galaxy.ansible.com/api/
-signatures: []
-version: 30.0.52573+git4350e03
-version_url: /api/v3/plugin/ansible/content/published/collections/index/brightcomputing/bcm110/versions/30.0.52573+git4350e03/

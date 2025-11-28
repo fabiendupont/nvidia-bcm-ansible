@@ -1,0 +1,217 @@
+---
+# Join existing RHEL nodes to BCM
+#
+# This playbook registers existing RHEL machines with BCM and deploys
+# the BCM Lite Daemon as a systemd quadlet container.
+#
+# Usage:
+#   ansible-playbook -i inventory/existing_rhel_nodes.yml \
+#     playbooks/join_rhel_nodes.yml
+#
+# Prerequisites:
+#   - RHEL nodes already deployed and accessible via SSH
+#   - Inventory with node details (hostname, MAC, IP)
+#
+# IMPORTANT: This playbook generates per-node litenode certificates.
+# Bootstrap certificates do NOT work for LiteNode authentication.
+
+- name: Join Existing RHEL Nodes to BCM
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    # These variables should be defined in inventory or group_vars
+    # cluster_name: "rhel-prod"
+    # rhel_nodes: [...]
+    #   - name: rhel-node-1
+    #     mac: "52:54:00:AA:BB:01"
+    #     ip: "10.141.160.50"
+    #     role: compute
+
+    bcm_internal_ip: "{{ ansible_default_ipv4.address }}"
+    litenode_cert_path: "/tmp/bcm-litenode-certs"
+
+  pre_tasks:
+    - name: Display join operation information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Joining Existing RHEL Nodes to BCM"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Nodes to join: {{ rhel_nodes | length }}"
+          - "================================================================"
+
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - rhel_nodes is defined
+          - rhel_nodes | length > 0
+        fail_msg: "Missing required variables. Check inventory configuration."
+
+    - name: Verify CA certificate exists
+      ansible.builtin.stat:
+        path: /cm/local/apps/cmd/etc/cacert.pem
+      register: ca_cert_check
+      failed_when: not ca_cert_check.stat.exists
+
+  tasks:
+    - name: Register RHEL nodes as LiteNodes in BCM
+      brightcomputing.bcm110.lite_node:
+        hostname: "{{ item.name }}"
+        state: present
+        mac: "{{ item.mac }}"
+        partition: "base"
+        interfaces_NetworkPhysicalInterface:
+          - name: "BOOTIF"
+            ip: "{{ item.ip }}"
+            network: "internalnet"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Display LiteNode registration results
+      ansible.builtin.debug:
+        msg: "Registered {{ rhel_nodes | length }} nodes as LiteNodes in BCM"
+
+    # Generate per-node litenode certificates
+    # Bootstrap certificates do NOT work for LiteNode authentication
+    - name: Create certificate directory for each node
+      ansible.builtin.file:
+        path: "{{ litenode_cert_path }}/{{ item.name }}"
+        state: directory
+        mode: '0755'
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Generate litenode certificate for each node
+      ansible.builtin.shell: |
+        cmsh -c 'cert; createcertificate 2048 "{{ item.name }}" "NVIDIA Inc" "Bright Licensing" "Santa Clara" "California" US litenode "" 36500 "{{ litenode_cert_path }}/{{ item.name }}/cert.key" "{{ litenode_cert_path }}/{{ item.name }}/cert.pem"'
+      args:
+        creates: "{{ litenode_cert_path }}/{{ item.name }}/cert.pem"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Copy CA certificate to node cert directories
+      ansible.builtin.copy:
+        src: /cm/local/apps/cmd/etc/cacert.pem
+        dest: "{{ litenode_cert_path }}/{{ item.name }}/cacert.pem"
+        mode: '0644'
+        remote_src: true
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Verify nodes are accessible via SSH
+      ansible.builtin.wait_for:
+        host: "{{ item.ip }}"
+        port: 22
+        timeout: 30
+        state: started
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.ip }})"
+
+    - name: Create BCM agent directories on nodes
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'mkdir -p /etc/containers/systemd /etc/bcm-agent/certs'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Generate BCM agent quadlet configuration
+      ansible.builtin.template:
+        src: ../roles/rhel_cluster/templates/bcm-agent.container.j2
+        dest: /tmp/bcm-agent.container
+        mode: '0644'
+
+    - name: Deploy BCM agent quadlet to nodes
+      ansible.builtin.command:
+        cmd: "scp -o StrictHostKeyChecking=no /tmp/bcm-agent.container root@{{ item.ip }}:/etc/containers/systemd/bcm-agent.container"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Fix hostname in quadlet on remote node
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'sed -i \"s/%H/{{ item.name }}/g\" /etc/containers/systemd/bcm-agent.container'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Deploy litenode certificates to nodes
+      ansible.builtin.command:
+        cmd: "scp -o StrictHostKeyChecking=no {{ litenode_cert_path }}/{{ item.0.name }}/{{ item.1 }} root@{{ item.0.ip }}:/etc/bcm-agent/certs/{{ item.1 }}"
+      loop: "{{ rhel_nodes | product(['cert.pem', 'cert.key', 'cacert.pem']) | list }}"
+      loop_control:
+        label: "{{ item.0.name }}/{{ item.1 }}"
+      changed_when: true
+
+    - name: Set certificate permissions on nodes
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'chmod 600 /etc/bcm-agent/certs/cert.key && chmod 644 /etc/bcm-agent/certs/cert.pem /etc/bcm-agent/certs/cacert.pem'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Reload systemd on nodes to pick up quadlet
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'systemctl daemon-reload'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Enable and start BCM agent service on nodes
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'systemctl enable --now bcm-agent.service'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      changed_when: true
+
+    - name: Verify BCM agent service is running
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'systemctl is-active bcm-agent.service'"
+      loop: "{{ rhel_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: service_check
+      changed_when: false
+
+    - name: Display service status
+      ansible.builtin.debug:
+        msg: "Node {{ item.item.name }}: BCM agent {{ item.stdout }}"
+      loop: "{{ service_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+
+    - name: Clean up temporary certificates
+      ansible.builtin.file:
+        path: "{{ litenode_cert_path }}"
+        state: absent
+
+  post_tasks:
+    - name: Display completion summary
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "RHEL NODES JOINED TO BCM SUCCESSFULLY!"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "Nodes registered as LiteNodes: {{ rhel_nodes | length }}"
+          - "BCM Lite Daemon: Deployed and running"
+          - ""
+          - "Verification commands:"
+          - "  - View LiteNodes: cmsh -c 'device; list -L'"
+          - "  - Check agent status: ssh root@<node> systemctl status bcm-agent"
+          - "  - View agent logs: ssh root@<node> journalctl -u bcm-agent -f"
+          - "================================================================"

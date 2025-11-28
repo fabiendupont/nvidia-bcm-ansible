@@ -34,7 +34,26 @@ The playbook will:
 
 ## Manual Setup
 
-### 1. Create Systemd Service
+### 1. Create Sushy Configuration File
+
+Create `/etc/sushy-emulator/sushy-emulator.conf`:
+
+```python
+SUSHY_EMULATOR_LISTEN_IP = "0.0.0.0"
+SUSHY_EMULATOR_LISTEN_PORT = 8000
+SUSHY_EMULATOR_LIBVIRT_URI = "qemu:///system"
+```
+
+```bash
+sudo mkdir -p /etc/sushy-emulator
+sudo cat > /etc/sushy-emulator/sushy-emulator.conf <<'EOF'
+SUSHY_EMULATOR_LISTEN_IP = "0.0.0.0"
+SUSHY_EMULATOR_LISTEN_PORT = 8000
+SUSHY_EMULATOR_LIBVIRT_URI = "qemu:///system"
+EOF
+```
+
+### 2. Create Systemd Service
 
 Create `/etc/systemd/system/sushy-emulator.service`:
 
@@ -53,16 +72,26 @@ ExecStartPre=-/usr/bin/podman rm sushy-emulator
 ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
   --net=host \
   --privileged \
-  -v /var/run/libvirt:/var/run/libvirt:Z \
+  -v /var/run/libvirt:/var/run/libvirt \
+  -v /etc/sushy-emulator:/etc/sushy-emulator:ro \
   quay.io/metal3-io/sushy-tools:latest \
-  sushy-emulator --port 8000 --libvirt-uri qemu:///system
+  sushy-emulator --config /etc/sushy-emulator/sushy-emulator.conf
 ExecStop=/usr/bin/podman stop sushy-emulator
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-### 2. Enable and Start Service
+### 3. Configure Firewall
+
+Allow port 8000 in the libvirt firewall zone:
+
+```bash
+sudo firewall-cmd --zone=libvirt --add-port=8000/tcp
+sudo firewall-cmd --zone=libvirt --add-port=8000/tcp --permanent
+```
+
+### 4. Enable and Start Service
 
 ```bash
 sudo systemctl daemon-reload
@@ -182,6 +211,18 @@ Common issues:
 - **Port 8000 in use**: `sudo ss -tlnp | grep 8000`
 - **Container image pull failed**: `podman pull quay.io/metal3-io/sushy-tools:latest`
 
+### SELinux
+
+**WARNING**: Do NOT use the `:Z` flag when mounting `/var/run/libvirt`. This flag relabels libvirt sockets to `container_file_t`, breaking virtualization and preventing VMs from starting.
+
+If you accidentally used `:Z` and libvirt is broken, restore the correct labels:
+```bash
+sudo restorecon -FRv /var/run/libvirt
+sudo systemctl restart virtqemud.socket  # Fedora 35+ / modular daemons
+```
+
+The `--privileged` flag provides sufficient access for Sushy to communicate with libvirt.
+
 ### VMs Not Appearing
 
 Verify libvirt connection:
@@ -214,7 +255,7 @@ Modify the systemd service to use a different port:
 ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
   --net=host \
   --privileged \
-  -v /var/run/libvirt:/var/run/libvirt:Z \
+  -v /var/run/libvirt:/var/run/libvirt \
   quay.io/metal3-io/sushy-tools:latest \
   sushy-emulator --port 8080 --libvirt-uri qemu:///system
 ```
@@ -233,7 +274,7 @@ For basic authentication, add environment variables:
 ExecStart=/usr/bin/podman run --rm --name sushy-emulator \
   --net=host \
   --privileged \
-  -v /var/run/libvirt:/var/run/libvirt:Z \
+  -v /var/run/libvirt:/var/run/libvirt \
   -e SUSHY_EMULATOR_AUTH_FILE=/etc/sushy/auth.conf \
   quay.io/metal3-io/sushy-tools:latest \
   sushy-emulator --port 8000 --libvirt-uri qemu:///system

@@ -1,5 +1,0 @@
-from pythoncm.entity import MonitoringDataProducerDPUSettingsEvent
-
-
-class MonitoringDataProducerDPUSettingsEventTriogen(MonitoringDataProducerDPUSettingsEvent):
-    pass
