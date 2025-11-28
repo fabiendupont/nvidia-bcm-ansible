@@ -8,6 +8,9 @@
       - node_roles | length > 0
     fail_msg: "node_roles must be defined with at least one role"
 
+- name: Prepare BCM Lite Daemon files for kickstart
+  ansible.builtin.include_tasks: prepare_bcm_agent.yml
+
 - name: Ensure kickstart directory exists
   ansible.builtin.file:
     path: "{{ ks_path }}"
@@ -27,7 +30,6 @@
   ansible.builtin.command: "cat {{ item }}"
   loop:
     - /root/.ssh/id_ecdsa.pub
-    - /root/.ssh/id_rsa.pub
   register: bcm_ssh_keys_raw
   changed_when: false
 
@@ -62,12 +64,10 @@
     state: present
     bootLoader: "{{ bootloader }}"
     bootLoaderProtocol: "{{ bootloader_protocol }}"
-    kernelParameters: "ip=dhcp inst.ks=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/ks/{{ role.category }}.cfg console={{ kernel_output_console }}"
+    kernelParameters: "inst.stage2=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }} inst.ks=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/ks/{{ role.category }}.cfg console={{ kernel_output_console }}"
     kernelOutputConsole: "{{ kernel_output_console }}"
     installMode: "{{ install_mode }}"
     newNodeInstallMode: "{{ newnode_install_mode }}"
-    softwareImageProxy:
-      parentSoftwareImage: "installer-{{ rhel_repo_name }}"
     notes: "RHEL {{ rhel_version }} - {{ cluster_name | upper }} Cluster - {{ role.name | title }} Nodes"
   loop: "{{ node_roles }}"
   loop_control:

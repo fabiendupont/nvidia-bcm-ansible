@@ -1,16 +1,18 @@
 ---
-# Generate BCM bootstrap certificates for LiteNode agent authentication
-# These certificates allow LiteNode agents to connect to BCM with limited permissions
-
-- name: Generate BCM bootstrap certificates
+# Setup BCM bootstrap certificates for cluster deployment
+# Creates bootstrap certificate with limited permissions for BCM Lite Daemon
+- name: Setup BCM bootstrap certificates
   hosts: bcm_headnode
   become: true
   gather_facts: false
 
+  vars:
+    bootstrap_cert_path: "/cm/local/apps/cmd/etc/bootstrap"
+
   tasks:
-    - name: Create bootstrap certificate directory
+    - name: Ensure bootstrap directory exists
       ansible.builtin.file:
-        path: /cm/local/apps/cmd/etc/bootstrap
+        path: "{{ bootstrap_cert_path }}"
         state: directory
         mode: '0700'
         owner: root
@@ -18,43 +20,85 @@
 
     - name: Check if bootstrap certificate already exists
       ansible.builtin.stat:
-        path: /cm/local/apps/cmd/etc/bootstrap/cert.pem
-      register: bootstrap_cert_stat
+        path: "{{ bootstrap_cert_path }}/cert.pem"
+      register: bootstrap_cert
 
-    - name: Create bootstrap certificate using cmsh
+    - name: Check if bootstrap key already exists
+      ansible.builtin.stat:
+        path: "{{ bootstrap_cert_path }}/cert.key"
+      register: bootstrap_key
+
+    - name: Create bootstrap certificate with cmsh if not exists
       ansible.builtin.shell: |
-        cmsh -c "cert; createcertificate bcm-bootstrap /cm/local/apps/cmd/etc/bootstrap/cert.pem /cm/local/apps/cmd/etc/bootstrap/cert.key"
-      when: not bootstrap_cert_stat.stat.exists
+        cd {{ bootstrap_cert_path }}
+        cmsh -c 'cert; createcertificate 4096 CertificateRequest "NVIDIA Inc" "Bright Licensing" "Santa Clara" California US bootstrap "" 36500 cert.key cert.pem'
+      when: not bootstrap_cert.stat.exists or not bootstrap_key.stat.exists
       register: cert_creation
-      failed_when: false
+      changed_when: "'Certificate pem written' in cert_creation.stdout"
 
-    - name: Copy BCM CA certificate to bootstrap directory
+    - name: Display certificate creation result
+      ansible.builtin.debug:
+        var: cert_creation.stdout_lines
+      when: cert_creation is defined and cert_creation.stdout is defined
+
+    - name: Copy CA certificate to bootstrap directory
       ansible.builtin.copy:
         src: /cm/local/apps/cmd/etc/cacert.pem
-        dest: /cm/local/apps/cmd/etc/bootstrap/cacert.pem
+        dest: "{{ bootstrap_cert_path }}/cacert.pem"
         remote_src: true
-        mode: '0644'
+        mode: '0600'
 
-    - name: Set bootstrap certificate permissions
+    - name: Set permissions on bootstrap certificate files
       ansible.builtin.file:
         path: "{{ item }}"
         mode: '0600'
         owner: root
         group: root
       loop:
-        - /cm/local/apps/cmd/etc/bootstrap/cert.key
-        - /cm/local/apps/cmd/etc/bootstrap/cert.pem
+        - "{{ bootstrap_cert_path }}/cert.pem"
+        - "{{ bootstrap_cert_path }}/cert.key"
+        - "{{ bootstrap_cert_path }}/cacert.pem"
 
-    - name: Verify bootstrap certificates exist
-      ansible.builtin.stat:
-        path: "{{ item }}"
-      loop:
-        - /cm/local/apps/cmd/etc/bootstrap/cert.pem
-        - /cm/local/apps/cmd/etc/bootstrap/cert.key
-        - /cm/local/apps/cmd/etc/bootstrap/cacert.pem
-      register: cert_files
+    - name: Verify bootstrap certificate and key match
+      ansible.builtin.shell: |
+        cert_mod=$(openssl x509 -in {{ bootstrap_cert_path }}/cert.pem -noout -modulus | openssl md5)
+        key_mod=$(openssl rsa -in {{ bootstrap_cert_path }}/cert.key -noout -modulus 2>/dev/null | openssl md5)
+        if [ "$cert_mod" = "$key_mod" ]; then
+          echo "SUCCESS: Certificate and key match"
+          exit 0
+        else
+          echo "ERROR: Certificate and key do not match"
+          exit 1
+        fi
+      register: cert_verify
+      changed_when: false
 
-    - name: Display certificate setup result
+    - name: Display certificate details
+      ansible.builtin.shell: |
+        echo "Bootstrap certificate files:"
+        ls -lh {{ bootstrap_cert_path }}/
+        echo ""
+        echo "Certificate details:"
+        openssl x509 -in {{ bootstrap_cert_path }}/cert.pem -noout -subject -issuer -dates
+      register: cert_info
+      changed_when: false
+
+    - name: Display certificate info
       ansible.builtin.debug:
-        msg: "Bootstrap certificates configured successfully"
-      when: cert_files.results | selectattr('stat.exists') | list | length == 3
+        var: cert_info.stdout_lines
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg: |
+          Bootstrap certificate setup COMPLETE
+
+          Files created:
+            - {{ bootstrap_cert_path }}/cert.pem (bootstrap certificate)
+            - {{ bootstrap_cert_path }}/cert.key (private key)
+            - {{ bootstrap_cert_path }}/cacert.pem (CA certificate)
+
+          Profile: bootstrap (limited permissions for cert request only)
+          CN: CertificateRequest
+          Valid for: 100 years
+
+          Note: Using shared bootstrap certificate for all clusters

@@ -1,20 +1,13 @@
 ---
 # Register nodes in BCM using official modules
 
-- name: Build node category map
-  ansible.builtin.set_fact:
-    node_category_map: "{{ node_category_map | default({}) | combine({node.name: 'rhel_' + (rhel_version | replace('.', '')) + '_' + (cluster_name | replace('-', '_')) + '_' + node.role}) }}"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    loop_var: node
-    label: "{{ node.name }}"
-
 - name: Register RHEL cluster nodes
   brightcomputing.bcm110.physical_node:
-    name: "{{ node.name }}"
+    hostname: "{{ node.name }}"
     state: present
     mac: "{{ node.mac }}"
-    category: "{{ node_category_map[node.name] }}"
+    category: "{{ node.category }}"
+    partition: "base"
     provisioningInterface: "BOOTIF"
     interfaces_NetworkPhysicalInterface:
       - name: "BOOTIF"

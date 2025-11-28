@@ -1,0 +1,12 @@
+.git
+.venv
+collections
+.ansible
+__pycache__
+*.pyc
+*.pyo
+.bcm
+scripts
+inventory
+*.log
+.claude

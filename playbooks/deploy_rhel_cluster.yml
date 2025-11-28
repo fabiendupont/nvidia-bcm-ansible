@@ -6,28 +6,27 @@
 # 2. Generate role-specific kickstart files
 # 3. Create BCM categories for each node role
 # 4. Register nodes in BCM
+# 5. Create and boot VMs (for test environments)
+# 6. Wait for installation and convert to LiteNode
 #
 # Usage:
-#   ansible-playbook -i inventory/rhel_cluster.yml playbooks/deploy_rhel_cluster.yml
+#   ansible-playbook -i inventory/test_rhel_vm.yml playbooks/deploy_rhel_cluster.yml
 #
 # Prerequisites:
 #   - RHEL ISO file available on BCM head node
 #   - Inventory file with cluster definition
 #   - BCM head node accessible
+#   - For VM creation: libvirt/KVM on localhost
 
-- name: Deploy RHEL+Slurm Cluster on BCM
+# ================================================================
+# PHASE 1: Setup PXE Infrastructure and Register Nodes in BCM
+# ================================================================
+- name: "PHASE 1 - Setup PXE Infrastructure on BCM"
   hosts: bcm_headnode
   become: true
   gather_facts: true
 
   vars:
-    # These variables should be defined in inventory or group_vars
-    # cluster_name: hpc01
-    # rhel_version: "9.6"
-    # rhel_iso_path: /root/rhel-9.6-x86_64-dvd.iso
-    # node_roles: [...]
-    # cluster_nodes: [...]
-
     deployment_log_file: "/var/log/bcm-deployment-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
 
   pre_tasks:
@@ -74,28 +73,189 @@
         mode: '0644'
 
   roles:
-    # Phase 1: Setup PXE infrastructure
+    # Setup PXE infrastructure (extract ISO, create boot files)
     - role: nvidia.bcm.pxe_setup
 
-    # Phase 2: Deploy RHEL cluster
+    # Create categories and register nodes in BCM
     - role: nvidia.bcm.rhel_cluster
+
+  post_tasks:
+    - name: Display Phase 1 completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 1 COMPLETE: PXE Infrastructure Ready"
+          - "================================================================"
+          - "Categories created: {{ node_roles | length }}"
+          - "Nodes registered: {{ cluster_nodes | length }}"
+          - "================================================================"
+
+# ================================================================
+# PHASE 2: Create and Boot VMs (for test environments)
+# ================================================================
+- name: "PHASE 2 - Create and Boot VMs"
+  hosts: localhost
+  become: true
+  gather_facts: true
+  vars:
+    # VM configuration defaults (can be overridden in inventory)
+    vm_memory_mb: "{{ hostvars[groups['bcm_headnode'][0]]['vm_memory_mb'] | default(4096) }}"
+    vm_vcpus: "{{ hostvars[groups['bcm_headnode'][0]]['vm_vcpus'] | default(2) }}"
+    vm_disk_gb: "{{ hostvars[groups['bcm_headnode'][0]]['vm_disk_gb'] | default(40) }}"
+    vm_network: "{{ hostvars[groups['bcm_headnode'][0]]['vm_network'] | default('bcm-internal') }}"
+    skip_vm_creation: "{{ hostvars[groups['bcm_headnode'][0]]['skip_vm_creation'] | default(false) }}"
+    cluster_nodes: "{{ hostvars[groups['bcm_headnode'][0]]['cluster_nodes'] }}"
+
+  tasks:
+    - name: Display Phase 2 start
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 2: Creating and Booting VMs"
+          - "================================================================"
+          - "VM Memory: {{ vm_memory_mb }} MB"
+          - "VM vCPUs: {{ vm_vcpus }}"
+          - "VM Disk: {{ vm_disk_gb }} GB"
+          - "VM Network: {{ vm_network }}"
+          - "Skip VM creation: {{ skip_vm_creation }}"
+          - "================================================================"
+      when: not skip_vm_creation
+
+    - name: Skip VM creation message
+      ansible.builtin.debug:
+        msg: "Skipping VM creation (skip_vm_creation=true). Using existing VMs or physical nodes."
+      when: skip_vm_creation
+
+    - name: Get list of existing VMs
+      community.libvirt.virt:
+        command: list_vms
+        uri: "qemu:///system"
+      register: existing_vms
+      when: not skip_vm_creation
+
+    - name: Create VM disk images
+      ansible.builtin.command:
+        cmd: "qemu-img create -f qcow2 /var/lib/libvirt/images/{{ item.name }}.qcow2 {{ vm_disk_gb }}G"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - not skip_vm_creation
+        - item.name not in existing_vms.list_vms
+      register: disk_creation
+      changed_when: disk_creation.rc == 0
+
+    - name: Define VMs
+      community.libvirt.virt:
+        command: define
+        xml: |
+          <domain type='kvm'>
+            <name>{{ item.name }}</name>
+            <memory unit='MiB'>{{ vm_memory_mb }}</memory>
+            <vcpu>{{ vm_vcpus }}</vcpu>
+            <os>
+              <type arch='x86_64' machine='q35'>hvm</type>
+              <boot dev='hd'/>
+              <boot dev='network'/>
+            </os>
+            <features>
+              <acpi/>
+              <apic/>
+            </features>
+            <cpu mode='host-passthrough'/>
+            <clock offset='utc'/>
+            <on_poweroff>destroy</on_poweroff>
+            <on_reboot>restart</on_reboot>
+            <on_crash>destroy</on_crash>
+            <devices>
+              <emulator>/usr/bin/qemu-system-x86_64</emulator>
+              <disk type='file' device='disk'>
+                <driver name='qemu' type='qcow2'/>
+                <source file='/var/lib/libvirt/images/{{ item.name }}.qcow2'/>
+                <target dev='vda' bus='virtio'/>
+              </disk>
+              <interface type='network'>
+                <mac address='{{ item.mac }}'/>
+                <source network='{{ vm_network }}'/>
+                <model type='virtio'/>
+              </interface>
+              <console type='pty'>
+                <target type='serial' port='0'/>
+              </console>
+              <graphics type='spice' autoport='yes'>
+                <listen type='address' address='127.0.0.1'/>
+              </graphics>
+              <video>
+                <model type='qxl'/>
+              </video>
+            </devices>
+          </domain>
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when:
+        - not skip_vm_creation
+        - item.name not in existing_vms.list_vms
+
+    - name: Start VMs for PXE boot
+      community.libvirt.virt:
+        name: "{{ item.name }}"
+        state: running
+        uri: "qemu:///system"
+      loop: "{{ cluster_nodes }}"
+      when: not skip_vm_creation
+
+    - name: Display Phase 2 completion
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 2 COMPLETE: VMs Created and Booting"
+          - "================================================================"
+          - "VMs: {{ cluster_nodes | length }} created and started"
+          - "VMs are now PXE booting and installing RHEL"
+          - "================================================================"
+      when: not skip_vm_creation
+
+# ================================================================
+# PHASE 3: Wait for Installation and Convert to LiteNode
+# ================================================================
+- name: "PHASE 3 - Wait for Installation and Convert to LiteNode"
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    deployment_log_file: "/var/log/bcm-deployment-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
+
+  pre_tasks:
+    - name: Display Phase 3 start
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "PHASE 3: Waiting for RHEL Installation and Converting to LiteNode"
+          - "================================================================"
+          - "Monitoring node installation and conversion..."
+          - "================================================================"
+
+  roles:
+    - role: nvidia.bcm.convert_to_litenode
+      vars:
+        install_complete_file: "/root/install-complete.txt"
+        verify_service: "bcm-agent.service"
 
   post_tasks:
     - name: Display deployment summary
       ansible.builtin.debug:
         msg:
           - "================================================================"
-          - "Deployment Complete!"
+          - "RHEL CLUSTER DEPLOYMENT COMPLETE!"
           - "================================================================"
           - "Cluster: {{ cluster_name }}"
+          - "RHEL Version: {{ rhel_version }}"
           - "Categories created: {{ node_roles | length }}"
-          - "Nodes registered: {{ cluster_nodes | default([]) | length }}"
+          - "Nodes converted to LiteNode: {{ cluster_nodes | default([]) | length }}"
+          - "BCM Lite Daemon: Deployed via quadlet"
           - ""
-          - "Next steps:"
-          - "  1. Verify categories: cmsh -c 'category; list'"
-          - "  2. Verify nodes: cmsh -c 'device; list'"
-          - "  3. Power on nodes to start PXE installation"
-          - "  4. Monitor installation progress"
+          - "Verification commands:"
+          - "  - View LiteNodes: cmsh -c 'device; list -L'"
+          - "  - Check agent status: ssh root@<node> systemctl status bcm-agent"
           - ""
           - "See /root/deployment-summary-{{ cluster_name }}.md for details"
           - "================================================================"

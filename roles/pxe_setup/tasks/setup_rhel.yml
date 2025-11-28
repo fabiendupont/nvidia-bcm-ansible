@@ -23,7 +23,7 @@
     src: "{{ rhel_iso_path }}"
     fstype: iso9660
     opts: ro,loop
-    state: mounted
+    state: ephemeral
 
 - name: Create RHEL repository directory
   ansible.builtin.file:
@@ -135,7 +135,7 @@
     src: "/cm/images/installer-{{ rhel_repo_name }}/LiveOS/rootfs.img"
     fstype: ext4
     opts: ro,loop
-    state: mounted
+    state: ephemeral
   when: install_img_stat.stat.exists
 
 - name: Copy rootfs contents to BCM software image

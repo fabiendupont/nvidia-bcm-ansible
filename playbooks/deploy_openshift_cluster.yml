@@ -285,10 +285,60 @@
           - "Monitoring cluster readiness via kubeconfig..."
           - "================================================================"
 
-    - name: Include convert_to_litenode tasks
+    - name: Wait for OpenShift nodes to be reachable via SSH
+      ansible.builtin.wait_for:
+        host: "{{ item.ip }}"
+        port: 22
+        timeout: 1800  # 30 minutes for OpenShift installation
+        state: started
+      loop: "{{ cluster_nodes }}"
+      loop_control:
+        label: "{{ item.name }} ({{ item.ip }})"
+      when: not (skip_litenode_conversion | default(false))
+
+    - name: Verify nodes are accessible via SSH
+      ansible.builtin.command:
+        cmd: "ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 core@{{ item.ip }} hostname"
+      loop: "{{ cluster_nodes }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: ssh_check
+      changed_when: false
+      retries: 3
+      delay: 10
+      when: not (skip_litenode_conversion | default(false))
+
+    - name: Display SSH check results
+      ansible.builtin.debug:
+        msg: "Node {{ item.item.name }}: {{ item.stdout }}"
+      loop: "{{ ssh_check.results }}"
+      loop_control:
+        label: "{{ item.item.name }}"
+      when: not (skip_litenode_conversion | default(false)) and ssh_check is defined
+
+    - name: Wait for OpenShift cluster to be ready
+      ansible.builtin.shell: |
+        export KUBECONFIG=/openshift/clusters/{{ cluster_name }}/auth/kubeconfig
+        /openshift/tools/{{ openshift_version }}/oc get nodes --no-headers 2>/dev/null | grep -c " Ready" || echo "0"
+      register: ready_node_count
+      until: ready_node_count.stdout | int == cluster_nodes | length
+      retries: 60
+      delay: 30
+      changed_when: false
+      when: not (skip_litenode_conversion | default(false))
+
+    - name: Display cluster readiness status
+      ansible.builtin.debug:
+        msg: "OpenShift cluster has {{ ready_node_count.stdout }} nodes Ready (expected {{ cluster_nodes | length }})"
+      when: not (skip_litenode_conversion | default(false)) and ready_node_count is defined
+
+    - name: Convert PhysicalNode to LiteNode
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
-        tasks_from: convert_to_litenode
+        name: nvidia.bcm.convert_to_litenode
+      vars:
+        # Skip SSH and OpenShift checks - already done above
+        ssh_wait_timeout: 10
+        verify_openshift: false
       when: not (skip_litenode_conversion | default(false))
 
     - name: Display LiteNode conversion skipped

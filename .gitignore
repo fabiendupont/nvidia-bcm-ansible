@@ -2,6 +2,7 @@
 *.retry
 .ansible/
 ansible.log
+collections/
 
 # Python
 __pycache__/
