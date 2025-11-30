@@ -120,19 +120,3 @@
 - name: Display conversion results
   ansible.builtin.debug:
     msg: "Converted {{ cluster_nodes | length }} nodes from PhysicalNode to LiteNode"
-
-- name: Pause to allow BCM to update device list
-  ansible.builtin.pause:
-    seconds: 10
-
-- name: Wait for BCM agent to report UP
-  ansible.builtin.command:
-    cmd: "cmsh -c 'device; status -n {{ item.name }}'"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }}"
-  register: node_status
-  until: "'UP' in node_status.stdout"
-  retries: 30
-  delay: 10
-  changed_when: false

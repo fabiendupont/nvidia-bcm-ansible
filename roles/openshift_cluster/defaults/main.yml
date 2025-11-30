@@ -32,7 +32,7 @@ openshift_iso_path: ""
 # openshift_pull_secret_path: "/path/to/pull-secret.json"
 
 # BCM category settings
-bootloader: "syslinux"
+bootloader: "SYSLINUX"
 bootloader_protocol: "HTTP"
 install_mode: "SKIP"  # Don't install - nodes boot PXE and self-install OpenShift
 newnode_install_mode: "NOSYNC"  # Don't sync - OpenShift manages its own installation

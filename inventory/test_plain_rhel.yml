@@ -1,0 +1,78 @@
+---
+# Test inventory for plain RHEL deployment (without BCM agent)
+# Used to test join_rhel_nodes.yml playbook
+#
+# Workflow:
+#   1. ansible-playbook -i inventory/test_plain_rhel.yml playbooks/deploy_rhel_cluster.yml
+#   2. Wait for PXE installation to complete
+#   3. ansible-playbook -i inventory/test_plain_rhel.yml playbooks/join_rhel_nodes.yml
+
+all:
+  children:
+    bcm_headnode:
+      hosts:
+        bcm-headnode:
+          ansible_host: 192.168.122.204
+          ansible_user: root
+
+      vars:
+        # Cluster configuration
+        cluster_name: "test-plain"
+        rhel_version: "9.6"
+        rhel_iso_path: "/root/rhel-9.6-x86_64-dvd.iso"
+        root_password: "changeme123"
+
+        # BCM server IP (internal network)
+        bcm_server: "10.141.255.254"
+        bcm_internal_ip: "10.141.255.254"
+
+        # Network Configuration
+        network_bootproto: dhcp
+        network_device: link
+        network_onboot: true
+
+        # Disk Configuration
+        disk_device: vda
+        disk_clearpart: true
+        disk_autopart_type: lvm
+
+        # Node roles - plain RHEL without BCM agent
+        node_roles:
+          - name: plain-compute
+            category: rhel-plain-compute
+            install_bcm_agent: false
+            packages:
+              - "@^minimal-environment"
+              - nfs-utils
+              - vim-enhanced
+
+        # VM Configuration
+        vm_memory_mb: 4096
+        vm_vcpus: 2
+        vm_disk_gb: 40
+        vm_network: "bcm-internalnet"
+
+        # Redfish Power Management (Sushy Emulator)
+        sushy_host: "192.168.122.1"
+        sushy_port: 8000
+
+        # Nodes to deploy
+        cluster_nodes:
+          - name: test-plain-01
+            ansible_user: root
+            mac: "52:54:00:AA:02:01"
+            ip: "10.141.100.201"
+            category: rhel-plain-compute
+            hostname: "test-plain-01.test-plain.local"
+            redfish_enabled: true
+            redfish_host: "{{ sushy_host }}"
+            redfish_port: "{{ sushy_port }}"
+            redfish_system_id: "test-plain-01-uuid"
+
+        # For join_rhel_nodes.yml - same nodes
+        rhel_nodes:
+          - name: test-plain-01
+            ansible_user: root
+            mac: "52:54:00:AA:02:01"
+            ip: "10.141.100.201"
+            role: compute

@@ -11,6 +11,7 @@ This directory contains purpose-specific playbooks for different deployment scen
 | `join_rhel_nodes.yml` | Join existing RHEL machines to BCM | SSH access, inventory |
 | **OpenShift Deployments** |||
 | `deploy_openshift_cluster.yml` | Deploy new OpenShift cluster from scratch | Pull secret, inventory |
+| `add_openshift_worker.yml` | Add worker to existing OpenShift cluster | Running cluster, kubeconfig, worker details |
 | `join_openshift_cluster.yml` | Integrate existing cluster with BCM | Running cluster, kubeconfig |
 | `deploy_bcm_agent.yml` | Deploy/retry BCM agent only | Cluster deployed, LiteNodes registered |
 | `build_bcm_agent_image.yml` | Build container image only | None |
@@ -125,6 +126,59 @@ ansible-playbook -i inventory/openshift_test_cluster.yml \
   playbooks/deploy_openshift_cluster.yml \
   -e "skip_bcm_agent=true"
 ```
+
+---
+
+### add_openshift_worker.yml
+**Purpose:** Add a worker node to an existing OpenShift cluster via PXE
+
+**When to use:**
+- Expanding an existing OpenShift cluster with new workers
+- Cluster was deployed via `deploy_openshift_cluster.yml` or manually
+- Need to scale up worker capacity
+
+**What it does:**
+1. Reads BCM SSH keys for core user access
+2. Generates worker ignition config (merges with cluster's worker ignition)
+3. Registers new worker as PhysicalNode in BCM for PXE boot
+4. Optionally creates test VM
+5. Waits for worker to PXE boot and join cluster
+6. Converts worker to LiteNode in BCM
+7. BCM agent pod starts automatically (DaemonSet already deployed)
+
+**Usage:**
+```bash
+# Add worker with required details
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/openshift_test_cluster.yml \
+    playbooks/add_openshift_worker.yml \
+    -e "worker_name=ocp-worker-3 worker_mac=52:54:00:0C:01:03 worker_ip=10.141.160.53"
+
+# With VM creation for testing
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/openshift_test_cluster.yml \
+    playbooks/add_openshift_worker.yml \
+    -e "worker_name=ocp-worker-3 worker_mac=52:54:00:0C:01:03 worker_ip=10.141.160.53 create_test_vm=true"
+```
+
+**Required variables:**
+- `worker_name` - Hostname for the new worker
+- `worker_mac` - MAC address for the new worker
+- `worker_ip` - IP address for the new worker
+
+**Prerequisites:**
+- Existing OpenShift cluster deployed (e.g., via `deploy_openshift_cluster.yml`)
+- Kubeconfig available on BCM head node
+- OpenShift tools installed for the cluster version
+- RHCOS PXE boot files available
+- BCM agent DaemonSet already deployed
+- Worker role defined in inventory `node_roles`
+
+**Key features:**
+- Worker ignition merges with cluster's Machine Config Server (port 22623)
+- Uses pointer ignition that references cluster's worker config
+- Adds BCM SSH keys and sets hostname
+- Automatic PhysicalNode→LiteNode conversion after join
 
 ---
 

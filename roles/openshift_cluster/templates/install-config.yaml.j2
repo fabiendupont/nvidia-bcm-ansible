@@ -36,5 +36,5 @@ platform:
 {% else %}
   none: {}
 {% endif %}
-pullSecret: '{{ openshift_pull_secret | to_json }}'
+pullSecret: '{{ openshift_pull_secret }}'
 sshKey: '{{ bcm_ssh_keys | first }}'

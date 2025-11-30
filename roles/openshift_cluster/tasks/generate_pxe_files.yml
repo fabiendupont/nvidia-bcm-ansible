@@ -215,3 +215,8 @@
       - "initrd: {{ (pxe_initrd.stat.size / 1024 / 1024) | round(2) }} MB (with agent installer)"
       - "rootfs: {{ (pxe_rootfs.stat.size / 1024 / 1024) | round(2) }} MB"
       - "Kubeconfig will be at: /openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+
+- name: Setup PXE boot infrastructure (symlinks and BCM software image)
+  ansible.builtin.include_role:
+    name: nvidia.bcm.pxe_setup
+    tasks_from: setup_openshift.yml

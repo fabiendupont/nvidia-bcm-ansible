@@ -1,0 +1,310 @@
+---
+# Add Worker Node to Existing OpenShift Cluster via BCM PXE
+#
+# This playbook adds a new worker node to an existing OpenShift cluster by:
+#   1. Extracting worker ignition config from the existing cluster
+#   2. Registering the new worker as PhysicalNode in BCM
+#   3. Setting up PXE boot with RHCOS image
+#   4. Booting the worker via PXE
+#   5. Waiting for the worker to join the cluster
+#   6. Converting the worker to LiteNode in BCM
+#
+# Prerequisites:
+#   - Existing OpenShift cluster deployed and accessible
+#   - Kubeconfig available on BCM head node
+#   - New worker node details (hostname, MAC, IP)
+#   - OpenShift tools installed for the cluster version
+#   - RHCOS image available for PXE boot
+#   - BCM agent DaemonSet already deployed in the cluster
+#
+# Usage:
+#   ansible-playbook -i inventory/openshift_test_cluster.yml \
+#     playbooks/add_openshift_worker.yml \
+#     -e "worker_name=ocp-worker-3 worker_mac=52:54:00:0C:01:03 worker_ip=10.141.160.53"
+#
+# Required inventory variables:
+#   - cluster_name: Name of the existing OpenShift cluster
+#   - openshift_version: OpenShift version (must match cluster)
+#   - kubeconfig_path: Path to kubeconfig on BCM head node
+#   - node_roles: List with worker role definition
+#
+# Required extra variables:
+#   - worker_name: Hostname for the new worker
+#   - worker_mac: MAC address for the new worker
+#   - worker_ip: IP address for the new worker
+#
+# Optional variables:
+#   - worker_role: Worker role name (default: "worker")
+#   - skip_litenode_conversion: Skip PhysicalNode→LiteNode conversion (default: false)
+#   - create_test_vm: Create libvirt VM for testing (default: false)
+
+- name: Add Worker Node to OpenShift Cluster
+  hosts: bcm_headnode
+  become: true
+  gather_facts: true
+
+  vars:
+    worker_role: "{{ worker_role | default('worker') }}"
+    skip_litenode_conversion: "{{ skip_litenode_conversion | default(false) }}"
+    create_test_vm: "{{ create_test_vm | default(false) }}"
+
+    # Derived variables
+    worker_ignition_url: "http://{{ bcm_server }}:{{ http_port }}{{ tftpboot_path }}/ignition/openshift-{{ openshift_version }}/{{ cluster_name }}/worker/{{ worker_mac | lower | replace(':', '-') }}.ign"
+    worker_category: "openshift_{{ openshift_version | replace('.', '') }}_{{ cluster_name | replace('-', '_') }}_{{ worker_role }}"
+
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - cluster_name is defined
+          - openshift_version is defined
+          - kubeconfig_path is defined
+          - worker_name is defined
+          - worker_mac is defined
+          - worker_ip is defined
+          - node_roles is defined
+          - node_roles | selectattr('name', 'equalto', worker_role) | list | length > 0
+        fail_msg: |
+          Missing required variables. Please provide:
+            - cluster_name (in inventory)
+            - openshift_version (in inventory)
+            - kubeconfig_path (in inventory)
+            - node_roles (in inventory, must include worker role)
+            - worker_name (extra var: -e "worker_name=...")
+            - worker_mac (extra var: -e "worker_mac=...")
+            - worker_ip (extra var: -e "worker_ip=...")
+
+    - name: Verify cluster is accessible
+      kubernetes.core.k8s_cluster_info:
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: cluster_info
+      failed_when: cluster_info.failed | default(false)
+
+    - name: Display worker addition information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Adding Worker Node to OpenShift Cluster"
+          - "================================================================"
+          - "Cluster: {{ cluster_name }}"
+          - "OpenShift Version: {{ openshift_version }}"
+          - "Worker Name: {{ worker_name }}"
+          - "Worker MAC: {{ worker_mac }}"
+          - "Worker IP: {{ worker_ip }}"
+          - "Worker Role: {{ worker_role }}"
+          - "Worker Category: {{ worker_category }}"
+          - "Ignition URL: {{ worker_ignition_url }}"
+          - "================================================================"
+
+  tasks:
+    # ========================================================================
+    # Phase 1: Read BCM SSH Keys
+    # ========================================================================
+
+    - name: Read BCM head node SSH public keys
+      ansible.builtin.command: "cat {{ item }}"
+      loop:
+        - /root/.ssh/id_ecdsa.pub
+        - /root/.ssh/id_rsa.pub
+      register: bcm_ssh_keys_raw
+      changed_when: false
+      failed_when: false
+
+    - name: Set BCM SSH keys as list
+      ansible.builtin.set_fact:
+        bcm_ssh_keys: "{{ bcm_ssh_keys_raw.results | selectattr('rc', 'equalto', 0) | map(attribute='stdout') | list }}"
+
+    - name: Fail if no SSH keys found
+      ansible.builtin.fail:
+        msg: "No SSH public keys found on BCM head node. Please generate SSH keys first."
+      when: bcm_ssh_keys | length == 0
+
+    # ========================================================================
+    # Phase 2: Generate Worker Ignition
+    # ========================================================================
+
+    - name: Check if worker ignition directory exists
+      ansible.builtin.stat:
+        path: "{{ ignition_base_path }}/{{ worker_role }}"
+      register: worker_ignition_dir
+
+    - name: Create worker ignition directory
+      ansible.builtin.file:
+        path: "{{ ignition_base_path }}/{{ worker_role }}"
+        state: directory
+        mode: '0755'
+      when: not worker_ignition_dir.stat.exists
+
+    - name: Get MachineConfig for worker ignition pointer
+      kubernetes.core.k8s_info:
+        api_version: machineconfiguration.openshift.io/v1
+        kind: MachineConfig
+        name: 99-worker-generated-registries
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: worker_machineconfig
+      failed_when: false
+
+    - name: Extract worker ignition URL from cluster (if available)
+      ansible.builtin.set_fact:
+        cluster_worker_ignition_source: "{{ worker_machineconfig.resources[0].spec.config.ignition.config.merge[0].source | default('') }}"
+      when:
+        - worker_machineconfig.resources is defined
+        - worker_machineconfig.resources | length > 0
+
+    - name: Generate worker ignition from template
+      ansible.builtin.template:
+        src: ../roles/openshift_cluster/templates/worker-ignition.ign.j2
+        dest: "{{ ignition_base_path }}/{{ worker_role }}/{{ worker_mac | lower | replace(':', '-') }}.ign"
+        mode: '0644'
+      vars:
+        node_hostname: "{{ worker_name }}"
+        node_ip: "{{ worker_ip }}"
+
+    # ========================================================================
+    # Phase 3: Register Worker in BCM for PXE Boot
+    # ========================================================================
+
+    - name: Verify worker category exists
+      brightcomputing.bcm110.category:
+        name: "{{ worker_category }}"
+        state: present
+        bootLoader: "{{ bootloader }}"
+        bootLoaderProtocol: "{{ bootloader_protocol }}"
+        kernelParameters: "coreos.live.rootfs_url=http://{{ bcm_server }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ cluster_name }}/agent.x86_64-rootfs.img ignition.config.url={{ worker_ignition_url }} ignition.firstboot ignition.platform.id=metal console={{ kernel_output_console }}"
+        kernelOutputConsole: "{{ kernel_output_console }}"
+        installMode: "{{ install_mode }}"
+        newNodeInstallMode: "{{ newnode_install_mode }}"
+        softwareImageProxy:
+          parentSoftwareImage: "installer-openshift-{{ openshift_version }}"
+        notes: "OpenShift {{ openshift_version }} - {{ cluster_name | upper }} Cluster - Worker Nodes"
+
+    - name: Register worker node as PhysicalNode in BCM
+      brightcomputing.bcm110.physical_node:
+        name: "{{ worker_name }}"
+        state: present
+        mac: "{{ worker_mac }}"
+        category: "{{ worker_category }}"
+        provisioningInterface: "BOOTIF"
+        interfaces_NetworkPhysicalInterface:
+          - name: "BOOTIF"
+            ip: "{{ worker_ip }}"
+            network: "internalnet"
+
+    - name: Display PXE boot information
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Worker Node Registered for PXE Boot"
+          - "================================================================"
+          - "Node: {{ worker_name }}"
+          - "Category: {{ worker_category }}"
+          - "Ignition: {{ worker_ignition_url }}"
+          - ""
+          - "Next steps:"
+          - "  1. Power on the worker node (it will PXE boot)"
+          - "  2. Monitor installation progress"
+          - "  3. Wait for node to join the cluster"
+          - "================================================================"
+
+    # ========================================================================
+    # Phase 4: Create Test VM (Optional)
+    # ========================================================================
+
+    - name: Create test VM for worker
+      ansible.builtin.include_role:
+        name: nvidia.bcm.vm_management
+        tasks_from: create_vm
+      vars:
+        vm_name: "{{ worker_name }}"
+        vm_mac: "{{ worker_mac }}"
+        vm_memory_mb: "{{ worker_vm_memory_mb | default(8192) }}"
+        vm_vcpus: "{{ worker_vm_vcpus | default(4) }}"
+        vm_disk_gb: "{{ worker_vm_disk_gb | default(120) }}"
+      when: create_test_vm | bool
+      delegate_to: localhost
+
+    # ========================================================================
+    # Phase 5: Wait for Worker to Join Cluster
+    # ========================================================================
+
+    - name: Wait for worker node to appear in cluster
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Node
+        name: "{{ worker_name }}"
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: worker_node_info
+      until: worker_node_info.resources | length > 0
+      retries: 60
+      delay: 30
+      changed_when: false
+
+    - name: Wait for worker node to be Ready
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Node
+        name: "{{ worker_name }}"
+      environment:
+        KUBECONFIG: "{{ kubeconfig_path }}"
+      register: worker_node_status
+      until:
+        - worker_node_status.resources | length > 0
+        - worker_node_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') | map(attribute='status') | first == 'True'
+      retries: 60
+      delay: 30
+      changed_when: false
+
+    - name: Display worker join status
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Worker Node Successfully Joined Cluster"
+          - "================================================================"
+          - "Node: {{ worker_name }}"
+          - "Status: {{ worker_node_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') | map(attribute='status') | first }}"
+          - "Kubernetes Version: {{ worker_node_status.resources[0].status.nodeInfo.kubeletVersion }}"
+          - "================================================================"
+
+    # ========================================================================
+    # Phase 6: Convert to LiteNode (Optional)
+    # ========================================================================
+
+    - name: Convert worker to LiteNode
+      ansible.builtin.include_role:
+        name: nvidia.bcm.convert_to_litenode
+      vars:
+        cluster_nodes:
+          - name: "{{ worker_name }}"
+            ansible_user: core
+            mac: "{{ worker_mac }}"
+            ip: "{{ worker_ip }}"
+        verify_openshift: true
+        cluster_name: "{{ cluster_name }}"
+        openshift_version: "{{ openshift_version }}"
+      when: not skip_litenode_conversion | bool
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg:
+          - "================================================================"
+          - "Worker Node Successfully Added to OpenShift Cluster"
+          - "================================================================"
+          - "Worker: {{ worker_name }} ({{ worker_ip }})"
+          - "Cluster: {{ cluster_name }}"
+          - "BCM Status: {{ 'LiteNode' if not skip_litenode_conversion else 'PhysicalNode' }}"
+          - ""
+          - "Verify worker status:"
+          - "  export KUBECONFIG={{ kubeconfig_path }}"
+          - "  oc get nodes {{ worker_name }}"
+          - "  oc describe node {{ worker_name }}"
+          - ""
+          - "Verify BCM agent pod:"
+          - "  oc get pods -n {{ bcm_agent_namespace | default('bcm-agent') }} -o wide | grep {{ worker_name }}"
+          - ""
+          - "Check BCM status:"
+          - "  cmsh -c 'device; list -L | grep {{ worker_name }}'"
+          - "================================================================"

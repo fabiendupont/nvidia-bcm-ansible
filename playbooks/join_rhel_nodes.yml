@@ -58,23 +58,12 @@
       failed_when: not ca_cert_check.stat.exists
 
   tasks:
-    - name: Register RHEL nodes as LiteNodes in BCM
-      brightcomputing.bcm110.lite_node:
-        hostname: "{{ item.name }}"
-        state: present
-        mac: "{{ item.mac }}"
-        partition: "base"
-        interfaces_NetworkPhysicalInterface:
-          - name: "BOOTIF"
-            ip: "{{ item.ip }}"
-            network: "internalnet"
-      loop: "{{ rhel_nodes }}"
-      loop_control:
-        label: "{{ item.name }}"
-
-    - name: Display LiteNode registration results
-      ansible.builtin.debug:
-        msg: "Registered {{ rhel_nodes | length }} nodes as LiteNodes in BCM"
+    - name: Convert nodes to LiteNodes (removes PhysicalNode if exists)
+      ansible.builtin.include_role:
+        name: nvidia.bcm.convert_to_litenode
+      vars:
+        cluster_nodes: "{{ rhel_nodes }}"
+        ssh_wait_timeout: 60
 
     # Generate per-node litenode certificates
     # Bootstrap certificates do NOT work for LiteNode authentication
@@ -170,9 +159,9 @@
         label: "{{ item.name }}"
       changed_when: true
 
-    - name: Enable and start BCM agent service on nodes
+    - name: Start BCM agent service on nodes
       ansible.builtin.command:
-        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'systemctl enable --now bcm-agent.service'"
+        cmd: "ssh -o StrictHostKeyChecking=no root@{{ item.ip }} 'systemctl start bcm-agent.service'"
       loop: "{{ rhel_nodes }}"
       loop_control:
         label: "{{ item.name }}"

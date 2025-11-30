@@ -260,3 +260,106 @@ Uses modular libvirt daemons (`virtqemud`, `virtnetworkd`, etc.) instead of mono
 ### SELinux
 
 Never use `:Z` flag when mounting `/var/run/libvirt` in containers - it relabels sockets and breaks virtualization.
+
+## Running OpenShift Test Scenarios
+
+### Test Inventory - Single Node OpenShift (SNO)
+
+Use `inventory/openshift_sno_test.yml` for testing Single-Node OpenShift deployments.
+
+### Scenario: Deploy SNO via PXE
+
+This tests deploying a single control-plane node that also runs workloads (no workers).
+
+```bash
+# Step 1: Deploy SNO cluster (creates VM, PXE boots, installs OpenShift)
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/openshift_sno_test.yml \
+    playbooks/deploy_openshift_cluster.yml \
+    -e "create_test_vms=true openshift_pull_secret_path=~/pull-secret.json"
+
+# Step 2: Monitor installation (optional - takes ~30-45 minutes)
+ssh bcm-headnode "tail -f /var/log/bcm-deployment-openshift-test-sno-*.log"
+virt-viewer -c qemu:///system sno-master-0
+
+# Step 3: Wait for cluster to be ready
+export KUBECONFIG=/openshift/clusters/test-sno/auth/kubeconfig
+watch oc get nodes
+watch oc get clusteroperators
+
+# Step 4: Verify BCM integration
+ssh bcm-headnode "cmsh -c 'device; list -L'"
+oc get pods -n bcm-agent
+```
+
+**SNO Requirements:**
+- VM: 16GB RAM, 8 vCPUs, 120GB disk (higher resources since it runs everything)
+- No VIPs (uses `platform: none`)
+- Single master node acts as both control-plane and worker
+- OpenShift pull secret from console.redhat.com
+
+### Cleanup OpenShift SNO
+
+```bash
+# Remove SNO cluster from BCM
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/openshift_sno_test.yml \
+    playbooks/cleanup_bcm_cluster.yml
+
+# Remove VM
+virsh -c qemu:///system destroy sno-master-0
+virsh -c qemu:///system undefine sno-master-0 --remove-all-storage
+```
+
+---
+
+## Running RHEL Test Scenarios
+
+### Test Inventory
+
+Use `inventory/test_plain_rhel.yml` for testing RHEL deployments with VMs.
+
+### Scenario 1: Deploy RHEL VM via PXE, then join to BCM
+
+This tests the full workflow: create VM, PXE boot, install RHEL, then join to BCM.
+
+```bash
+# Step 1: Deploy VM and install RHEL (without BCM agent)
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/test_plain_rhel.yml playbooks/deploy_rhel_cluster.yml
+
+# Step 2: Monitor installation (optional)
+virt-viewer -c qemu:///system test-plain-01
+
+# Step 3: Wait for SSH to be available (installation complete)
+ssh root@10.141.100.201 hostname
+
+# Step 4: Join the RHEL node to BCM (installs BCM agent)
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/test_plain_rhel.yml playbooks/join_rhel_nodes.yml
+
+# Step 5: Verify
+ssh bcm-headnode "cmsh -c 'device; list -L'"
+ssh root@10.141.100.201 systemctl status bcm-agent
+```
+
+### Scenario 2: Join existing RHEL VM to BCM
+
+If you already have a RHEL VM running:
+
+```bash
+# Update inventory with your VM details, then:
+PYTHONPATH=.venv/lib/python3.14/site-packages \
+  ansible-playbook -i inventory/test_plain_rhel.yml playbooks/join_rhel_nodes.yml
+```
+
+### Cleanup
+
+```bash
+# Remove VM
+virsh -c qemu:///system destroy test-plain-01
+virsh -c qemu:///system undefine test-plain-01 --remove-all-storage
+
+# Remove node from BCM
+ssh bcm-headnode "cmsh -c 'device use test-plain-01; remove; commit'"
+```
