@@ -62,6 +62,8 @@
   brightcomputing.bcm110.category:
     name: "{{ role.category }}"
     state: present
+    softwareImageProxy:
+      parentSoftwareImage: "{{ software_image }}"
     bootLoader: "{{ bootloader }}"
     bootLoaderProtocol: "{{ bootloader_protocol }}"
     kernelParameters: "inst.stage2=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/repos/{{ rhel_repo_name }} inst.ks=http://{{ bcm_internal_ip }}:{{ http_port }}{{ tftpboot_path }}/ks/{{ role.category }}.cfg console={{ kernel_output_console }}"

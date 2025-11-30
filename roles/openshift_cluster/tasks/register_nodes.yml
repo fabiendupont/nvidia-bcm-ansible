@@ -10,10 +10,11 @@
 
 - name: Register OpenShift cluster nodes
   brightcomputing.bcm110.physical_node:
-    name: "{{ item.name }}"
+    hostname: "{{ item.name }}"
     state: present
     mac: "{{ item.mac }}"
     category: "{{ node_category_map[item.name] }}"
+    partition: "base"
     provisioningInterface: "BOOTIF"
     interfaces_NetworkPhysicalInterface:
       - name: "BOOTIF"

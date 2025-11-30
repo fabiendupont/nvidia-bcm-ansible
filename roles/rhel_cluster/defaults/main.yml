@@ -54,6 +54,8 @@ bootloader_protocol: "HTTP"
 install_mode: "NOSYNC"
 newnode_install_mode: "NOSYNC"
 kernel_output_console: "tty0"
+# Software image - uses the RHEL installer image created by pxe_setup role
+software_image: "installer-{{ rhel_repo_name }}"
 
 # Kickstart template defaults
 kickstart_skipx: true

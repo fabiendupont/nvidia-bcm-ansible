@@ -27,3 +27,24 @@ repository: https://github.com/fabiendupont/nvidia-bcm-ansible
 documentation: https://github.com/fabiendupont/nvidia-bcm-ansible
 homepage: https://github.com/fabiendupont/nvidia-bcm-ansible
 issues: https://github.com/fabiendupont/nvidia-bcm-ansible/issues
+
+build_ignore:
+  - bcm-headnode
+  - "*.tar.gz"
+  - .git
+  - .github
+  - tests/output
+  - .pytest_cache
+  - __pycache__
+  - "*.pyc"
+  - .vscode
+  - .idea
+  - collections
+  - tmp
+  - "*.log"
+  - .ansible
+  - .claude
+  - .venv
+  - .envrc
+  - .bcm
+  - lib

@@ -1,0 +1,32 @@
+{
+  "ignition": {
+    "version": "3.2.0",
+    "config": {
+      "merge": [
+        {
+          "source": "http://{{ bcm_server }}:22623/config/worker"
+        }
+      ]
+    }
+  },
+  "passwd": {
+    "users": [
+      {
+        "name": "core",
+        "sshAuthorizedKeys": {{ bcm_ssh_keys | to_json }}
+      }
+    ]
+  },
+  "storage": {
+    "files": [
+      {
+        "path": "/etc/hostname",
+        "mode": 420,
+        "overwrite": true,
+        "contents": {
+          "source": "data:,{{ node_hostname }}"
+        }
+      }
+    ]
+  }
+}

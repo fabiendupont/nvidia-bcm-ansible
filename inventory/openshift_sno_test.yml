@@ -1,0 +1,93 @@
+---
+# Test inventory for Single-Node OpenShift (SNO) deployment via BCM
+#
+# This demonstrates SNO deployment with one control-plane node that also runs workloads.
+# No workers, no VIPs - the single node handles everything.
+
+all:
+  children:
+    bcm_headnode:
+      hosts:
+        bcm-headnode:
+          ansible_host: 192.168.122.204
+          ansible_user: root
+
+      vars:
+        # ================================================================
+        # Cluster Configuration
+        # ================================================================
+        cluster_name: test-sno
+        cluster_type: openshift
+        openshift_version: "4.20"
+
+        # BCM server IP (internal network)
+        bcm_server: "10.141.255.254"
+        bcm_internal_ip: "10.141.255.254"
+
+        # OpenShift pull secret (download from https://console.redhat.com/openshift/install/pull-secret)
+        openshift_pull_secret_path: ~/pull-secret.json
+
+        # Kubeconfig for cluster access after installation
+        kubeconfig_path: "/openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
+
+        # BCM agent Helm chart path
+        bcm_agent_helm_chart_path: "/root/nvidia-bcm-lite-daemon/helm/bcm-agent"
+
+        # ================================================================
+        # VM Configuration (virtio disks)
+        # ================================================================
+        install_device: "/dev/vda"  # VMs use virtio disks
+
+        # ================================================================
+        # Redfish Configuration (for VM testing with sushy-emulator)
+        # ================================================================
+        sushy_host: "192.168.122.1"
+        sushy_port: 8000
+
+        # ================================================================
+        # Network Configuration
+        # ================================================================
+        openshift_base_domain: "test.local"
+        openshift_cluster_network_cidr: "10.128.0.0/14"
+        openshift_cluster_network_host_prefix: 23
+        openshift_service_network_cidr: "172.30.0.0/16"
+        openshift_machine_network_cidr: "10.141.0.0/16"
+
+        # SNO IMPORTANT: No VIPs for Single-Node OpenShift
+        # Do NOT define openshift_api_vips or openshift_ingress_vips
+        # This will use platform: none instead of platform: baremetal
+
+        # ================================================================
+        # Node Roles (SNO uses master role only)
+        # ================================================================
+        node_roles:
+          - name: master
+            category: "openshift_{{ openshift_version | replace('.', '') }}_{{ cluster_name | replace('-', '_') }}_master"
+
+        # ================================================================
+        # Single Node (Control Plane + Worker)
+        # ================================================================
+        cluster_nodes:
+          - name: sno-master-0
+            ansible_user: core
+            mac: "52:54:00:0C:02:00"
+            ip: "10.141.160.60"
+            role: master
+            # SNO node info for Redfish power management
+            redfish_enabled: true
+            redfish_host: "{{ sushy_host }}"
+            redfish_port: "{{ sushy_port }}"
+            redfish_system_id: "sno-master-0-uuid"
+
+        # ================================================================
+        # VM Settings for SNO (higher resources since it runs everything)
+        # ================================================================
+        vm_memory_mb: 16384  # 16GB RAM for SNO
+        vm_vcpus: 8          # 8 vCPUs for SNO
+        vm_disk_gb: 120      # 120GB disk
+
+        # ================================================================
+        # OpenShift Configuration
+        # ================================================================
+        # Worker replicas must be 0 for SNO
+        openshift_worker_replicas: 0
