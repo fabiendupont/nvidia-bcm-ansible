@@ -1,8 +1,10 @@
-# NVIDIA BCM Ansible Collection - Module Reference
+# BCM Ansible Collection - Role and Module Reference
 
 ## Overview
 
 The `fabiendupont.bcm` collection provides **high-level automation roles** for deploying OpenShift and RHEL clusters on NVIDIA Base Command Manager (BCM).
+
+> **Important:** This is an independent community project and is **not officially supported or endorsed by NVIDIA**.
 
 For low-level BCM entity management, this collection uses the official **NVIDIA Bright Computing collection** (`brightcomputing.bcm110`) which provides 190+ modules covering all BCM entities.
 
@@ -12,11 +14,25 @@ For low-level BCM entity management, this collection uses the official **NVIDIA 
 fabiendupont.bcm (High-level automation)
 ├── Dependencies
 │   └── brightcomputing.bcm110 (190+ official BCM modules)
-└── Roles
-    ├── openshift_cluster  - OpenShift Agent-Based Installer automation
-    ├── rhel_cluster       - RHEL cluster deployment
-    ├── pxe_setup          - PXE infrastructure setup
-    └── dns_setup          - DNS configuration
+└── Roles (14 total)
+    ├── Deployment Roles
+    │   ├── openshift_cluster    - OpenShift cluster deployment
+    │   └── rhel_cluster          - RHEL cluster deployment
+    ├── Infrastructure Roles
+    │   ├── pxe_setup             - PXE boot infrastructure
+    │   ├── dns_setup             - DNS configuration
+    │   └── registry_setup        - Container registry management
+    ├── Shared Utility Roles
+    │   ├── bcm_agent_image       - Build/push BCM agent container image
+    │   ├── litenode_certificates - Generate per-node litenode certificates
+    │   ├── register_bcm_nodes    - Register nodes in BCM
+    │   ├── convert_to_litenode   - Convert PhysicalNode to LiteNode
+    │   └── pythoncm_setup        - Setup pythoncm for dynamic inventory
+    └── Configuration Roles
+        ├── bcm_agent             - BCM agent management on nodes
+        ├── cluster_audit         - Cluster health checks
+        ├── gpu_cluster_config    - GPU cluster configuration
+        └── network_optimization  - Network performance tuning
 ```
 
 ## Official BCM Modules (brightcomputing.bcm110)
@@ -258,6 +274,142 @@ Deploys RHEL clusters via PXE boot.
 ```
 
 **Documentation:** [docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md](docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md)
+
+### registry_setup
+
+Deploys container registry on BCM head node using systemd quadlets.
+
+**Features:**
+- Podman-based registry deployment
+- TLS certificate signed by BCM CA
+- Systemd service management
+- Health check verification
+
+**Usage:**
+```yaml
+- name: Setup container registry
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.registry_setup
+  vars:
+    registry_port: 5000
+```
+
+**Documentation:** [roles/registry_setup/README.md](roles/registry_setup/README.md)
+
+### bcm_agent_image
+
+Builds and optionally pushes BCM agent container image.
+
+**Features:**
+- Clones nvidia-bcm-lite-daemon repository
+- Builds container image with podman
+- Optional registry push
+- Idempotent operations
+
+**Usage:**
+```yaml
+- name: Build BCM agent image
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.bcm_agent_image
+  vars:
+    bcm_agent_push_to_registry: true
+    bcm_agent_registry_host: "registry.example.com:5000"
+```
+
+**Documentation:** [roles/bcm_agent_image/README.md](roles/bcm_agent_image/README.md)
+
+### litenode_certificates
+
+Generates per-node litenode certificates for BCM agent authentication.
+
+**Features:**
+- Creates certificates via BCM CA
+- Supports 3 directory structures (flat, per_node, per_mac)
+- Idempotent certificate generation
+- Configurable validity period
+
+**Usage:**
+```yaml
+- name: Generate litenode certificates
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.litenode_certificates
+  vars:
+    cluster_nodes: "{{ cluster_nodes }}"
+    litenode_certs_dir: "/path/to/certs"
+    litenode_cert_dir_structure: "flat"
+```
+
+**Documentation:** [roles/litenode_certificates/README.md](roles/litenode_certificates/README.md)
+
+### register_bcm_nodes
+
+Registers nodes in BCM with automatic or provided category assignment.
+
+**Features:**
+- Auto mode: dynamic category generation
+- Provided mode: use inventory categories
+- Validates node data
+- Single registration task
+
+**Usage:**
+```yaml
+- name: Register nodes
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.register_bcm_nodes
+  vars:
+    bcm_node_category_mode: "auto"
+    bcm_node_category_prefix: "openshift_133"
+```
+
+**Documentation:** [roles/register_bcm_nodes/README.md](roles/register_bcm_nodes/README.md)
+
+### convert_to_litenode
+
+Converts PhysicalNode to LiteNode after OS installation.
+
+**Features:**
+- SSH accessibility check
+- Optional installation verification
+- PhysicalNode deletion
+- LiteNode creation
+- Handles node reboot
+
+**Usage:**
+```yaml
+- name: Convert to LiteNode
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.convert_to_litenode
+  vars:
+    cluster_nodes: "{{ cluster_nodes }}"
+    ssh_wait_timeout: 600
+```
+
+**Documentation:** [roles/convert_to_litenode/README.md](roles/convert_to_litenode/README.md)
+
+### pythoncm_setup
+
+Sets up pythoncm library for dynamic inventory plugin usage.
+
+**Features:**
+- Extracts pythoncm from BCM head node
+- Builds Python wheel
+- Installs in local environment
+- Enables dynamic inventory
+
+**Usage:**
+```yaml
+- name: Setup pythoncm
+  hosts: bcm_headnode
+  roles:
+    - fabiendupont.bcm.pythoncm_setup
+```
+
+**Documentation:** [roles/pythoncm_setup/README.md](roles/pythoncm_setup/README.md)
 
 ## Plugins
 
