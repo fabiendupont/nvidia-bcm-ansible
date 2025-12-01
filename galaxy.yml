@@ -6,18 +6,31 @@ readme: README.md
 authors:
   - Fabien Dupont <fdupont@redhat.com>
 
-description: Community-driven Ansible collection for high-level automation on NVIDIA Base Command Manager (BCM). Not officially supported by NVIDIA.
+description: >-
+  Community-driven Ansible collection for deploying and managing OpenShift and RHEL clusters
+  on NVIDIA Base Command Manager (BCM). Features include automated OpenShift Agent-Based
+  Installer deployment, PXE boot infrastructure, BCM agent management, and comprehensive
+  cluster lifecycle automation. Not officially supported by NVIDIA.
 
 license:
   - GPL-3.0-or-later
+
+license_file: LICENSE
 
 tags:
   - nvidia
   - bcm
   - base_command_manager
+  - openshift
+  - kubernetes
+  - rhel
   - cluster
   - hpc
   - infrastructure
+  - deployment
+  - automation
+  - pxe_boot
+  - gpu
 
 dependencies:
   brightcomputing.bcm110: '>=30.0.0'
@@ -29,22 +42,61 @@ homepage: https://github.com/fabiendupont/nvidia-bcm-ansible
 issues: https://github.com/fabiendupont/nvidia-bcm-ansible/issues
 
 build_ignore:
-  - bcm-headnode
-  - "*.tar.gz"
+  # Version control and CI/CD
   - .git
   - .github
-  - tests/output
-  - .pytest_cache
+  - .gitignore
+
+  # Build artifacts and dependencies
+  - "*.tar.gz"
+  - collections
+  - build
+  - dist
+
+  # Python artifacts
   - __pycache__
   - "*.pyc"
+  - "*.py[cod]"
+  - "*.egg-info"
+  - .pytest_cache
+  - .coverage
+  - htmlcov
+
+  # Virtual environments
+  - .venv
+  - venv
+  - env
+  - ENV
+
+  # IDE and editor files
   - .vscode
   - .idea
-  - collections
-  - tmp
-  - "*.log"
-  - .ansible
-  - .claude
-  - .venv
+  - "*.swp"
+  - "*.swo"
+  - "*~"
+  - .DS_Store
+  - Thumbs.db
+
+  # Local configuration and secrets
   - .envrc
   - .bcm
+  - "*.pem"
+  - "*.key"
+  - "*.crt"
+
+  # Ansible runtime
+  - .ansible
+  - ansible.log
+  - "*.retry"
+
+  # Test inventories (keep examples)
+  - inventory/setup.yml
+  - inventory/*test*.yml
+  - inventory/bcm_dynamic.yml
+
+  # Development and testing
+  - .claude
+  - tmp
+  - "*.log"
   - lib
+  - bcm-headnode
