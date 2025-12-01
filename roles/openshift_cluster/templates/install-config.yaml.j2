@@ -38,3 +38,7 @@ platform:
 {% endif %}
 pullSecret: '{{ openshift_pull_secret }}'
 sshKey: '{{ bcm_ssh_keys | first }}'
+{% if bcm_ca_certificate is defined and bcm_ca_certificate | length > 0 %}
+additionalTrustBundle: |
+{{ bcm_ca_certificate | indent(2, first=True) }}
+{% endif %}

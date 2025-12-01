@@ -74,13 +74,13 @@
 
   roles:
     # Setup PXE infrastructure (extract ISO, create boot files)
-    - role: nvidia.bcm.pxe_setup
+    - role: fabiendupont.bcm.pxe_setup
 
     # Setup container registry for BCM agent image distribution
-    - role: nvidia.bcm.registry_setup
+    - role: fabiendupont.bcm.registry_setup
 
     # Create categories and register nodes in BCM
-    - role: nvidia.bcm.rhel_cluster
+    - role: fabiendupont.bcm.rhel_cluster
 
   post_tasks:
     - name: Display Phase 1 completion
@@ -238,7 +238,7 @@
           - "================================================================"
 
   roles:
-    - role: nvidia.bcm.convert_to_litenode
+    - role: fabiendupont.bcm.convert_to_litenode
       vars:
         install_complete_file: "/root/install-complete.txt"
         verify_service: "bcm-agent.service"

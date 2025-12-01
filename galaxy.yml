@@ -1,12 +1,12 @@
 ---
-namespace: nvidia
+namespace: fabiendupont
 name: bcm
 version: 0.1.0
 readme: README.md
 authors:
   - Fabien Dupont <fdupont@redhat.com>
 
-description: Community Ansible collection for high-level automation on NVIDIA Base Command Manager (BCM)
+description: Community-driven Ansible collection for high-level automation on NVIDIA Base Command Manager (BCM). Not officially supported by NVIDIA.
 
 license:
   - GPL-3.0-or-later

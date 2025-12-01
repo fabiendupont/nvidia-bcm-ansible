@@ -62,19 +62,19 @@ ansible-galaxy collection install -r requirements.yml
 
 ```bash
 # List installed collections
-ansible-galaxy collection list | grep nvidia.bcm
+ansible-galaxy collection list | grep fabiendupont.bcm
 
 # View module documentation
-ansible-doc nvidia.bcm.bcm_node
-ansible-doc nvidia.bcm.bcm_category
+ansible-doc fabiendupont.bcm.bcm_node
+ansible-doc fabiendupont.bcm.bcm_category
 
 # View inventory plugin documentation
-ansible-doc -t inventory nvidia.bcm.bcm_inventory
+ansible-doc -t inventory fabiendupont.bcm.bcm_inventory
 ```
 
 Expected output:
 ```
-nvidia.bcm    1.0.0
+fabiendupont.bcm    1.0.0
 ```
 
 ---
@@ -86,7 +86,7 @@ nvidia.bcm    1.0.0
 Create `test_inventory.yml`:
 
 ```yaml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 host: localhost
 ```
 
@@ -100,7 +100,7 @@ ansible-inventory -i test_inventory.yml --graph
 ### Test 2: Query a Node
 
 ```bash
-ansible localhost -m nvidia.bcm.bcm_node -a "name=bcm11-headnode state=query"
+ansible localhost -m fabiendupont.bcm.bcm_node -a "name=bcm11-headnode state=query"
 ```
 
 ### Test 3: Run a Simple Playbook
@@ -115,7 +115,7 @@ Create `test.yml`:
 
   tasks:
     - name: Query default category
-      nvidia.bcm.bcm_category:
+      fabiendupont.bcm.bcm_category:
         name: default
         state: query
       register: result
@@ -145,25 +145,25 @@ Here's a practical example that queries your cluster configuration:
 
   tasks:
     - name: Get head node info
-      nvidia.bcm.bcm_node:
+      fabiendupont.bcm.bcm_node:
         name: bcm11-headnode
         state: query
       register: headnode
 
     - name: Get default category
-      nvidia.bcm.bcm_category:
+      fabiendupont.bcm.bcm_category:
         name: default
         state: query
       register: category
 
     - name: Get software image
-      nvidia.bcm.bcm_software_image:
+      fabiendupont.bcm.bcm_software_image:
         name: default-image
         state: query
       register: image
 
     - name: Get internal network
-      nvidia.bcm.bcm_network:
+      fabiendupont.bcm.bcm_network:
         name: internalnet
         state: query
       register: network
@@ -201,7 +201,7 @@ Create a `requirements.yml` in your project:
 ```yaml
 ---
 collections:
-  - name: nvidia.bcm
+  - name: fabiendupont.bcm
     source: https://your-automation-hub/api/galaxy/
 ```
 
@@ -227,7 +227,7 @@ host_key_checking = False
 collections_path = ./collections:~/.ansible/collections:/usr/share/ansible/collections
 
 [inventory]
-enable_plugins = nvidia.bcm.bcm_inventory
+enable_plugins = fabiendupont.bcm.bcm_inventory
 ```
 
 ### Inventory Configuration
@@ -235,7 +235,7 @@ enable_plugins = nvidia.bcm.bcm_inventory
 Create `inventory/bcm.yml`:
 
 ```yaml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 host: localhost
 pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
 
@@ -302,7 +302,7 @@ sudo ansible-galaxy collection install nvidia-bcm-1.0.0.tar.gz --force
 
 1. **Read the full documentation**: See [INSTALL.md](INSTALL.md) for detailed installation
 2. **Review examples**: Check the [playbooks/](playbooks/) directory
-3. **Explore modules**: Run `ansible-doc nvidia.bcm.<module>` for each module
+3. **Explore modules**: Run `ansible-doc fabiendupont.bcm.<module>` for each module
 4. **Check development guide**: See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) to create custom modules
 
 ---
@@ -322,7 +322,7 @@ sudo ansible-galaxy collection install nvidia-bcm-1.0.0.tar.gz --force
 
 ## Getting Help
 
-- **Module Documentation**: `ansible-doc nvidia.bcm.<module_name>`
+- **Module Documentation**: `ansible-doc fabiendupont.bcm.<module_name>`
 - **Collection Issues**: Create an issue in the repository
 - **NVIDIA BCM Documentation**: https://docs.nvidia.com/base-command-manager/
 

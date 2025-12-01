@@ -22,7 +22,7 @@ Manage BCM users with comprehensive property control:
 **Example:**
 ```yaml
 - name: Update user email
-  nvidia.bcm.bcm_user:
+  fabiendupont.bcm.bcm_user:
     name: testuser
     state: present
     email: testuser@example.com
@@ -38,7 +38,7 @@ Manage BCM groups with full integration into the user system:
 **Example:**
 ```yaml
 - name: Update group notes
-  nvidia.bcm.bcm_group:
+  fabiendupont.bcm.bcm_group:
     name: developers
     state: present
     notes: Development team group
@@ -55,7 +55,7 @@ Comprehensive cluster information and inventory reporting:
 **Example:**
 ```yaml
 - name: Gather cluster facts
-  nvidia.bcm.bcm_info:
+  fabiendupont.bcm.bcm_info:
   register: bcm_facts
 
 - name: Display device count
@@ -74,7 +74,7 @@ Control node power states with IPMI/Redfish integration:
 **Example:**
 ```yaml
 - name: Power on multiple nodes
-  nvidia.bcm.bcm_power:
+  fabiendupont.bcm.bcm_power:
     name: "{{ item }}"
     state: on
   loop:
@@ -153,8 +153,8 @@ ansible-galaxy collection install nvidia-bcm-1.1.0.tar.gz --force
 
 ### Verify Installation
 ```bash
-ansible-galaxy collection list | grep nvidia.bcm
-# Should show: nvidia.bcm   1.1.0
+ansible-galaxy collection list | grep fabiendupont.bcm
+# Should show: fabiendupont.bcm   1.1.0
 ```
 
 ---
@@ -165,16 +165,16 @@ All modules have been tested successfully:
 
 ```bash
 # Test bcm_user
-ansible localhost -m nvidia.bcm.bcm_user -a "name=cmsupport state=query" -c local
+ansible localhost -m fabiendupont.bcm.bcm_user -a "name=cmsupport state=query" -c local
 
 # Test bcm_group
-ansible localhost -m nvidia.bcm.bcm_group -a "name=cmsupport state=query" -c local
+ansible localhost -m fabiendupont.bcm.bcm_group -a "name=cmsupport state=query" -c local
 
 # Test bcm_info
-ansible localhost -m nvidia.bcm.bcm_info -c local
+ansible localhost -m fabiendupont.bcm.bcm_info -c local
 
 # Test bcm_power
-ansible localhost -m nvidia.bcm.bcm_power -a "name=node001 state=status" -c local
+ansible localhost -m fabiendupont.bcm.bcm_power -a "name=node001 state=status" -c local
 ```
 
 Example playbooks tested:

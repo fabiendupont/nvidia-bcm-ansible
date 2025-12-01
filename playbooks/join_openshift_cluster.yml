@@ -146,7 +146,7 @@
 
     - name: Deploy BCM agent to cluster
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
         tasks_from: deploy_bcm_daemon
 
   post_tasks:

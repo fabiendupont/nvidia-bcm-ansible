@@ -204,9 +204,9 @@ ansible-lint playbooks/*.yml
 ### Module Documentation
 ```bash
 # Generate module docs
-ansible-doc nvidia.bcm.bcm_info
-ansible-doc nvidia.bcm.bcm_certificate
-ansible-doc nvidia.bcm.bcm_node
+ansible-doc fabiendupont.bcm.bcm_info
+ansible-doc fabiendupont.bcm.bcm_certificate
+ansible-doc fabiendupont.bcm.bcm_node
 ```
 
 ## Test Environment

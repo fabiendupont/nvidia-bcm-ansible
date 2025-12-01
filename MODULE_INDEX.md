@@ -2,14 +2,14 @@
 
 ## Overview
 
-The `nvidia.bcm` collection provides **high-level automation roles** for deploying OpenShift and RHEL clusters on NVIDIA Base Command Manager (BCM).
+The `fabiendupont.bcm` collection provides **high-level automation roles** for deploying OpenShift and RHEL clusters on NVIDIA Base Command Manager (BCM).
 
 For low-level BCM entity management, this collection uses the official **NVIDIA Bright Computing collection** (`brightcomputing.bcm110`) which provides 190+ modules covering all BCM entities.
 
 ## Architecture
 
 ```
-nvidia.bcm (High-level automation)
+fabiendupont.bcm (High-level automation)
 ├── Dependencies
 │   └── brightcomputing.bcm110 (190+ official BCM modules)
 └── Roles
@@ -21,11 +21,11 @@ nvidia.bcm (High-level automation)
 
 ## Official BCM Modules (brightcomputing.bcm110)
 
-The `nvidia.bcm` collection depends on and uses the official NVIDIA Bright Computing collection for all BCM entity operations.
+The `fabiendupont.bcm` collection depends on and uses the official NVIDIA Bright Computing collection for all BCM entity operations.
 
 **Installation:**
 ```bash
-ansible-galaxy collection install nvidia.bcm
+ansible-galaxy collection install fabiendupont.bcm
 # This automatically installs brightcomputing.bcm110 as a dependency
 ```
 
@@ -157,9 +157,9 @@ The official collection provides 190+ modules including:
 
 **Full List:** https://galaxy.ansible.com/ui/repo/published/brightcomputing/bcm110/
 
-## High-Level Roles (nvidia.bcm)
+## High-Level Roles (fabiendupont.bcm)
 
-The `nvidia.bcm` collection provides specialized roles for common deployment scenarios.
+The `fabiendupont.bcm` collection provides specialized roles for common deployment scenarios.
 
 ### openshift_cluster
 
@@ -180,7 +180,7 @@ Automates OpenShift Agent-Based Installer deployment via PXE boot on BCM.
 - name: Deploy OpenShift cluster
   hosts: bcm_headnode
   roles:
-    - nvidia.bcm.openshift_cluster
+    - fabiendupont.bcm.openshift_cluster
   vars:
     cluster_name: "test-ocp"
     openshift_version: "4.20"
@@ -206,7 +206,7 @@ Sets up PXE boot infrastructure for operating system deployment.
 - name: Setup PXE infrastructure
   hosts: bcm_headnode
   roles:
-    - nvidia.bcm.pxe_setup
+    - fabiendupont.bcm.pxe_setup
   vars:
     pxe_os_type: "rhel"
     pxe_version: "9.5"
@@ -229,7 +229,7 @@ Configures DNS for cluster networking.
 - name: Setup DNS
   hosts: bcm_headnode
   roles:
-    - nvidia.bcm.dns_setup
+    - fabiendupont.bcm.dns_setup
   vars:
     cluster_name: "test-ocp"
     cluster_domain: "example.com"
@@ -252,7 +252,7 @@ Deploys RHEL clusters via PXE boot.
 - name: Deploy RHEL cluster
   hosts: bcm_headnode
   roles:
-    - nvidia.bcm.rhel_cluster
+    - fabiendupont.bcm.rhel_cluster
   vars:
     rhel_version: "9.5"
 ```
@@ -268,7 +268,7 @@ Dynamic inventory plugin for discovering BCM nodes.
 **Usage:**
 ```yaml
 # inventory.yml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 bcm_host: bcm-headnode
 pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
 groups:
@@ -276,7 +276,7 @@ groups:
   - rack
 ```
 
-**Documentation:** `ansible-doc -t inventory nvidia.bcm.bcm_inventory`
+**Documentation:** `ansible-doc -t inventory fabiendupont.bcm.bcm_inventory`
 
 ## Complete Example
 
@@ -319,17 +319,17 @@ groups:
     # Setup DNS
     - name: Configure DNS for cluster
       ansible.builtin.include_role:
-        name: nvidia.bcm.dns_setup
+        name: fabiendupont.bcm.dns_setup
 
     # Setup PXE infrastructure
     - name: Prepare PXE boot environment
       ansible.builtin.include_role:
-        name: nvidia.bcm.pxe_setup
+        name: fabiendupont.bcm.pxe_setup
 
     # Deploy OpenShift
     - name: Deploy OpenShift cluster
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
 
     # Verify with official modules
     - name: Query cluster nodes

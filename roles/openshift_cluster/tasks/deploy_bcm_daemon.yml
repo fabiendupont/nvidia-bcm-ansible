@@ -99,7 +99,7 @@
 # Convert nodes to LiteNode before deploying BCM agent
 - name: Convert PhysicalNode to LiteNode
   ansible.builtin.include_role:
-    name: nvidia.bcm.convert_to_litenode
+    name: fabiendupont.bcm.convert_to_litenode
   vars:
     ssh_wait_timeout: 60
     verify_openshift: true

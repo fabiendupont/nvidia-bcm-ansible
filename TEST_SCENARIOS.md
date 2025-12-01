@@ -84,7 +84,7 @@ ssh root@10.141.100.201 systemctl status bcm-agent
 - ✅ Node appears in `cmsh -c 'device; list -L'`
 
 **Key Implementation Details:**
-- Uses `nvidia.bcm.convert_to_litenode` role for BCM registration
+- Uses `fabiendupont.bcm.convert_to_litenode` role for BCM registration
 - Generates per-node litenode certificates (NOT bootstrap certs)
 - Quadlet units auto-enable on boot via `[Install]` section
 - `systemctl start` (not `enable --now`) for generated units
@@ -413,7 +413,7 @@ Last Updated: 2025-11-30
 - ✅ **TESTED: RHEL VM deployment via PXE (scenario 1a)** - 2025-11-28
 - ✅ **TESTED: RHEL VM joining BCM (scenario 1b)** - 2025-11-28
 - ✅ convert_to_litenode role refactored (removed agent wait logic for composability)
-- ✅ join_rhel_nodes.yml uses nvidia.bcm.convert_to_litenode role
+- ✅ join_rhel_nodes.yml uses fabiendupont.bcm.convert_to_litenode role
 - ✅ **add_openshift_worker.yml playbook created** - 2025-11-28
 - ✅ **TESTED: Single-Node OpenShift deployment via PXE (scenario 2a)** - 2025-11-30
 - ✅ **Fixed: PXE symlink setup automated** - roles/openshift_cluster/tasks/generate_pxe_files.yml
