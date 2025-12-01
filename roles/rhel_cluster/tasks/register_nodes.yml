@@ -1,19 +1,11 @@
 ---
-# Register nodes in BCM using official modules
+# Register RHEL cluster nodes in BCM
+#
+# Uses the shared register_bcm_nodes role with provided categories.
+# Categories are specified in the cluster_nodes data structure.
 
-- name: Register RHEL cluster nodes
-  brightcomputing.bcm110.physical_node:
-    hostname: "{{ node.name }}"
-    state: present
-    mac: "{{ node.mac }}"
-    category: "{{ node.category }}"
-    partition: "base"
-    provisioningInterface: "BOOTIF"
-    interfaces_NetworkPhysicalInterface:
-      - name: "BOOTIF"
-        ip: "{{ node.ip }}"
-        network: "internalnet"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    loop_var: node
-    label: "{{ node.name }}"
+- name: Register nodes using shared role
+  ansible.builtin.include_role:
+    name: register_bcm_nodes
+  vars:
+    bcm_node_category_mode: "provided"

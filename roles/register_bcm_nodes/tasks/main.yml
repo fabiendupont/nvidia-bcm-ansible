@@ -1,0 +1,90 @@
+---
+# Register nodes in BCM
+#
+# This role supports two modes for category assignment:
+# 1. auto: Automatically build category from template
+# 2. provided: Use category field from node data
+#
+# Required variables:
+#   cluster_nodes: list of nodes with name, mac, ip attributes
+#
+# Optional variables:
+#   bcm_node_category_mode: "auto" or "provided" (default: provided)
+#   bcm_node_category_template: Jinja2 template for auto mode
+#   cluster_name: Required if using auto mode
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - cluster_nodes is defined
+      - cluster_nodes | length > 0
+      - bcm_node_category_mode in ['auto', 'provided']
+    fail_msg: "cluster_nodes must be defined and bcm_node_category_mode must be 'auto' or 'provided'"
+
+- name: Validate cluster_name for auto mode
+  ansible.builtin.assert:
+    that:
+      - cluster_name is defined
+    fail_msg: "cluster_name is required when bcm_node_category_mode='auto'"
+  when: bcm_node_category_mode == 'auto'
+
+- name: Validate category field for provided mode
+  ansible.builtin.assert:
+    that:
+      - item.category is defined
+    fail_msg: "Node {{ item.name }} missing 'category' field required for provided mode"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: bcm_node_category_mode == 'provided'
+
+# Build category mapping for auto mode
+- name: Build category mapping (auto mode)
+  ansible.builtin.set_fact:
+    bcm_node_categories: >-
+      {{
+        bcm_node_categories | default({}) | combine({
+          item.name: bcm_node_category_prefix + '_' + (cluster_name | replace('-', '_')) + '_' + item.role
+        })
+      }}
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: bcm_node_category_mode == 'auto'
+
+# Build category mapping for provided mode
+- name: Build category mapping (provided mode)
+  ansible.builtin.set_fact:
+    bcm_node_categories: >-
+      {{
+        bcm_node_categories | default({}) | combine({
+          item.name: item.category
+        })
+      }}
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: bcm_node_category_mode == 'provided'
+
+# Register nodes with BCM
+- name: Register nodes in BCM
+  brightcomputing.bcm110.physical_node:
+    hostname: "{{ item.name }}"
+    state: present
+    mac: "{{ item.mac }}"
+    category: "{{ bcm_node_categories[item.name] }}"
+    partition: "{{ bcm_node_partition }}"
+    provisioningInterface: "{{ bcm_node_provisioning_interface }}"
+    interfaces_NetworkPhysicalInterface:
+      - name: "{{ bcm_node_provisioning_interface }}"
+        ip: "{{ item.ip }}"
+        network: "{{ bcm_node_network }}"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ bcm_node_categories[item.name] }}"
+
+- name: Display registration summary
+  ansible.builtin.debug:
+    msg:
+      - "Registered {{ cluster_nodes | length }} nodes in BCM"
+      - "Category mode: {{ bcm_node_category_mode }}"
