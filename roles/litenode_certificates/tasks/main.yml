@@ -1,0 +1,45 @@
+---
+# Generate per-node litenode certificates for BCM agent authentication
+#
+# IMPORTANT: Bootstrap certificates do NOT work for LiteNode authentication.
+# Each LiteNode needs its own certificate with profile=litenode issued by BCM.
+#
+# Required variables:
+#   cluster_nodes: list of nodes with 'name' attribute
+#
+# Optional variables:
+#   litenode_certs_dir: output directory (default: /tmp/litenode-certs)
+
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - cluster_nodes is defined
+      - cluster_nodes | length > 0
+    fail_msg: "cluster_nodes must be defined with at least one node"
+
+- name: Create litenode certificates directory
+  ansible.builtin.file:
+    path: "{{ litenode_certs_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate litenode certificate for each cluster node
+  ansible.builtin.shell: |
+    cmsh -c 'cert; createcertificate {{ litenode_cert_bits }} "{{ item.name }}" "{{ litenode_cert_org }}" "{{ litenode_cert_ou }}" "{{ litenode_cert_city }}" "{{ litenode_cert_state }}" {{ litenode_cert_country }} {{ litenode_cert_profile }} "" {{ litenode_cert_validity_days }} "{{ litenode_certs_dir }}/{{ item.name }}.key" "{{ litenode_certs_dir }}/{{ item.name }}.pem"'
+  args:
+    creates: "{{ litenode_certs_dir }}/{{ item.name }}.pem"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Set certificate file permissions
+  ansible.builtin.file:
+    path: "{{ litenode_certs_dir }}/{{ item.0.name }}.{{ item.1 }}"
+    mode: '0644'
+  loop: "{{ cluster_nodes | product(['pem', 'key']) | list }}"
+  loop_control:
+    label: "{{ item.0.name }}.{{ item.1 }}"
+
+- name: Display generated certificates
+  ansible.builtin.debug:
+    msg: "Generated litenode certificates in {{ litenode_certs_dir }} for {{ cluster_nodes | length }} nodes"

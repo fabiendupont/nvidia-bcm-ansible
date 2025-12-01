@@ -1,0 +1,7 @@
+---
+- name: Reload systemd and restart registry
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: "{{ registry_container_name }}"
+    state: restarted
+    enabled: true

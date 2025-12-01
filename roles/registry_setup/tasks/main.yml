@@ -1,0 +1,108 @@
+---
+- name: Check if registry certificate already exists
+  ansible.builtin.stat:
+    path: "{{ registry_cert_path }}"
+  register: registry_cert_stat
+
+- name: Generate registry certificate
+  when: not registry_cert_stat.stat.exists
+  block:
+    - name: Create certificate signing request
+      ansible.builtin.command:
+        cmd: >
+          openssl req -new -nodes
+          -keyout {{ registry_key_path }}
+          -subj "{{ registry_cert_subject }}"
+          -out {{ registry_csr_path }}
+          -addext "subjectAltName={{ registry_cert_san }}"
+      changed_when: true
+
+    - name: Sign certificate with BCM CA
+      ansible.builtin.command:
+        cmd: >
+          openssl x509 -req
+          -in {{ registry_csr_path }}
+          -CA {{ bcm_ca_cert }}
+          -CAkey {{ bcm_ca_key }}
+          -CAcreateserial
+          -out {{ registry_cert_path }}
+          -days {{ registry_cert_days }}
+          -copy_extensions copy
+      changed_when: true
+
+    - name: Set certificate file permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0600'
+        owner: root
+        group: root
+      loop:
+        - "{{ registry_cert_path }}"
+        - "{{ registry_key_path }}"
+
+    - name: Clean up CSR file
+      ansible.builtin.file:
+        path: "{{ registry_csr_path }}"
+        state: absent
+
+- name: Verify certificate details
+  ansible.builtin.command:
+    cmd: openssl x509 -in {{ registry_cert_path }} -noout -subject -ext subjectAltName
+  register: cert_info
+  changed_when: false
+
+- name: Display certificate information
+  ansible.builtin.debug:
+    msg: "{{ cert_info.stdout_lines }}"
+
+- name: Create registry data directory
+  ansible.builtin.file:
+    path: "{{ registry_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create quadlet directory
+  ansible.builtin.file:
+    path: /etc/containers/systemd
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Deploy registry quadlet configuration
+  ansible.builtin.template:
+    src: registry.container.j2
+    dest: /etc/containers/systemd/{{ registry_container_name }}.container
+    mode: '0644'
+    owner: root
+    group: root
+  notify: Reload systemd and restart registry
+
+- name: Flush handlers to ensure registry is started
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for registry to be ready
+  ansible.builtin.wait_for:
+    host: "{{ ansible_default_ipv4.address }}"
+    port: "{{ registry_port }}"
+    delay: 2
+    timeout: 30
+
+- name: Verify registry is responding
+  ansible.builtin.uri:
+    url: "https://{{ registry_hostname }}:{{ registry_port }}/v2/"
+    validate_certs: false
+    status_code: 200
+  register: registry_health
+  retries: 3
+  delay: 5
+
+- name: Display registry status
+  ansible.builtin.debug:
+    msg:
+      - "Registry is running at: https://{{ registry_hostname }}:{{ registry_port }}"
+      - "Data directory: {{ registry_data_dir }}"
+      - "Certificate: {{ registry_cert_path }}"
+      - "Health check: {{ registry_health.status }}"

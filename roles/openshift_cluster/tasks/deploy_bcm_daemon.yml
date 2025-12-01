@@ -1,0 +1,156 @@
+---
+# Deploy BCM Lite Daemon to OpenShift cluster
+#
+# This task file orchestrates BCM agent deployment to an OpenShift cluster.
+# It can be called from multiple playbooks (deploy_openshift_cluster.yml,
+# join_openshift_cluster.yml, deploy_bcm_agent.yml).
+#
+# Prerequisites:
+#   - OpenShift cluster deployed and accessible
+#   - kubeconfig_path defined and accessible
+#   - cluster_nodes defined with node information
+#   - Bootstrap certificates created on BCM head node
+#   - bcm_agent_helm_chart_path defined (path to Helm chart)
+#
+# Optional variables:
+#   - bcm_agent_namespace: Kubernetes namespace (default: bcm-agent)
+#   - bcm_agent_force_rebuild: Force image rebuild (default: false)
+#   - skip_build: Skip image build step (default: false)
+#
+# Workflow:
+#   1. Validate prerequisites
+#   2. Optionally build container image (if not skip_build)
+#   3. Deploy Helm chart via deploy_agent.yml
+#   4. Verify deployment
+
+- name: Set BCM agent namespace default
+  ansible.builtin.set_fact:
+    bcm_agent_namespace: "{{ bcm_agent_namespace | default('bcm-agent') }}"
+
+- name: Validate required variables for BCM agent deployment
+  ansible.builtin.assert:
+    that:
+      - cluster_name is defined
+      - kubeconfig_path is defined
+      - cluster_nodes is defined
+      - cluster_nodes | length > 0
+      - bcm_agent_helm_chart_path is defined
+    fail_msg: |
+      Missing required variables for BCM agent deployment:
+        - cluster_name: {{ cluster_name | default('UNDEFINED') }}
+        - kubeconfig_path: {{ kubeconfig_path | default('UNDEFINED') }}
+        - cluster_nodes: {{ cluster_nodes | default([]) | length }} nodes
+        - bcm_agent_helm_chart_path: {{ bcm_agent_helm_chart_path | default('UNDEFINED') }}
+
+      Please ensure inventory defines these variables.
+
+- name: Check if kubeconfig exists
+  ansible.builtin.stat:
+    path: "{{ kubeconfig_path }}"
+  register: kubeconfig_stat
+  failed_when: not kubeconfig_stat.stat.exists
+
+- name: Check if Helm chart exists
+  ansible.builtin.stat:
+    path: "{{ bcm_agent_helm_chart_path }}"
+  register: helm_chart_stat
+
+- name: Display Helm chart status
+  ansible.builtin.debug:
+    msg:
+      - "BCM Agent Helm Chart Status:"
+      - "  Path: {{ bcm_agent_helm_chart_path }}"
+      - "  Exists: {{ helm_chart_stat.stat.exists }}"
+      - "  Note: Helm chart directory should be cloned from nvidia-bcm-lite-daemon repository"
+  when: not helm_chart_stat.stat.exists
+
+- name: Fail if Helm chart not found
+  ansible.builtin.fail:
+    msg: |
+      BCM agent Helm chart not found at {{ bcm_agent_helm_chart_path }}.
+
+      To set up the BCM agent Helm chart:
+      1. Clone the nvidia-bcm-lite-daemon repository:
+         git clone <nvidia-bcm-lite-daemon-repo-url> /root/nvidia-bcm-lite-daemon
+
+      2. Ensure the Helm chart is at: {{ bcm_agent_helm_chart_path }}
+
+      3. Verify the chart structure:
+         helm lint {{ bcm_agent_helm_chart_path }}
+
+      Alternatively, set bcm_agent_helm_chart_path in your inventory to point
+      to the correct Helm chart location.
+  when: not helm_chart_stat.stat.exists
+
+- name: Display BCM agent deployment information
+  ansible.builtin.debug:
+    msg:
+      - "================================================================"
+      - "Deploying BCM Agent to OpenShift Cluster"
+      - "================================================================"
+      - "Cluster: {{ cluster_name }}"
+      - "Namespace: {{ bcm_agent_namespace }}"
+      - "Nodes: {{ cluster_nodes | length }}"
+      - "Kubeconfig: {{ kubeconfig_path }}"
+      - "Helm Chart: {{ bcm_agent_helm_chart_path }}"
+      - "Skip build: {{ skip_build | default(false) }}"
+      - "================================================================"
+
+# Convert nodes to LiteNode before deploying BCM agent
+- name: Convert PhysicalNode to LiteNode
+  ansible.builtin.include_role:
+    name: nvidia.bcm.convert_to_litenode
+  vars:
+    ssh_wait_timeout: 60
+    verify_openshift: true
+  when: not (skip_litenode_conversion | default(false))
+
+- name: Display LiteNode conversion skipped
+  ansible.builtin.debug:
+    msg: "Skipping LiteNode conversion (skip_litenode_conversion=true)"
+  when: skip_litenode_conversion | default(false)
+
+# Container image build logic
+# TODO: Implement build_bcm_agent_image.yml task file for intelligent image building
+# For now, we assume the image is either:
+#   - Already built locally
+#   - Available from a registry
+#   - Will be built by Helm chart hooks
+
+- name: Check if image build was requested
+  ansible.builtin.debug:
+    msg:
+      - "NOTE: Container image build is not yet implemented in this role task."
+      - "The Helm chart will either:"
+      - "  1. Use an existing image from the chart's default values"
+      - "  2. Pull from a configured registry"
+      - "  3. Build via Helm chart hooks (if configured)"
+      - ""
+      - "To manually build the BCM agent image before deployment:"
+      - "  ansible-playbook playbooks/build_bcm_agent_image.yml"
+  when:
+    - not (skip_build | default(false))
+    - bcm_agent_force_rebuild | default(false)
+
+# Deploy the BCM agent using existing deploy_agent.yml logic
+- name: Deploy BCM agent Helm chart
+  ansible.builtin.include_tasks: deploy_agent.yml
+
+- name: Display deployment completion
+  ansible.builtin.debug:
+    msg:
+      - "================================================================"
+      - "BCM Agent Deployment Complete"
+      - "================================================================"
+      - "Namespace: {{ bcm_agent_namespace }}"
+      - "Cluster: {{ cluster_name }}"
+      - "Nodes: {{ cluster_nodes | length }}"
+      - ""
+      - "Verify deployment:"
+      - "  export KUBECONFIG={{ kubeconfig_path }}"
+      - "  oc get pods -n {{ bcm_agent_namespace }}"
+      - "  oc logs -n {{ bcm_agent_namespace }} -l app.kubernetes.io/name=bcm-agent"
+      - ""
+      - "Check LiteNode status in BCM:"
+      - "  cmsh -c 'device; list -L'"
+      - "================================================================"

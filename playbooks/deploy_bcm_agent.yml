@@ -43,6 +43,10 @@
   become: true
   gather_facts: true
 
+  vars:
+    bcm_agent_namespace: "bcm-agent"
+    bcm_agent_local_tag: "latest"
+
   pre_tasks:
     - name: Validate required variables
       ansible.builtin.assert:
@@ -77,17 +81,14 @@
           - "================================================================"
 
   tasks:
-    - name: Include BCM agent deployment tasks
+    - name: Setup container registry on BCM head node
+      ansible.builtin.include_role:
+        name: nvidia.bcm.registry_setup
+
+    - name: Deploy BCM agent to cluster
       ansible.builtin.include_role:
         name: nvidia.bcm.openshift_cluster
         tasks_from: deploy_bcm_daemon
-      when: not (skip_build | default(false))
-
-    - name: Include BCM agent deployment tasks (skip build)
-      ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
-        tasks_from: deploy_agent
-      when: skip_build | default(false)
 
   post_tasks:
     - name: Display completion message

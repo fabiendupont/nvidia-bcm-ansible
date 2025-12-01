@@ -1,0 +1,4 @@
+---
+# Role variables with higher precedence than defaults
+# Variables passed to include_role will override defaults/main.yml
+# Do not redefine litenode_certs_dir here as it would override the passed value

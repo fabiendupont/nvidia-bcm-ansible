@@ -1,62 +1,111 @@
 ---
 # Deploy BCM agent via Helm chart after LiteNode conversion
 # This enables persistent agent-based management of OpenShift nodes
+#
+# Note: LiteNode conversion is handled by deploy_bcm_daemon.yml before
+# this task file is included. If calling this directly, ensure nodes are
+# already converted to LiteNodes.
 
-- name: Check if bootstrap certificate exists on BCM
-  ansible.builtin.stat:
-    path: "/cm/local/apps/cmd/etc/bootstrap/cert.pem"
-  register: bootstrap_cert
-  delegate_to: localhost
+- name: Set registry variables defaults
+  ansible.builtin.set_fact:
+    registry_hostname: "{{ registry_hostname | default(ansible_fqdn) }}"
+    registry_port: "{{ registry_port | default(5000) }}"
 
-- name: Fail if bootstrap certificate not found
-  ansible.builtin.fail:
-    msg: |
-      Bootstrap certificate not found. Please create bootstrap certificate on BCM head node:
-      1. Generate bootstrap certificate with limited permissions (cert request only)
-      2. Place in /cm/local/apps/cmd/etc/bootstrap/
-  when: not bootstrap_cert.stat.exists
+# Generate per-node litenode certificates using shared role
+- name: Generate litenode certificates for cluster nodes
+  ansible.builtin.include_role:
+    name: litenode_certificates
+  vars:
+    litenode_certs_dir: "/openshift/clusters/{{ cluster_name }}/node_certs"
 
 - name: Read BCM CA certificate
   ansible.builtin.slurp:
     src: "/cm/local/apps/cmd/etc/cacert.pem"
   register: bcm_ca_cert_b64
-  delegate_to: localhost
 
-- name: Read BCM bootstrap certificate
-  ansible.builtin.slurp:
-    src: "/cm/local/apps/cmd/etc/bootstrap/cert.pem"
-  register: bcm_bootstrap_cert_b64
-  delegate_to: localhost
+- name: Check if BCM agent image exists locally
+  containers.podman.podman_image_info:
+    name: "localhost/bcm-agent:{{ bcm_agent_local_tag }}"
+  register: local_image_info
 
-- name: Read BCM bootstrap key
-  ansible.builtin.slurp:
-    src: "/cm/local/apps/cmd/etc/bootstrap/cert.key"
-  register: bcm_bootstrap_key_b64
-  delegate_to: localhost
+- name: Fail if local image not found
+  ansible.builtin.fail:
+    msg: |
+      BCM agent image not found locally: localhost/bcm-agent:{{ bcm_agent_local_tag }}
+      Please build the image first using build_bcm_agent_image.yml playbook.
+  when: local_image_info.images | length == 0
+
+- name: Tag image for registry
+  containers.podman.podman_tag:
+    image: "localhost/bcm-agent:{{ bcm_agent_local_tag }}"
+    target_names:
+      - "{{ registry_hostname }}:{{ registry_port }}/bcm-agent:{{ bcm_agent_local_tag }}"
+
+- name: Push image to BCM registry
+  containers.podman.podman_image:
+    name: "{{ registry_hostname }}:{{ registry_port }}/bcm-agent"
+    tag: "{{ bcm_agent_local_tag }}"
+    push: true
+    validate_certs: false
+  register: image_push
+  retries: 3
+  delay: 5
+
+- name: Display image push status
+  ansible.builtin.debug:
+    msg: "Pushed bcm-agent:{{ bcm_agent_local_tag }} to {{ registry_hostname }}:{{ registry_port }}"
 
 - name: Create bcm-agent namespace
   kubernetes.core.k8s:
     api_version: v1
     kind: Namespace
-    name: bcm-agent
+    name: "{{ bcm_agent_namespace }}"
     state: present
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
 
-- name: Create BCM certificate Secret
+- name: Grant privileged SCC to bcm-agent ServiceAccount
+  ansible.builtin.command:
+    cmd: "/openshift/tools/{{ openshift_version }}/oc adm policy add-scc-to-user privileged -z bcm-agent -n {{ bcm_agent_namespace }}"
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+  register: scc_result
+  changed_when: "'added' in scc_result.stdout or 'already has' not in scc_result.stdout"
+
+- name: Read per-node litenode certificates
+  ansible.builtin.slurp:
+    src: "/openshift/clusters/{{ cluster_name }}/node_certs/{{ item.name }}.pem"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: litenode_certs
+
+- name: Read per-node litenode keys
+  ansible.builtin.slurp:
+    src: "/openshift/clusters/{{ cluster_name }}/node_certs/{{ item.name }}.key"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: litenode_keys
+
+- name: Build certificate data dictionary
+  ansible.builtin.set_fact:
+    cert_data: "{{ cert_data | default({}) | combine({item.0.item.name ~ '-cert.pem': item.0.content, item.0.item.name ~ '-cert.key': item.1.content}) }}"
+  loop: "{{ litenode_certs.results | zip(litenode_keys.results) | list }}"
+  loop_control:
+    label: "{{ item.0.item.name }}"
+
+- name: Create BCM litenode certificates Secret with all per-node certs
   kubernetes.core.k8s:
     state: present
     definition:
       apiVersion: v1
       kind: Secret
       metadata:
-        name: bcm-bootstrap-cert
-        namespace: bcm-agent
+        name: bcm-litenode-certs
+        namespace: "{{ bcm_agent_namespace }}"
       type: Opaque
-      data:
-        cacert.pem: "{{ bcm_ca_cert_b64.content }}"
-        cert.pem: "{{ bcm_bootstrap_cert_b64.content }}"
-        cert.key: "{{ bcm_bootstrap_key_b64.content }}"
+      data: "{{ cert_data | combine({'cacert.pem': bcm_ca_cert_b64.content}) }}"
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
 
@@ -64,9 +113,13 @@
   kubernetes.core.helm:
     name: bcm-agent
     chart_ref: "{{ bcm_agent_helm_chart_path }}"
-    release_namespace: bcm-agent
-    create_namespace: true
+    release_namespace: "{{ bcm_agent_namespace }}"
+    create_namespace: false
     values:
+      image:
+        repository: "{{ registry_hostname }}:{{ registry_port }}/bcm-agent"
+        tag: "{{ bcm_agent_local_tag }}"
+        pullPolicy: IfNotPresent
       config:
         bcm:
           host: "{{ bcm_server }}"
@@ -76,7 +129,8 @@
           labelPrefix: "bcm.nvidia.com"
           enableLabeling: true
       certificates:
-        secretName: bcm-bootstrap-cert
+        secretName: bcm-litenode-certs
+        # Container will select cert files matching hostname (e.g., sno-master-0-cert.pem)
       resources:
         requests:
           memory: "256Mi"
@@ -90,9 +144,56 @@
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
 
+- name: Patch DaemonSet with initContainer to select per-node certificate
+  kubernetes.core.k8s:
+    state: patched
+    kind: DaemonSet
+    name: bcm-agent
+    namespace: "{{ bcm_agent_namespace }}"
+    definition:
+      spec:
+        template:
+          spec:
+            containers:
+              - name: bcm-agent
+                volumeMounts:
+                  - name: bcm-certs
+                    mountPath: /etc/bcm-agent/certs
+                    readOnly: true
+            initContainers:
+              - name: select-node-cert
+                image: "{{ registry_hostname }}:{{ registry_port }}/bcm-agent:{{ bcm_agent_local_tag }}"
+                command:
+                  - /bin/sh
+                  - -c
+                  - |
+                    cp /etc/bcm-certs-all/cacert.pem /etc/bcm-agent/certs/cacert.pem
+                    cp /etc/bcm-certs-all/${NODE_NAME}-cert.pem /etc/bcm-agent/certs/cert.pem
+                    cp /etc/bcm-certs-all/${NODE_NAME}-cert.key /etc/bcm-agent/certs/cert.key
+                    chmod 600 /etc/bcm-agent/certs/cert.key
+                env:
+                  - name: NODE_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: spec.nodeName
+                volumeMounts:
+                  - name: bcm-certs-all
+                    mountPath: /etc/bcm-certs-all
+                    readOnly: true
+                  - name: bcm-certs
+                    mountPath: /etc/bcm-agent/certs
+            volumes:
+              - name: bcm-certs-all
+                secret:
+                  secretName: bcm-litenode-certs
+              - name: bcm-certs
+                emptyDir: {}
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
 - name: Wait for bcm-agent DaemonSet to be ready
   ansible.builtin.command:
-    cmd: "oc rollout status daemonset/bcm-agent -n bcm-agent --timeout=5m"
+    cmd: "/openshift/tools/{{ openshift_version }}/oc rollout status daemonset/bcm-agent -n {{ bcm_agent_namespace }} --timeout=5m"
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
   register: daemonset_status
@@ -109,7 +210,7 @@
 
 - name: Check LiteNode status in BCM
   brightcomputing.bcm110.lite_node_info:
-    name: "{{ item.name }}"
+    hostname: "{{ item.name }}"
   loop: "{{ cluster_nodes }}"
   loop_control:
     label: "{{ item.name }}"
