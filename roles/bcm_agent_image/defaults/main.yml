@@ -1,0 +1,22 @@
+---
+# BCM Agent Image Build Configuration
+# Default values for building and distributing the BCM agent container image
+
+# Image naming
+bcm_agent_local_image: "localhost/bcm-agent"
+bcm_agent_local_tag: "latest"
+
+# Repository configuration
+bcm_agent_repo_url: "https://github.com/fabiendupont/nvidia-bcm-lite-daemon"
+bcm_agent_repo_path: "/root/nvidia-bcm-lite-daemon"
+bcm_agent_repo_version: "main"
+
+# Build behavior
+bcm_agent_force_rebuild: false
+
+# Registry push configuration
+bcm_agent_push_to_registry: false  # Set to true to push image to registry
+bcm_agent_registry_host: ""        # e.g., "bcm-headnode.cm.cluster:5000"
+bcm_agent_registry_image: ""       # e.g., "bcm-agent" (without host)
+bcm_agent_registry_tag: "{{ bcm_agent_local_tag }}"
+bcm_agent_registry_validate_certs: false  # Set to true for production registries
