@@ -45,7 +45,7 @@ ansible-galaxy collection install nvidia-bcm-*.tar.gz
 ### From Galaxy (when published)
 
 ```bash
-ansible-galaxy collection install nvidia.bcm
+ansible-galaxy collection install fabiendupont.bcm
 ```
 
 ## Step 4: Test the Installation
@@ -55,7 +55,7 @@ ansible-galaxy collection install nvidia.bcm
 Create a test inventory file `test_inventory.yml`:
 
 ```yaml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 host: localhost
 pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
 ```
@@ -160,7 +160,7 @@ cmsh -c "device; list"
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `plugin` | string | required | Must be `nvidia.bcm.bcm_inventory` |
+| `plugin` | string | required | Must be `fabiendupont.bcm.bcm_inventory` |
 | `host` | string | `localhost` | BCM head node hostname or IP |
 | `pythoncm_path` | string | `/cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages` | Path to pythoncm library |
 | `strict` | bool | `false` | If true, skip hosts with missing variables |
@@ -170,7 +170,7 @@ cmsh -c "device; list"
 ### Advanced Inventory Configuration
 
 ```yaml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 host: localhost
 pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
 
@@ -189,4 +189,4 @@ compose:
 
 - Read the [DEVELOPMENT.md](docs/DEVELOPMENT.md) guide to create custom modules
 - Check the [example playbooks](playbooks/) for usage examples
-- Review module documentation: `ansible-doc nvidia.bcm.bcm_node`
+- Review module documentation: `ansible-doc fabiendupont.bcm.bcm_node`

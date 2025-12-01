@@ -1,12 +1,12 @@
-# NVIDIA BCM Ansible Collection
+# BCM Ansible Collection
 
-**Community-driven** high-level automation for deploying OpenShift and RHEL clusters on NVIDIA Base Command Manager (BCM).
+**Community-driven** Ansible collection for high-level automation on NVIDIA Base Command Manager (BCM) - deploying OpenShift and RHEL clusters with ease.
 
-> **Note:** This is a community project and is not officially supported by NVIDIA. For official BCM modules, use the `brightcomputing.bcm110` collection.
+> **Important:** This is an independent community project by Fabien Dupont and is **not officially supported or endorsed by NVIDIA**. For official BCM modules, use the `brightcomputing.bcm110` collection.
 
 ## Overview
 
-The `nvidia.bcm` collection provides **specialized roles** for automating complex deployment workflows on BCM infrastructure:
+The `fabiendupont.bcm` collection provides **specialized roles** for automating complex deployment workflows on BCM infrastructure:
 
 - **OpenShift Agent-Based Installer** - Automated PXE-based deployment
 - **RHEL Cluster Deployment** - Kickstart-based provisioning
@@ -18,7 +18,7 @@ For low-level BCM entity management (categories, nodes, networks, etc.), this co
 ## Architecture
 
 ```
-nvidia.bcm (High-level automation)
+fabiendupont.bcm (High-level automation)
 ├── Dependencies
 │   └── brightcomputing.bcm110 (190+ official BCM modules)
 │       └── pythoncm (BCM Python API)
@@ -42,11 +42,11 @@ nvidia.bcm (High-level automation)
 Install the collection from Ansible Galaxy (includes official dependencies):
 
 ```bash
-ansible-galaxy collection install nvidia.bcm
+ansible-galaxy collection install fabiendupont.bcm
 ```
 
 This automatically installs:
-- `nvidia.bcm` - High-level automation roles
+- `fabiendupont.bcm` - High-level automation roles
 - `brightcomputing.bcm110` - Official BCM modules (190+)
 - `containers.podman` - Container management
 
@@ -84,9 +84,9 @@ This automatically installs:
         role: "master"
 
   roles:
-    - nvidia.bcm.dns_setup
-    - nvidia.bcm.pxe_setup
-    - nvidia.bcm.openshift_cluster
+    - fabiendupont.bcm.dns_setup
+    - fabiendupont.bcm.pxe_setup
+    - fabiendupont.bcm.openshift_cluster
 ```
 
 **What it does:**
@@ -115,7 +115,7 @@ See: [docs/AUTOMATED_OPENSHIFT_DEPLOYMENT.md](docs/AUTOMATED_OPENSHIFT_DEPLOYMEN
     rhel_iso_path: "/path/to/rhel-9.5.iso"
 
   roles:
-    - nvidia.bcm.rhel_cluster
+    - fabiendupont.bcm.rhel_cluster
 ```
 
 See: [docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md](docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md)
@@ -257,7 +257,7 @@ Dynamic inventory plugin for discovering BCM nodes.
 **Usage:**
 ```yaml
 # inventory.yml
-plugin: nvidia.bcm.bcm_inventory
+plugin: fabiendupont.bcm.bcm_inventory
 bcm_host: bcm-headnode
 pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
 groups:
@@ -271,7 +271,7 @@ ansible-inventory -i inventory.yml --list
 ansible -i inventory.yml all -m ping
 ```
 
-**Documentation:** `ansible-doc -t inventory nvidia.bcm.bcm_inventory`
+**Documentation:** `ansible-doc -t inventory fabiendupont.bcm.bcm_inventory`
 
 ## Official BCM Modules
 
@@ -356,9 +356,9 @@ The `brightcomputing.bcm110` collection provides 190+ modules for comprehensive 
         role: "worker"
 
   roles:
-    - nvidia.bcm.dns_setup
-    - nvidia.bcm.pxe_setup
-    - nvidia.bcm.openshift_cluster
+    - fabiendupont.bcm.dns_setup
+    - fabiendupont.bcm.pxe_setup
+    - fabiendupont.bcm.openshift_cluster
 ```
 
 ### Verify Deployment
@@ -399,7 +399,7 @@ host_key_checking = False
 inventory = inventory/
 
 [inventory]
-enable_plugins = nvidia.bcm.bcm_inventory, yaml, ini
+enable_plugins = fabiendupont.bcm.bcm_inventory, yaml, ini
 ```
 
 ### Python Interpreter

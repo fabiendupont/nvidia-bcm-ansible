@@ -214,7 +214,7 @@
 
     - name: Create test VM for worker
       ansible.builtin.include_role:
-        name: nvidia.bcm.vm_management
+        name: fabiendupont.bcm.vm_management
         tasks_from: create_vm
       vars:
         vm_name: "{{ worker_name }}"
@@ -274,7 +274,7 @@
 
     - name: Convert worker to LiteNode
       ansible.builtin.include_role:
-        name: nvidia.bcm.convert_to_litenode
+        name: fabiendupont.bcm.convert_to_litenode
       vars:
         cluster_nodes:
           - name: "{{ worker_name }}"

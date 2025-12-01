@@ -30,4 +30,4 @@
   gather_facts: false
 
   roles:
-    - nvidia.bcm.pythoncm_setup
+    - fabiendupont.bcm.pythoncm_setup

@@ -4,7 +4,7 @@
 
 The `bcm_certificate` module provides management of X.509 certificates in NVIDIA Base Command Manager (BCM). BCM uses certificates for authentication and authorization of nodes, users, and services.
 
-## Module: nvidia.bcm.bcm_certificate
+## Module: fabiendupont.bcm.bcm_certificate
 
 ### Features
 
@@ -27,34 +27,34 @@ The `bcm_certificate` module provides management of X.509 certificates in NVIDIA
 ```yaml
 # Query all certificates
 - name: List all certificates
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     state: query
   register: all_certs
 
 # Query node certificates only
 - name: List node certificates
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     state: query
     filter_profile: node
   register: node_certs
 
 # Get specific certificate by serial number
 - name: Query certificate
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     serial_number: 26
     state: query
   register: cert_info
 
 # Query by common name (e.g., MAC address for nodes)
 - name: Find certificate by name
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     name: "52-54-00-a3-91-ae"
     state: query
   register: cert
 
 # Save certificate to file
 - name: Export certificate
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     serial_number: 26
     state: query
     cert_file: /tmp/node001.pem
@@ -62,19 +62,19 @@ The `bcm_certificate` module provides management of X.509 certificates in NVIDIA
 
 # Revoke a certificate
 - name: Revoke certificate
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     serial_number: 100
     state: revoked
 
 # Unrevoke a certificate
 - name: Unrevoke certificate
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     serial_number: 100
     state: unrevoked
 
 # Remove a certificate
 - name: Delete certificate
-  nvidia.bcm.bcm_certificate:
+  fabiendupont.bcm.bcm_certificate:
     serial_number: 100
     state: absent
 ```
@@ -117,7 +117,7 @@ Each certificate contains:
   tasks:
     # Get all certificates
     - name: Query all certificates
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         state: query
       register: result
 
@@ -126,21 +126,21 @@ Each certificate contains:
 
     # Filter by profile
     - name: Get only admin certificates
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         state: query
         filter_profile: admin
       register: admin_certs
 
     # Filter by revocation status
     - name: Get active (non-revoked) certificates
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         state: query
         filter_revoked: false
       register: active_certs
 
     # Query specific certificate
     - name: Get certificate details
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         serial_number: 26
         state: query
       register: cert
@@ -158,14 +158,14 @@ Each certificate contains:
   tasks:
     # Get all node certificates
     - name: Query node certificates
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         state: query
         filter_profile: node
       register: node_certs
 
     # Export each to a file
     - name: Save certificates to files
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         serial_number: "{{ item.serial_number }}"
         state: query
         cert_file: "/tmp/certs/{{ item.common_name }}.pem"
@@ -186,19 +186,19 @@ Each certificate contains:
   tasks:
     # Revoke a compromised certificate
     - name: Revoke certificate
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         serial_number: 100
         state: revoked
 
     # Later, unrevoke if needed
     - name: Restore certificate
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         serial_number: 100
         state: unrevoked
 
     # Permanently remove old certificate
     - name: Delete certificate
-      nvidia.bcm.bcm_certificate:
+      fabiendupont.bcm.bcm_certificate:
         serial_number: 99
         state: absent
 ```

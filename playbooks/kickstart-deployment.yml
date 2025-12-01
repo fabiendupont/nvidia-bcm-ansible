@@ -305,7 +305,7 @@
     ###########################################################################
 
     - name: Create BCM categories for kickstart deployments
-      nvidia.bcm.bcm_category:
+      fabiendupont.bcm.bcm_category:
         name: "{{ item.category_name }}"
         state: present
         notes: "{{ item.category_notes }}"
@@ -369,7 +369,7 @@
     ###########################################################################
 
     - name: Assign nodes to kickstart categories
-      nvidia.bcm.bcm_node:
+      fabiendupont.bcm.bcm_node:
         name: "{{ item.1 }}"
         state: present
         category: "{{ item.0.category_name }}"
@@ -411,7 +411,7 @@
     ###########################################################################
 
     - name: Verify categories exist
-      nvidia.bcm.bcm_category:
+      fabiendupont.bcm.bcm_category:
         name: "{{ item.category_name }}"
         state: query
       loop: "{{ deployments }}"
@@ -420,7 +420,7 @@
       tags: [never, verify]
 
     - name: Verify node assignments
-      nvidia.bcm.bcm_node:
+      fabiendupont.bcm.bcm_node:
         name: "{{ item.1 }}"
         state: query
       loop: "{{ deployments | subelements('nodes', skip_missing=True) }}"

@@ -2,7 +2,7 @@
 # Main tasks for network optimization
 
 - name: Query current network configuration
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ network_name }}"
     state: query
   register: current_network
@@ -25,7 +25,7 @@
     domain_needs_update: "{{ current_network.network.domain_name != network_domain }}"
 
 - name: Optimize network MTU for HPC workloads
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ network_name }}"
     state: present
     mtu: "{{ network_mtu }}"
@@ -35,7 +35,7 @@
   register: mtu_result
 
 - name: Update domain name
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ network_name }}"
     state: present
     domain_name: "{{ network_domain }}"
@@ -57,7 +57,7 @@
     - domain_result.changed | default(false)
 
 - name: Query optimized network configuration
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ network_name }}"
     state: query
   register: optimized_network

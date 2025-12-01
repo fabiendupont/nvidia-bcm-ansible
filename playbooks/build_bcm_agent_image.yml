@@ -49,7 +49,7 @@
 
     - name: Include BCM agent image build tasks
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
         tasks_from: build_bcm_agent_image
 
     - name: Display completion message

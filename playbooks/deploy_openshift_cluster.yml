@@ -12,12 +12,14 @@
 #
 # This playbook includes three phases:
 #
-# PHASE 1: PXE Infrastructure Setup (on BCM head node)
-#   1. Install OpenShift tools (oc, openshift-install) for specified version
-#   2. Generate cluster boot artifacts (agent-config with node MAC addresses)
-#   3. Setup BCM software image (version-specific, reusable)
-#   4. Install PXE boot files (cluster-specific rootfs)
-#   5. Create BCM categories and register nodes as PhysicalNode
+# PHASE 1: Infrastructure Setup (on BCM head node)
+#   1. Setup container registry (reusable for all clusters)
+#   2. Build BCM agent container image (reusable for all clusters)
+#   3. Install OpenShift tools (oc, openshift-install) for specified version
+#   4. Generate cluster boot artifacts (agent-config with node MAC addresses)
+#   5. Setup BCM software image (version-specific, reusable)
+#   6. Install PXE boot files (cluster-specific rootfs)
+#   7. Create BCM categories and register nodes as PhysicalNode
 #
 # PHASE 2: VM/Node Boot (on local machine or physical hardware)
 #   1. Create VMs with predefined MAC addresses (optional, for testing)
@@ -26,7 +28,7 @@
 # PHASE 3: Post-Installation (on BCM head node)
 #   1. Wait for OpenShift cluster installation to complete
 #   2. Convert nodes from PhysicalNode to LiteNode
-#   3. Deploy BCM Lite Daemon Helm chart (DaemonSet)
+#   3. Deploy BCM agent Helm chart (uses pre-built image from registry)
 #
 # Usage Examples:
 #
@@ -62,7 +64,7 @@
 #   - For VM creation: libvirt on local machine
 #   - For BCM agent: Bootstrap certificates (run setup_bcm_bootstrap_certs.yml)
 
-- name: PHASE 1 - Setup PXE Infrastructure on BCM
+- name: PHASE 1 - Setup Infrastructure on BCM
   hosts: bcm_headnode
   become: true
   gather_facts: true
@@ -75,7 +77,7 @@
       ansible.builtin.debug:
         msg:
           - "================================================================"
-          - "PHASE 1: Setting up PXE Infrastructure"
+          - "PHASE 1: Setting up Infrastructure"
           - "================================================================"
           - "Cluster: {{ cluster_name }}"
           - "OpenShift Version: {{ openshift_version }}"
@@ -94,9 +96,20 @@
           - cluster_nodes | length > 0
         fail_msg: "Missing required variables. Check inventory configuration."
 
+    - name: Setup container registry on BCM head node
+      ansible.builtin.include_role:
+        name: fabiendupont.bcm.registry_setup
+      when: not (skip_bcm_agent | default(false))
+
+    - name: Build BCM agent container image
+      ansible.builtin.include_role:
+        name: fabiendupont.bcm.openshift_cluster
+        tasks_from: build_bcm_agent_image
+      when: not (skip_bcm_agent | default(false))
+
     - name: Generate OpenShift PXE Boot Files
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
         tasks_from: generate_pxe_files
 
     - name: Create deployment log
@@ -123,16 +136,16 @@
 
   roles:
     # Setup DNS for cluster domain
-    - role: nvidia.bcm.dns_setup
+    - role: fabiendupont.bcm.dns_setup
 
     # Setup PXE infrastructure
-    - role: nvidia.bcm.pxe_setup
+    - role: fabiendupont.bcm.pxe_setup
       vars:
         verify_http_access: true
         verify_boot_files: true
 
     # Register nodes and create categories
-    - role: nvidia.bcm.openshift_cluster
+    - role: fabiendupont.bcm.openshift_cluster
 
   post_tasks:
     - name: Verify software image exists
@@ -145,8 +158,11 @@
       ansible.builtin.debug:
         msg:
           - "================================================================"
-          - "PHASE 1 COMPLETE: PXE Infrastructure Ready"
+          - "PHASE 1 COMPLETE: Infrastructure Ready"
           - "================================================================"
+          - "Container Registry: https://{{ ansible_fqdn }}:5000 (systemd: bcm-registry.service)"
+          - "BCM Agent Image: localhost/bcm-agent:{{ bcm_agent_local_tag | default('latest') }}"
+          - "OpenShift Version: {{ openshift_version }}"
           - "Software Image: installer-openshift-{{ openshift_version }}"
           - "PXE Files: /tftpboot/repos/{{ cluster_name }}/"
           - "Kubeconfig (after install): /openshift/clusters/{{ cluster_name }}/auth/kubeconfig"
@@ -334,7 +350,7 @@
 
     - name: Convert PhysicalNode to LiteNode
       ansible.builtin.include_role:
-        name: nvidia.bcm.convert_to_litenode
+        name: fabiendupont.bcm.convert_to_litenode
       vars:
         # Skip SSH and OpenShift checks - already done above
         ssh_wait_timeout: 10
@@ -346,9 +362,9 @@
         msg: "Skipping LiteNode conversion (skip_litenode_conversion=true)"
       when: skip_litenode_conversion | default(false)
 
-    - name: Deploy BCM Lite Daemon DaemonSet
+    - name: Deploy BCM agent DaemonSet
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
         tasks_from: deploy_bcm_daemon
       when: not (skip_bcm_agent | default(false))
 

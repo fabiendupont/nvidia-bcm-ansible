@@ -151,6 +151,15 @@
   ansible.builtin.debug:
     msg: "Found {{ bcm_ssh_keys | length }} SSH public key(s) from BCM head node"
 
+- name: Read BCM CA certificate for registry trust
+  ansible.builtin.slurp:
+    src: /cm/local/apps/cmd/etc/temporary_cacert.pem
+  register: bcm_ca_cert_b64
+
+- name: Set BCM CA certificate fact
+  ansible.builtin.set_fact:
+    bcm_ca_certificate: "{{ bcm_ca_cert_b64.content | b64decode }}"
+
 - name: Generate install-config.yaml
   ansible.builtin.template:
     src: install-config.yaml.j2
@@ -218,5 +227,5 @@
 
 - name: Setup PXE boot infrastructure (symlinks and BCM software image)
   ansible.builtin.include_role:
-    name: nvidia.bcm.pxe_setup
+    name: fabiendupont.bcm.pxe_setup
     tasks_from: setup_openshift.yml

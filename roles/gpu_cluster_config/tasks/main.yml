@@ -2,7 +2,7 @@
 # Main tasks for GPU cluster configuration
 
 - name: Query current software image configuration
-  nvidia.bcm.bcm_software_image:
+  fabiendupont.bcm.bcm_software_image:
     name: "{{ gpu_image_name }}"
     state: query
   register: current_image
@@ -12,7 +12,7 @@
     msg: "Current kernel parameters: {{ current_image.image.kernel_parameters }}"
 
 - name: Update kernel parameters for GPU workloads
-  nvidia.bcm.bcm_software_image:
+  fabiendupont.bcm.bcm_software_image:
     name: "{{ gpu_image_name }}"
     state: present
     kernel_parameters: "{{ gpu_kernel_params }}"
@@ -25,13 +25,13 @@
   when: image_updated.changed | default(false)
 
 - name: Query current network configuration
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ gpu_network_name }}"
     state: query
   register: current_network
 
 - name: Update network MTU for GPU workloads
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: "{{ gpu_network_name }}"
     state: present
     mtu: "{{ gpu_network_mtu }}"
@@ -44,7 +44,7 @@
   when: network_updated.changed | default(false)
 
 - name: Update category documentation
-  nvidia.bcm.bcm_category:
+  fabiendupont.bcm.bcm_category:
     name: "{{ gpu_category_name }}"
     state: present
     notes: "{{ gpu_category_notes }} - Updated {{ ansible_date_time.iso8601 }}"

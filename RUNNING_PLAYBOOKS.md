@@ -28,7 +28,7 @@ PYTHONPATH=/home/fdupont/Work/NVIDIA/BCM/nvidia-bcm-ansible/.venv/lib/python3.14
      ansible-playbook -i inventory/test_rhel_vm.yml playbooks/setup_pythoncm.yml
    ```
 
-2. Build and install the nvidia.bcm collection:
+2. Build and install the fabiendupont.bcm collection:
    ```bash
    # Build from source (root directory contains galaxy.yml)
    ansible-galaxy collection build . --output-path /tmp/ --force

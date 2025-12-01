@@ -19,7 +19,7 @@
     mode: '0644'
 
 - name: Audit head node
-  nvidia.bcm.bcm_node:
+  fabiendupont.bcm.bcm_node:
     name: bcm11-headnode
     state: query
   register: headnode
@@ -40,7 +40,7 @@
   when: audit_nodes | bool and headnode.node is defined
 
 - name: Audit default category
-  nvidia.bcm.bcm_category:
+  fabiendupont.bcm.bcm_category:
     name: default
     state: query
   register: category
@@ -61,7 +61,7 @@
   when: audit_categories | bool and category.category is defined
 
 - name: Audit software image
-  nvidia.bcm.bcm_software_image:
+  fabiendupont.bcm.bcm_software_image:
     name: default-image
     state: query
   register: image
@@ -83,7 +83,7 @@
   when: audit_images | bool and image.image is defined
 
 - name: Audit internal network
-  nvidia.bcm.bcm_network:
+  fabiendupont.bcm.bcm_network:
     name: internalnet
     state: query
   register: network
@@ -104,7 +104,7 @@
   when: audit_networks | bool and network.network is defined
 
 - name: Audit configuration overlay
-  nvidia.bcm.bcm_overlay:
+  fabiendupont.bcm.bcm_overlay:
     name: slurm-submit
     state: query
   register: overlay
