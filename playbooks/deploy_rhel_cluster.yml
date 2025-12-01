@@ -76,6 +76,9 @@
     # Setup PXE infrastructure (extract ISO, create boot files)
     - role: nvidia.bcm.pxe_setup
 
+    # Setup container registry for BCM agent image distribution
+    - role: nvidia.bcm.registry_setup
+
     # Create categories and register nodes in BCM
     - role: nvidia.bcm.rhel_cluster
 
