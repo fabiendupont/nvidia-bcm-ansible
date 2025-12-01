@@ -12,7 +12,7 @@ This role optimizes BCM configuration for GPU clusters by:
 ## Requirements
 
 - NVIDIA BCM 11.0+
-- nvidia.bcm collection installed
+- fabiendupont.bcm collection installed
 - Root or sudo access to BCM head node
 
 ## Role Variables
@@ -39,7 +39,7 @@ None
   gather_facts: false
 
   roles:
-    - role: nvidia.bcm.gpu_cluster_config
+    - role: fabiendupont.bcm.gpu_cluster_config
       vars:
         gpu_image_name: rhel9-gpu
         gpu_network_mtu: 9000
@@ -54,7 +54,7 @@ None
   gather_facts: false
 
   roles:
-    - role: nvidia.bcm.gpu_cluster_config
+    - role: fabiendupont.bcm.gpu_cluster_config
       vars:
         gpu_image_name: rhel9-cuda12
         gpu_kernel_params: "rd.driver.blacklist=nouveau nvidia-drm.modeset=1 nvidia.NVreg_EnableGpuFirmware=0"

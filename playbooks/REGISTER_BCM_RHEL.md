@@ -26,14 +26,14 @@ This playbook registers the RHEL VM `bcm-rhel` (10.141.255.253) with BCM and dep
 ### Option 1: Run the wrapper script
 
 ```bash
-cd ansible_collections/nvidia/bcm/playbooks
+cd ansible_collections/fabiendupont/bcm/playbooks
 ./run-register-bcm-rhel.sh
 ```
 
 ### Option 2: Run ansible-playbook directly
 
 ```bash
-cd ansible_collections/nvidia/bcm/playbooks
+cd ansible_collections/fabiendupont/bcm/playbooks
 
 ansible-playbook \
   -i bcm-rhel-inventory.yml \

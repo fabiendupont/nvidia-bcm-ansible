@@ -411,24 +411,38 @@ Sets up pythoncm library for dynamic inventory plugin usage.
 
 **Documentation:** [roles/pythoncm_setup/README.md](roles/pythoncm_setup/README.md)
 
-## Plugins
+## Dynamic Inventory
 
-### bcm_inventory
+### Using the Official bright_nodes Plugin
 
-Dynamic inventory plugin for discovering BCM nodes.
+This collection uses the official `brightcomputing.bcm110.bright_nodes` dynamic inventory plugin for discovering BCM nodes.
 
 **Usage:**
 ```yaml
-# inventory.yml
-plugin: fabiendupont.bcm.bcm_inventory
-bcm_host: bcm-headnode
-pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
-groups:
+# inventory/bcm_dynamic.yml
+plugin: brightcomputing.bcm110.bright_nodes
+head_node: bcm-headnode
+port: 8081
+cert_file: .bcm/certs/cert.pem
+key_file: .bcm/certs/cert.key
+ca_file: .bcm/certs/cacert.pem
+
+# Group nodes by category and device type
+group_by:
   - category
-  - rack
+  - device_type
+
+# Add interface information to host vars
+interfaces: true
+
+# Set ansible_host to the provisioning interface IP
+compose:
+  ansible_host: provisioning_interface.ip
 ```
 
-**Documentation:** `ansible-doc -t inventory fabiendupont.bcm.bcm_inventory`
+**Documentation:** `ansible-doc -t inventory brightcomputing.bcm110.bright_nodes`
+
+**See also:** [docs/RUNNING_PLAYBOOKS.md](docs/RUNNING_PLAYBOOKS.md) for pythoncm setup
 
 ## Complete Example
 

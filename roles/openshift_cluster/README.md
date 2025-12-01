@@ -17,7 +17,7 @@ This role deploys OpenShift clusters on NVIDIA Base Command Manager (BCM) using 
 - BCM head node with PXE infrastructure already set up (use `pxe_setup` role first)
 - OpenShift agent ISO extracted (use `pxe_setup` role first)
 - Ignition files generated (via `openshift-install agent create image`)
-- `nvidia.bcm` collection modules
+- `fabiendupont.bcm` collection modules
 
 ## Role Variables
 
@@ -96,7 +96,7 @@ This role should be used after the `pxe_setup` role has configured the PXE infra
         ignition_file: /root/openshift-install/ignition/worker-1.ign
 
   roles:
-    - nvidia.bcm.openshift_cluster
+    - fabiendupont.bcm.openshift_cluster
 ```
 
 ### Multi-Cluster Environment
@@ -140,7 +140,7 @@ This role should be used after the `pxe_setup` role has configured the PXE infra
   tasks:
     - name: Deploy production cluster
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
       vars:
         cluster_name: "{{ prod_cluster.name }}"
         openshift_version: "{{ prod_cluster.version }}"
@@ -149,7 +149,7 @@ This role should be used after the `pxe_setup` role has configured the PXE infra
 
     - name: Deploy test cluster
       ansible.builtin.include_role:
-        name: nvidia.bcm.openshift_cluster
+        name: fabiendupont.bcm.openshift_cluster
       vars:
         cluster_name: "{{ test_cluster.name }}"
         openshift_version: "{{ test_cluster.version }}"

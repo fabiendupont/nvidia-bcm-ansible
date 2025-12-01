@@ -13,7 +13,7 @@ This role optimizes BCM network settings by:
 ## Requirements
 
 - NVIDIA BCM 11.0+
-- nvidia.bcm collection installed
+- fabiendupont.bcm collection installed
 - Network infrastructure supporting desired MTU
 
 ## Role Variables
@@ -39,7 +39,7 @@ None
   gather_facts: false
 
   roles:
-    - nvidia.bcm.network_optimization
+    - fabiendupont.bcm.network_optimization
 ```
 
 ## Example with Custom MTU
@@ -51,7 +51,7 @@ None
   gather_facts: false
 
   roles:
-    - role: nvidia.bcm.network_optimization
+    - role: fabiendupont.bcm.network_optimization
       vars:
         network_name: internalnet
         network_mtu: 9000
@@ -69,14 +69,14 @@ None
   tasks:
     - name: Optimize internal network
       include_role:
-        name: nvidia.bcm.network_optimization
+        name: fabiendupont.bcm.network_optimization
       vars:
         network_name: internalnet
         network_mtu: 9000
 
     - name: Optimize external network
       include_role:
-        name: nvidia.bcm.network_optimization
+        name: fabiendupont.bcm.network_optimization
       vars:
         network_name: externalnet
         network_mtu: 1500  # Standard MTU for external
@@ -134,7 +134,7 @@ If you experience connectivity issues after enabling jumbo frames:
 To revert to standard MTU:
 
 ```yaml
-- role: nvidia.bcm.network_optimization
+- role: fabiendupont.bcm.network_optimization
   vars:
     network_mtu: 1500
     enable_jumbo_frames: false

@@ -123,7 +123,7 @@ None.
   hosts: compute_nodes
   become: true
   roles:
-    - role: nvidia.bcm.bcm_agent
+    - role: fabiendupont.bcm.bcm_agent
 ```
 
 ### Custom Configuration
@@ -134,7 +134,7 @@ None.
   hosts: gpu_nodes
   become: true
   roles:
-    - role: nvidia.bcm.bcm_agent
+    - role: fabiendupont.bcm.bcm_agent
       vars:
         bcm_agent_image_tag: "1.0.1"
         bcm_agent_bcm_host: "bcm-primary.example.com"
@@ -152,7 +152,7 @@ None.
   hosts: bcm_compute
   become: true
   roles:
-    - role: nvidia.bcm.bcm_agent
+    - role: fabiendupont.bcm.bcm_agent
       vars:
         bcm_agent_cert_source: "/cm/local/apps/cm-lite-daemon/etc"
         bcm_agent_cert_method: "symlink"
@@ -166,7 +166,7 @@ None.
   hosts: all
   become: true
   roles:
-    - role: nvidia.bcm.bcm_agent
+    - role: fabiendupont.bcm.bcm_agent
       vars:
         bcm_agent_auto_update: true
 ```
@@ -179,7 +179,7 @@ None.
   hosts: old_nodes
   become: true
   roles:
-    - role: nvidia.bcm.bcm_agent
+    - role: fabiendupont.bcm.bcm_agent
       vars:
         bcm_agent_state: "absent"
 ```

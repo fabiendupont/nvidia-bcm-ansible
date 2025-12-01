@@ -26,7 +26,7 @@ See `docs/BCM_PXE_INSTALLER_IMAGES.md` for detailed explanation.
 
 - Ansible 2.15+
 - BCM head node with PXE infrastructure already set up (use `pxe_setup` role first)
-- `nvidia.bcm` collection modules
+- `fabiendupont.bcm` collection modules
 
 ## Role Variables
 
@@ -121,7 +121,7 @@ This role should be used after the `pxe_setup` role has configured the PXE infra
         category: "slurm-{{ cluster_name }}-gpu-a100"
 
   roles:
-    - nvidia.bcm.rhel_cluster
+    - fabiendupont.bcm.rhel_cluster
 ```
 
 ### Multi-Role Cluster
@@ -161,7 +161,7 @@ This role should be used after the `pxe_setup` role has configured the PXE infra
           - "@file-server"
 
   roles:
-    - nvidia.bcm.rhel_cluster
+    - fabiendupont.bcm.rhel_cluster
 ```
 
 ## Workflow

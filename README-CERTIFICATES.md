@@ -316,7 +316,7 @@ The module uses:
 A comprehensive test playbook is provided:
 
 ```bash
-ansible-playbook /root/bcm/ansible_collections/nvidia/bcm/playbooks/test-certificate.yml
+ansible-playbook /root/bcm/ansible_collections/fabiendupont/bcm/playbooks/test-certificate.yml
 ```
 
 Tests include:
