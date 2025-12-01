@@ -1,25 +1,13 @@
 ---
-# Register nodes in BCM with MAC-based Ignition URLs
+# Register OpenShift cluster nodes in BCM
+#
+# Uses the shared register_bcm_nodes role with auto category generation.
+# Category format: openshift_{version}_{cluster}_{role}
+# Example: openshift_133_test_sno_master
 
-- name: Build category name for each node
-  ansible.builtin.set_fact:
-    node_category_map: "{{ node_category_map | default({}) | combine({item.name: 'openshift_' + (openshift_version | replace('.', '')) + '_' + (cluster_name | replace('-', '_')) + '_' + item.role}) }}"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }}"
-
-- name: Register OpenShift cluster nodes
-  brightcomputing.bcm110.physical_node:
-    hostname: "{{ item.name }}"
-    state: present
-    mac: "{{ item.mac }}"
-    category: "{{ node_category_map[item.name] }}"
-    partition: "base"
-    provisioningInterface: "BOOTIF"
-    interfaces_NetworkPhysicalInterface:
-      - name: "BOOTIF"
-        ip: "{{ item.ip }}"
-        network: "internalnet"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }}"
+- name: Register nodes using shared role
+  ansible.builtin.include_role:
+    name: register_bcm_nodes
+  vars:
+    bcm_node_category_mode: "auto"
+    bcm_node_category_prefix: "openshift_{{ openshift_version | replace('.', '') }}"

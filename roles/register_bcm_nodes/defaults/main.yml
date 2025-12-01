@@ -1,0 +1,18 @@
+---
+# Default configuration for BCM node registration
+
+# Category generation mode
+# - auto: Automatically build category from cluster_name and node role
+# - provided: Use category field from cluster_nodes data
+bcm_node_category_mode: "provided"
+
+# Auto category prefix and template (used when bcm_node_category_mode=auto)
+# Variables available in template: cluster_name, node (the node dict with all fields)
+# Example with openshift: "openshift_133_mycluster_master"
+bcm_node_category_prefix: ""  # e.g., "openshift_133" - set by caller
+bcm_node_category_template: "{{ bcm_node_category_prefix }}_{{ cluster_name | replace('-', '_') }}_{{ node.role }}"
+
+# Network configuration
+bcm_node_network: "internalnet"
+bcm_node_partition: "base"
+bcm_node_provisioning_interface: "BOOTIF"
