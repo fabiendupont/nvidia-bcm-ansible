@@ -4,7 +4,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Container]
-Image=ghcr.io/fabiendupont/nvidia-bcm-lite-daemon:latest
+Image={{ bcm_agent_image }}:{{ bcm_agent_tag }}
 ContainerName=bcm-agent
 
 Environment=NODE_NAME=%H

@@ -1,0 +1,109 @@
+---
+# Build and optionally push BCM Agent Container Image
+#
+# This role builds the BCM agent container image from the
+# nvidia-bcm-lite-daemon repository and optionally pushes it to a registry.
+#
+# Variables (see defaults/main.yml for full list):
+#   - bcm_agent_local_image: Local image name (default: localhost/bcm-agent)
+#   - bcm_agent_local_tag: Image tag (default: latest)
+#   - bcm_agent_push_to_registry: Enable registry push (default: false)
+#   - bcm_agent_registry_host: Registry host:port
+#   - bcm_agent_registry_image: Image name in registry
+
+- name: Display build configuration
+  ansible.builtin.debug:
+    msg:
+      - "================================================================"
+      - "Building BCM Agent Container Image"
+      - "================================================================"
+      - "Repository: {{ bcm_agent_repo_url }}"
+      - "Branch/Tag: {{ bcm_agent_repo_version }}"
+      - "Target: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+      - "Force rebuild: {{ bcm_agent_force_rebuild }}"
+      - "Push to registry: {{ bcm_agent_push_to_registry }}"
+      - "{% if bcm_agent_push_to_registry %}Registry: {{ bcm_agent_registry_host }}/{{ bcm_agent_registry_image }}:{{ bcm_agent_registry_tag }}{% endif %}"
+      - "================================================================"
+
+- name: Check if repository exists
+  ansible.builtin.stat:
+    path: "{{ bcm_agent_repo_path }}"
+  register: repo_stat
+
+- name: Clone nvidia-bcm-lite-daemon repository
+  ansible.builtin.git:
+    repo: "{{ bcm_agent_repo_url }}"
+    dest: "{{ bcm_agent_repo_path }}"
+    version: "{{ bcm_agent_repo_version }}"
+    force: true
+  when: not repo_stat.stat.exists or bcm_agent_force_rebuild
+
+- name: Update repository to latest version
+  ansible.builtin.git:
+    repo: "{{ bcm_agent_repo_url }}"
+    dest: "{{ bcm_agent_repo_path }}"
+    version: "{{ bcm_agent_repo_version }}"
+    update: true
+  when: repo_stat.stat.exists and not bcm_agent_force_rebuild
+
+- name: Check if BCM agent image exists
+  containers.podman.podman_image_info:
+    name: "{{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+  register: existing_image
+
+- name: Build BCM agent container image
+  ansible.builtin.command:
+    cmd: podman build -t {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }} .
+    chdir: "{{ bcm_agent_repo_path }}"
+  when: existing_image.images | length == 0 or bcm_agent_force_rebuild
+  changed_when: true
+
+- name: Verify image was built successfully
+  containers.podman.podman_image_info:
+    name: "{{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+  register: built_image
+
+- name: Display build result
+  ansible.builtin.debug:
+    msg:
+      - "================================================================"
+      - "BCM Agent Image Build Complete"
+      - "================================================================"
+      - "Image: {{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+      - "Image ID: {{ built_image.images[0].Id if built_image.images | length > 0 else 'Not found' }}"
+      - "Created: {{ built_image.images[0].Created if built_image.images | length > 0 else 'N/A' }}"
+      - "================================================================"
+
+- name: Fail if image build failed
+  ansible.builtin.fail:
+    msg: "BCM agent image build failed - image not found after build"
+  when: built_image.images | length == 0
+
+# Registry push (optional)
+- name: Tag image for registry
+  containers.podman.podman_tag:
+    image: "{{ bcm_agent_local_image }}:{{ bcm_agent_local_tag }}"
+    target_names:
+      - "{{ bcm_agent_registry_host }}/{{ bcm_agent_registry_image }}:{{ bcm_agent_registry_tag }}"
+  when: bcm_agent_push_to_registry | bool
+
+- name: Push image to registry
+  containers.podman.podman_image:
+    name: "{{ bcm_agent_registry_host }}/{{ bcm_agent_registry_image }}"
+    tag: "{{ bcm_agent_registry_tag }}"
+    push: true
+    validate_certs: "{{ bcm_agent_registry_validate_certs }}"
+  register: image_push
+  retries: 3
+  delay: 5
+  when: bcm_agent_push_to_registry | bool
+
+- name: Display registry push result
+  ansible.builtin.debug:
+    msg:
+      - "================================================================"
+      - "Image Push Complete"
+      - "================================================================"
+      - "Registry: {{ bcm_agent_registry_host }}/{{ bcm_agent_registry_image }}:{{ bcm_agent_registry_tag }}"
+      - "================================================================"
+  when: bcm_agent_push_to_registry | bool

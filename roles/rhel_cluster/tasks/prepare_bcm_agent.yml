@@ -7,6 +7,17 @@
 # We generate these per-node certificates here and organize by MAC address
 # so the kickstart can download the correct certificate for each node.
 
+# Build BCM agent image and push to local registry
+- name: Build and push BCM agent image
+  ansible.builtin.include_role:
+    name: bcm_agent_image
+  vars:
+    bcm_agent_push_to_registry: true
+    bcm_agent_registry_host: "{{ ansible_fqdn }}:5000"
+    bcm_agent_registry_image: "bcm-agent"
+    bcm_agent_registry_tag: "{{ bcm_agent_tag }}"
+  when: bcm_agent_build_image | bool
+
 - name: Create BCM agent files directory in tftpboot
   ansible.builtin.file:
     path: "{{ tftpboot_path }}/bcm-agent"

@@ -110,27 +110,11 @@
     msg: "Skipping LiteNode conversion (skip_litenode_conversion=true)"
   when: skip_litenode_conversion | default(false)
 
-# Container image build logic
-# TODO: Implement build_bcm_agent_image.yml task file for intelligent image building
-# For now, we assume the image is either:
-#   - Already built locally
-#   - Available from a registry
-#   - Will be built by Helm chart hooks
-
-- name: Check if image build was requested
-  ansible.builtin.debug:
-    msg:
-      - "NOTE: Container image build is not yet implemented in this role task."
-      - "The Helm chart will either:"
-      - "  1. Use an existing image from the chart's default values"
-      - "  2. Pull from a configured registry"
-      - "  3. Build via Helm chart hooks (if configured)"
-      - ""
-      - "To manually build the BCM agent image before deployment:"
-      - "  ansible-playbook playbooks/build_bcm_agent_image.yml"
-  when:
-    - not (skip_build | default(false))
-    - bcm_agent_force_rebuild | default(false)
+# Build BCM agent container image (unless skip_build is set)
+- name: Build BCM agent container image
+  ansible.builtin.include_role:
+    name: bcm_agent_image
+  when: not (skip_build | default(false))
 
 # Deploy the BCM agent using existing deploy_agent.yml logic
 - name: Deploy BCM agent Helm chart

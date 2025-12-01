@@ -10,6 +10,12 @@ bcm_server: "{{ ansible_default_ipv4.address }}"  # External/management IP
 bcm_internal_ip: "{{ ansible_default_ipv4.address }}"  # Internal provisioning network IP (override in inventory)
 http_port: 8080
 
+# BCM agent image configuration
+# Note: There is no public image - must be built locally from source
+bcm_agent_build_image: true  # Build image locally (required - no public image available)
+bcm_agent_image: "{{ ansible_fqdn }}:5000/bcm-agent"  # Use local BCM registry
+bcm_agent_tag: "latest"
+
 # Base paths
 tftpboot_path: /tftpboot
 ks_path: "{{ tftpboot_path }}/ks"
