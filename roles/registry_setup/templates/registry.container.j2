@@ -1,0 +1,22 @@
+[Unit]
+Description=BCM Container Registry
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image={{ registry_image }}
+Network=host
+Volume={{ registry_data_dir }}:/var/lib/registry:Z
+Volume={{ registry_cert_path }}:/certs/registry.pem:ro,Z
+Volume={{ registry_key_path }}:/certs/registry.key:ro,Z
+Environment=REGISTRY_HTTP_ADDR=0.0.0.0:{{ registry_port }}
+Environment=REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.pem
+Environment=REGISTRY_HTTP_TLS_KEY=/certs/registry.key
+AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target default.target

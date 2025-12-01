@@ -1,0 +1,13 @@
+---
+# Output directory for generated certificates
+litenode_certs_dir: "/tmp/litenode-certs"
+
+# Certificate parameters
+litenode_cert_bits: 2048
+litenode_cert_org: "NVIDIA Inc"
+litenode_cert_ou: "Bright Licensing"
+litenode_cert_city: "Santa Clara"
+litenode_cert_state: "California"
+litenode_cert_country: "US"
+litenode_cert_profile: "litenode"
+litenode_cert_validity_days: 36500  # ~100 years

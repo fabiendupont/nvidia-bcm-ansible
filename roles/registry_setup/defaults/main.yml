@@ -1,0 +1,20 @@
+---
+# Registry configuration
+registry_port: 5000
+registry_hostname: "{{ ansible_fqdn }}"
+registry_container_name: "bcm-registry"
+registry_image: "docker.io/library/registry:2"
+registry_data_dir: "/var/lib/bcm-registry"
+registry_cert_dir: "/cm/local/apps/cmd/etc"
+
+# BCM CA and certificate paths
+bcm_ca_cert: "/cm/local/apps/cmd/etc/temporary_cacert.pem"
+bcm_ca_key: "/cm/local/apps/cmd/etc/temporary_cacert.key"
+registry_cert_path: "{{ registry_cert_dir }}/registry.pem"
+registry_key_path: "{{ registry_cert_dir }}/registry.key"
+registry_csr_path: "/tmp/registry.csr"
+
+# Certificate configuration
+registry_cert_subject: "/CN={{ registry_hostname }}"
+registry_cert_days: 3650  # 10 years
+registry_cert_san: "DNS:{{ registry_hostname }},DNS:{{ ansible_hostname }},IP:{{ ansible_default_ipv4.address }}"

@@ -63,3 +63,7 @@ cluster_nodes: []
 # Ignition file management
 generate_ignition_files: false
 ignition_template_path: ""
+
+# BCM agent deployment
+bcm_agent_namespace: "bcm-agent"
+bcm_agent_local_tag: "latest"  # Default tag for BCM agent image
