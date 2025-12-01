@@ -28,7 +28,7 @@
     # BCM Configuration
     bcm_tftp_root: /tftpboot
     bcm_http_root: /var/www/html
-    bcm_server_ip: 10.141.255.254
+    bcm_server: 10.141.255.254
     bcm_http_port: 8080
 
     # OS Mirror Configuration
@@ -36,7 +36,7 @@
     os_mirror_url: "http://mirror.rockylinux.org/pub/rocky"
 
     # Option 2: Use local mirror (uncomment to use)
-    # os_mirror_url: "http://{{ bcm_server_ip }}:{{ bcm_http_port }}/mirrors"
+    # os_mirror_url: "http://{{ bcm_server }}:{{ bcm_http_port }}/mirrors"
 
     # Deployment Configurations
     deployments:
@@ -168,10 +168,10 @@
           # Register with BCM (optional)
           # This allows BCM to track the node even though it was kickstart-deployed
           echo "Kickstart deployment completed at $(date)" > /root/kickstart-info.txt
-          echo "BCM Server: {{ bcm_server_ip }}" >> /root/kickstart-info.txt
+          echo "BCM Server: {{ bcm_server }}" >> /root/kickstart-info.txt
 
           # Optional: Contact BCM API to register
-          # curl -X POST http://{{ bcm_server_ip }}:{{ bcm_http_port }}/api/register-node \
+          # curl -X POST http://{{ bcm_server }}:{{ bcm_http_port }}/api/register-node \
           #   -d "hostname=$(hostname)" \
           #   -d "mac=$(ip link show dev eth0 | grep ether | awk '{print $2}')"
 
@@ -252,12 +252,12 @@
           echo ========================================
           echo.
           echo Mirror: {{ deployments[0].mirror_path }}
-          echo Kickstart: http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg
+          echo Kickstart: http://{{ bcm_server }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg
           echo.
           echo Loading kernel and initrd...
           echo.
 
-          kernel {{ deployments[0].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg console=tty0 || goto failed
+          kernel {{ deployments[0].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server }}:{{ bcm_http_port }}/ks/rhel96-minimal.cfg console=tty0 || goto failed
           initrd {{ deployments[0].mirror_path }}/images/pxeboot/initrd.img || goto failed
 
           echo Booting...
@@ -286,10 +286,10 @@
           echo ========================================
           echo.
           echo Mirror: {{ deployments[1].mirror_path }}
-          echo Kickstart: http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg
+          echo Kickstart: http://{{ bcm_server }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg
           echo.
 
-          kernel {{ deployments[1].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server_ip }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg console=tty0 || goto failed
+          kernel {{ deployments[1].mirror_path }}/images/pxeboot/vmlinuz inst.ks=http://{{ bcm_server }}:{{ bcm_http_port }}/ks/rocky95-minimal.cfg console=tty0 || goto failed
           initrd {{ deployments[1].mirror_path }}/images/pxeboot/initrd.img || goto failed
 
           boot
@@ -327,7 +327,7 @@
 
           LABEL rhel96_kickstart
             KERNEL undionly.kpxe
-            APPEND tftp://{{ bcm_server_ip }}/ipxe/rhel96-kickstart.ipxe
+            APPEND tftp://{{ bcm_server }}/ipxe/rhel96-kickstart.ipxe
             MENU LABEL ^RHEL 9.6 - Kickstart Installation
             MENU DEFAULT
 
@@ -350,7 +350,7 @@
 
           LABEL rocky95_kickstart
             KERNEL undionly.kpxe
-            APPEND tftp://{{ bcm_server_ip }}/ipxe/rocky95-kickstart.ipxe
+            APPEND tftp://{{ bcm_server }}/ipxe/rocky95-kickstart.ipxe
             MENU LABEL ^Rocky Linux 9.5 - Kickstart Installation
             MENU DEFAULT
 
