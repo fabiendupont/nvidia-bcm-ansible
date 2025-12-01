@@ -248,30 +248,34 @@ rhel_iso_path: "/path/to/rhel.iso"
 
 **Documentation:** [docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md](docs/USAGE_GUIDE_RHEL_DEPLOYMENT.md)
 
-## Plugins
+## Dynamic Inventory
 
-### bcm_inventory
+### Using the Official bright_nodes Plugin
 
-Dynamic inventory plugin for discovering BCM nodes.
+This collection uses the official `brightcomputing.bcm110.bright_nodes` dynamic inventory plugin for discovering BCM nodes.
 
 **Usage:**
 ```yaml
-# inventory.yml
-plugin: fabiendupont.bcm.bcm_inventory
-bcm_host: bcm-headnode
-pythoncm_path: /cm/local/apps/cmd/pythoncm/lib/python3.12/site-packages
-groups:
+# inventory/bcm_dynamic.yml
+plugin: brightcomputing.bcm110.bright_nodes
+head_node: bcm-headnode
+port: 8081
+cert_file: .bcm/certs/cert.pem
+key_file: .bcm/certs/cert.key
+ca_file: .bcm/certs/cacert.pem
+group_by:
   - category
-  - rack
+  - device_type
+interfaces: true
 ```
 
 **Commands:**
 ```bash
-ansible-inventory -i inventory.yml --list
-ansible -i inventory.yml all -m ping
+ansible-inventory -i inventory/bcm_dynamic.yml --list
+ansible -i inventory/bcm_dynamic.yml all -m ping
 ```
 
-**Documentation:** `ansible-doc -t inventory fabiendupont.bcm.bcm_inventory`
+**Documentation:** `ansible-doc -t inventory brightcomputing.bcm110.bright_nodes`
 
 ## Official BCM Modules
 
@@ -399,7 +403,7 @@ host_key_checking = False
 inventory = inventory/
 
 [inventory]
-enable_plugins = fabiendupont.bcm.bcm_inventory, yaml, ini
+enable_plugins = brightcomputing.bcm110.bright_nodes, yaml, ini
 ```
 
 ### Python Interpreter

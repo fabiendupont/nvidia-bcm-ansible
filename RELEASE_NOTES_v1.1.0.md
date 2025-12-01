@@ -1,4 +1,4 @@
-# NVIDIA BCM Ansible Collection v1.1.0 - Release Notes
+# BCM Ansible Collection v1.1.0 - Release Notes
 
 **Release Date:** January 16, 2025
 
@@ -143,12 +143,12 @@ The collection now includes **10 modules** across 4 categories:
 
 ### From Tarball
 ```bash
-ansible-galaxy collection install nvidia-bcm-1.1.0.tar.gz
+ansible-galaxy collection install fabiendupont-bcm-1.1.0.tar.gz
 ```
 
 ### Upgrade from v1.0.0
 ```bash
-ansible-galaxy collection install nvidia-bcm-1.1.0.tar.gz --force
+ansible-galaxy collection install fabiendupont-bcm-1.1.0.tar.gz --force
 ```
 
 ### Verify Installation
@@ -204,7 +204,7 @@ No breaking changes. The v1.1.0 release is fully backward compatible with v1.0.0
 
 Simply upgrade the collection:
 ```bash
-ansible-galaxy collection install nvidia-bcm-1.1.0.tar.gz --force
+ansible-galaxy collection install fabiendupont-bcm-1.1.0.tar.gz --force
 ```
 
 ---
@@ -229,19 +229,19 @@ ansible-galaxy collection install nvidia-bcm-1.1.0.tar.gz --force
 ## File Locations
 
 **Collection Package:**
-- `/root/bcm/ansible_collections/nvidia/bcm/nvidia-bcm-1.1.0.tar.gz`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/fabiendupont-bcm-1.1.0.tar.gz`
 
 **Example Playbooks:**
-- `/root/bcm/ansible_collections/nvidia/bcm/playbooks/user_management_example.yml`
-- `/root/bcm/ansible_collections/nvidia/bcm/playbooks/group_management_example.yml`
-- `/root/bcm/ansible_collections/nvidia/bcm/playbooks/cluster_info_example.yml`
-- `/root/bcm/ansible_collections/nvidia/bcm/playbooks/power_management_example.yml`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/playbooks/user_management_example.yml`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/playbooks/group_management_example.yml`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/playbooks/cluster_info_example.yml`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/playbooks/power_management_example.yml`
 
 **Module Files:**
-- `/root/bcm/ansible_collections/nvidia/bcm/plugins/modules/bcm_user.py`
-- `/root/bcm/ansible_collections/nvidia/bcm/plugins/modules/bcm_group.py`
-- `/root/bcm/ansible_collections/nvidia/bcm/plugins/modules/bcm_info.py`
-- `/root/bcm/ansible_collections/nvidia/bcm/plugins/modules/bcm_power.py`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/plugins/modules/bcm_user.py`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/plugins/modules/bcm_group.py`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/plugins/modules/bcm_info.py`
+- `/root/bcm/ansible_collections/fabiendupont/bcm/plugins/modules/bcm_power.py`
 
 ---
 

@@ -1,6 +1,6 @@
 # Documentation
 
-This directory contains architecture and reference documentation for the NVIDIA BCM Ansible collection.
+This directory contains architecture and reference documentation for the BCM Ansible collection (`fabiendupont.bcm`).
 
 ## Documentation Index
 
@@ -27,7 +27,9 @@ For playbook usage, workflows, and examples, see:
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
+| [RUNNING_PLAYBOOKS.md](RUNNING_PLAYBOOKS.md) | Running playbooks with pythoncm dynamic inventory | Setup |
 | [SUSHY_EMULATOR_SETUP.md](SUSHY_EMULATOR_SETUP.md) | Setting up Redfish emulator for VM management | Test environments |
+| [TESTING_WITH_VMS.md](TESTING_WITH_VMS.md) | Testing BCM deployments with virtual machines | Development/testing |
 
 ## Quick Links
 
@@ -64,7 +66,9 @@ docs/
 ├── DNS_ARCHITECTURE.md                      # DNS architecture
 ├── BCM_PXE_FILESYSTEM_STRUCTURE.md          # BCM filesystem reference
 ├── BCM_PXE_INSTALLER_IMAGES.md              # Image types explained
-└── SUSHY_EMULATOR_SETUP.md                  # Redfish emulator setup
+├── RUNNING_PLAYBOOKS.md                     # Dynamic inventory setup
+├── SUSHY_EMULATOR_SETUP.md                  # Redfish emulator setup
+└── TESTING_WITH_VMS.md                      # VM testing guide
 ```
 
 ## Contributing
@@ -84,4 +88,4 @@ Previously, this directory contained 17+ documents. Many were:
 - Duplicative of playbook inline documentation
 - Outdated manual processes (now automated)
 
-We've consolidated to 6 focused documents covering architecture, concepts, and reference material.
+We've consolidated to 9 focused documents covering architecture, concepts, setup guides, and reference material.

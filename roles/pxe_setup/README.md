@@ -56,7 +56,7 @@ pxe_categories:
 - hosts: bcm_headnode
   become: true
   roles:
-    - role: nvidia.bcm.pxe_setup
+    - role: fabiendupont.bcm.pxe_setup
       vars:
         rhel_iso_path: /root/rhel-9.6-x86_64-dvd.iso
         rhel_version: "9.6"
@@ -73,7 +73,7 @@ pxe_categories:
 - hosts: bcm_headnode
   become: true
   roles:
-    - role: nvidia.bcm.pxe_setup
+    - role: fabiendupont.bcm.pxe_setup
       vars:
         openshift_iso_path: /root/agent.x86_64.iso
         openshift_version: "4.16"
@@ -90,7 +90,7 @@ pxe_categories:
 - hosts: bcm_headnode
   become: true
   roles:
-    - role: nvidia.bcm.pxe_setup
+    - role: fabiendupont.bcm.pxe_setup
       vars:
         rhel_iso_path: /root/rhel-9.6-x86_64-dvd.iso
         openshift_iso_path: /root/agent.x86_64.iso

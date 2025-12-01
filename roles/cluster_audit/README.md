@@ -20,7 +20,7 @@ Reports are saved to disk and can be used for:
 ## Requirements
 
 - NVIDIA BCM 11.0+
-- nvidia.bcm collection installed
+- fabiendupont.bcm collection installed
 - Write access to report directory
 
 ## Role Variables
@@ -48,7 +48,7 @@ None
   gather_facts: true
 
   roles:
-    - nvidia.bcm.cluster_audit
+    - fabiendupont.bcm.cluster_audit
 ```
 
 ## Example with Custom Report Location
@@ -60,7 +60,7 @@ None
   gather_facts: true
 
   roles:
-    - role: nvidia.bcm.cluster_audit
+    - role: fabiendupont.bcm.cluster_audit
       vars:
         audit_report_dir: /var/log/bcm_audits
         audit_report_filename: "cluster_audit_{{ ansible_date_time.epoch }}.txt"
