@@ -2,6 +2,12 @@
 # Output directory for generated certificates
 litenode_certs_dir: "/tmp/litenode-certs"
 
+# Directory structure and naming
+# - flat: All certs in base dir, filenames {node}.pem and {node}.key
+# - per_node: Each node gets subdir {node}/ with cert.pem and cert.key
+# - per_mac: Each node gets subdir {mac}/ with cert.pem and cert.key (MAC normalized to lowercase with colons)
+litenode_cert_dir_structure: "flat"
+
 # Certificate parameters
 litenode_cert_bits: 2048
 litenode_cert_org: "NVIDIA Inc"
