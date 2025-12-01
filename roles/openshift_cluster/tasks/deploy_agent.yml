@@ -6,11 +6,6 @@
 # this task file is included. If calling this directly, ensure nodes are
 # already converted to LiteNodes.
 
-- name: Set registry variables defaults
-  ansible.builtin.set_fact:
-    registry_hostname: "{{ registry_hostname | default(ansible_fqdn) }}"
-    registry_port: "{{ registry_port | default(5000) }}"
-
 # Generate per-node litenode certificates using shared role
 - name: Generate litenode certificates for cluster nodes
   ansible.builtin.include_role:
@@ -22,38 +17,6 @@
   ansible.builtin.slurp:
     src: "/cm/local/apps/cmd/etc/cacert.pem"
   register: bcm_ca_cert_b64
-
-- name: Check if BCM agent image exists locally
-  containers.podman.podman_image_info:
-    name: "localhost/bcm-agent:{{ bcm_agent_local_tag }}"
-  register: local_image_info
-
-- name: Fail if local image not found
-  ansible.builtin.fail:
-    msg: |
-      BCM agent image not found locally: localhost/bcm-agent:{{ bcm_agent_local_tag }}
-      Please build the image first using build_bcm_agent_image.yml playbook.
-  when: local_image_info.images | length == 0
-
-- name: Tag image for registry
-  containers.podman.podman_tag:
-    image: "localhost/bcm-agent:{{ bcm_agent_local_tag }}"
-    target_names:
-      - "{{ registry_hostname }}:{{ registry_port }}/bcm-agent:{{ bcm_agent_local_tag }}"
-
-- name: Push image to BCM registry
-  containers.podman.podman_image:
-    name: "{{ registry_hostname }}:{{ registry_port }}/bcm-agent"
-    tag: "{{ bcm_agent_local_tag }}"
-    push: true
-    validate_certs: false
-  register: image_push
-  retries: 3
-  delay: 5
-
-- name: Display image push status
-  ansible.builtin.debug:
-    msg: "Pushed bcm-agent:{{ bcm_agent_local_tag }} to {{ registry_hostname }}:{{ registry_port }}"
 
 - name: Create bcm-agent namespace
   kubernetes.core.k8s:
