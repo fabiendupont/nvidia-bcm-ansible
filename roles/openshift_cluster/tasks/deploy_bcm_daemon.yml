@@ -110,10 +110,20 @@
     msg: "Skipping LiteNode conversion (skip_litenode_conversion=true)"
   when: skip_litenode_conversion | default(false)
 
-# Build BCM agent container image (unless skip_build is set)
-- name: Build BCM agent container image
+# Build and push BCM agent container image (unless skip_build is set)
+- name: Set registry variables defaults
+  ansible.builtin.set_fact:
+    registry_hostname: "{{ registry_hostname | default(ansible_fqdn) }}"
+    registry_port: "{{ registry_port | default(5000) }}"
+
+- name: Build and push BCM agent container image
   ansible.builtin.include_role:
     name: bcm_agent_image
+  vars:
+    bcm_agent_push_to_registry: true
+    bcm_agent_registry_host: "{{ registry_hostname }}:{{ registry_port }}"
+    bcm_agent_registry_image: "bcm-agent"
+    bcm_agent_registry_tag: "{{ bcm_agent_local_tag }}"
   when: not (skip_build | default(false))
 
 # Deploy the BCM agent using existing deploy_agent.yml logic
