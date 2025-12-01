@@ -43,33 +43,14 @@
     mode: '0644'
     remote_src: true
 
-# Generate per-node litenode certificates
-# MAC is normalized to lowercase with colons for directory naming
-- name: Create per-node certificate directories
-  ansible.builtin.file:
-    path: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}"
-    state: directory
-    mode: '0755'
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }} ({{ item.mac }})"
-
-- name: Generate litenode certificates for each node
-  ansible.builtin.shell: |
-    cmsh -c 'cert; createcertificate 2048 "{{ item.name }}" "NVIDIA Inc" "Bright Licensing" "Santa Clara" "California" US litenode "" 36500 "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.key" "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.pem"'
-  args:
-    creates: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.pem"
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }} ({{ item.mac }})"
-
-- name: Set proper permissions on certificate keys
-  ansible.builtin.file:
-    path: "{{ tftpboot_path }}/bcm-agent/certs/{{ item.mac | lower }}/cert.key"
-    mode: '0644'
-  loop: "{{ cluster_nodes }}"
-  loop_control:
-    label: "{{ item.name }}"
+# Generate per-node litenode certificates using shared role
+# MAC-based directory structure for kickstart downloads
+- name: Generate litenode certificates for cluster nodes
+  ansible.builtin.include_role:
+    name: litenode_certificates
+  vars:
+    litenode_certs_dir: "{{ tftpboot_path }}/bcm-agent/certs"
+    litenode_cert_dir_structure: "per_mac"
 
 - name: Display BCM agent files location
   ansible.builtin.debug:

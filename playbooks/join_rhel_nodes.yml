@@ -65,25 +65,15 @@
         cluster_nodes: "{{ rhel_nodes }}"
         ssh_wait_timeout: 60
 
-    # Generate per-node litenode certificates
+    # Generate per-node litenode certificates using shared role
     # Bootstrap certificates do NOT work for LiteNode authentication
-    - name: Create certificate directory for each node
-      ansible.builtin.file:
-        path: "{{ litenode_cert_path }}/{{ item.name }}"
-        state: directory
-        mode: '0755'
-      loop: "{{ rhel_nodes }}"
-      loop_control:
-        label: "{{ item.name }}"
-
-    - name: Generate litenode certificate for each node
-      ansible.builtin.shell: |
-        cmsh -c 'cert; createcertificate 2048 "{{ item.name }}" "NVIDIA Inc" "Bright Licensing" "Santa Clara" "California" US litenode "" 36500 "{{ litenode_cert_path }}/{{ item.name }}/cert.key" "{{ litenode_cert_path }}/{{ item.name }}/cert.pem"'
-      args:
-        creates: "{{ litenode_cert_path }}/{{ item.name }}/cert.pem"
-      loop: "{{ rhel_nodes }}"
-      loop_control:
-        label: "{{ item.name }}"
+    - name: Generate litenode certificates for RHEL nodes
+      ansible.builtin.include_role:
+        name: nvidia.bcm.litenode_certificates
+      vars:
+        cluster_nodes: "{{ rhel_nodes }}"
+        litenode_certs_dir: "{{ litenode_cert_path }}"
+        litenode_cert_dir_structure: "per_node"
 
     - name: Copy CA certificate to node cert directories
       ansible.builtin.copy:

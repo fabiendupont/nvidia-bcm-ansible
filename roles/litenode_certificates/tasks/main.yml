@@ -5,36 +5,113 @@
 # Each LiteNode needs its own certificate with profile=litenode issued by BCM.
 #
 # Required variables:
-#   cluster_nodes: list of nodes with 'name' attribute
+#   cluster_nodes: list of nodes with 'name' attribute (and 'mac' if using per_mac structure)
 #
 # Optional variables:
 #   litenode_certs_dir: output directory (default: /tmp/litenode-certs)
+#   litenode_cert_dir_structure: 'flat' | 'per_node' | 'per_mac' (default: flat)
 
 - name: Validate required variables
   ansible.builtin.assert:
     that:
       - cluster_nodes is defined
       - cluster_nodes | length > 0
-    fail_msg: "cluster_nodes must be defined with at least one node"
+      - litenode_cert_dir_structure in ['flat', 'per_node', 'per_mac']
+    fail_msg: "cluster_nodes must be defined and litenode_cert_dir_structure must be one of: flat, per_node, per_mac"
 
-- name: Create litenode certificates directory
+- name: Validate MAC addresses for per_mac structure
+  ansible.builtin.assert:
+    that:
+      - item.mac is defined
+    fail_msg: "Node {{ item.name }} missing 'mac' attribute required for per_mac structure"
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: litenode_cert_dir_structure == 'per_mac'
+
+- name: Create litenode certificates base directory
   ansible.builtin.file:
     path: "{{ litenode_certs_dir }}"
     state: directory
     mode: '0755'
 
+# Build path mappings based on structure type
+- name: Build certificate paths for each node (flat structure)
+  ansible.builtin.set_fact:
+    litenode_cert_paths: >-
+      {{
+        litenode_cert_paths | default({}) | combine({
+          item.name: {
+            'dir': litenode_certs_dir,
+            'key': litenode_certs_dir + '/' + item.name + '.key',
+            'pem': litenode_certs_dir + '/' + item.name + '.pem'
+          }
+        })
+      }}
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: litenode_cert_dir_structure == 'flat'
+
+- name: Build certificate paths for each node (per_node structure)
+  ansible.builtin.set_fact:
+    litenode_cert_paths: >-
+      {{
+        litenode_cert_paths | default({}) | combine({
+          item.name: {
+            'dir': litenode_certs_dir + '/' + item.name,
+            'key': litenode_certs_dir + '/' + item.name + '/cert.key',
+            'pem': litenode_certs_dir + '/' + item.name + '/cert.pem'
+          }
+        })
+      }}
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: litenode_cert_dir_structure == 'per_node'
+
+- name: Build certificate paths for each node (per_mac structure)
+  ansible.builtin.set_fact:
+    litenode_cert_paths: >-
+      {{
+        litenode_cert_paths | default({}) | combine({
+          item.name: {
+            'dir': litenode_certs_dir + '/' + (item.mac | lower),
+            'key': litenode_certs_dir + '/' + (item.mac | lower) + '/cert.key',
+            'pem': litenode_certs_dir + '/' + (item.mac | lower) + '/cert.pem'
+          }
+        })
+      }}
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: litenode_cert_dir_structure == 'per_mac'
+
+# Create subdirectories if needed (per_node or per_mac)
+- name: Create certificate subdirectories
+  ansible.builtin.file:
+    path: "{{ litenode_cert_paths[item.name].dir }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ cluster_nodes }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: litenode_cert_dir_structure in ['per_node', 'per_mac']
+
+# Generate certificates using the path mappings
 - name: Generate litenode certificate for each cluster node
   ansible.builtin.shell: |
-    cmsh -c 'cert; createcertificate {{ litenode_cert_bits }} "{{ item.name }}" "{{ litenode_cert_org }}" "{{ litenode_cert_ou }}" "{{ litenode_cert_city }}" "{{ litenode_cert_state }}" {{ litenode_cert_country }} {{ litenode_cert_profile }} "" {{ litenode_cert_validity_days }} "{{ litenode_certs_dir }}/{{ item.name }}.key" "{{ litenode_certs_dir }}/{{ item.name }}.pem"'
+    cmsh -c 'cert; createcertificate {{ litenode_cert_bits }} "{{ item.name }}" "{{ litenode_cert_org }}" "{{ litenode_cert_ou }}" "{{ litenode_cert_city }}" "{{ litenode_cert_state }}" {{ litenode_cert_country }} {{ litenode_cert_profile }} "" {{ litenode_cert_validity_days }} "{{ litenode_cert_paths[item.name].key }}" "{{ litenode_cert_paths[item.name].pem }}"'
   args:
-    creates: "{{ litenode_certs_dir }}/{{ item.name }}.pem"
+    creates: "{{ litenode_cert_paths[item.name].pem }}"
   loop: "{{ cluster_nodes }}"
   loop_control:
     label: "{{ item.name }}"
 
+# Set permissions using the path mappings
 - name: Set certificate file permissions
   ansible.builtin.file:
-    path: "{{ litenode_certs_dir }}/{{ item.0.name }}.{{ item.1 }}"
+    path: "{{ litenode_cert_paths[item.0.name][item.1] }}"
     mode: '0644'
   loop: "{{ cluster_nodes | product(['pem', 'key']) | list }}"
   loop_control:
@@ -42,4 +119,7 @@
 
 - name: Display generated certificates
   ansible.builtin.debug:
-    msg: "Generated litenode certificates in {{ litenode_certs_dir }} for {{ cluster_nodes | length }} nodes"
+    msg:
+      - "Generated litenode certificates for {{ cluster_nodes | length }} nodes"
+      - "Directory: {{ litenode_certs_dir }}"
+      - "Structure: {{ litenode_cert_dir_structure }}"
