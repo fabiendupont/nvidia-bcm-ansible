@@ -10,14 +10,23 @@
 
   tasks:
     # ================================================================
+    # Phase 0: Wait for nodes to be seen as down in BCM
+    # ================================================================
+    # Note: VMs should be destroyed before running this playbook
+
+    # ================================================================
     # Phase 1: Remove LiteNodes from BCM
     # ================================================================
-    - name: Remove LiteNodes for cluster nodes
+    - name: Remove LiteNodes for cluster nodes (retry until successful)
       brightcomputing.bcm110.lite_node:
         hostname: "{{ item.name }}"
         state: absent
       loop: "{{ cluster_nodes }}"
       register: litenode_removal
+      until: litenode_removal is succeeded
+      retries: 6
+      delay: 5
+      ignore_errors: true
 
     # ================================================================
     # Phase 2: Remove PhysicalNodes from BCM
@@ -28,6 +37,7 @@
         state: absent
       loop: "{{ cluster_nodes }}"
       register: physicalnode_removal
+      ignore_errors: true
 
     # ================================================================
     # Phase 3: Remove BCM categories
@@ -42,6 +52,7 @@
         state: absent
       loop: "{{ cluster_categories }}"
       register: category_removal
+      ignore_errors: true
 
     # ================================================================
     # Phase 4: Remove software images
@@ -52,6 +63,7 @@
         state: absent
       when: cluster_type == 'openshift'
       register: openshift_image_removal
+      ignore_errors: true
 
     - name: Remove RHEL installer software image
       brightcomputing.bcm110.software_image:
@@ -59,6 +71,7 @@
         state: absent
       when: cluster_type == 'rhel'
       register: rhel_image_removal
+      ignore_errors: true
 
     # ================================================================
     # Phase 5: Clean up cluster artifacts on BCM head node
