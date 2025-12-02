@@ -172,17 +172,18 @@
     prompt: "Waiting for agents to connect to BCM..."
 
 - name: Check LiteNode status in BCM
-  brightcomputing.bcm110.lite_node_info:
-    hostname: "{{ item.name }}"
+  ansible.builtin.shell: |
+    cmsh -c "device; show {{ item.name }}" | grep -E "(Status|Hostname)" || echo "Node not found"
   loop: "{{ cluster_nodes }}"
   loop_control:
     label: "{{ item.name }}"
   register: litenode_connectivity
+  changed_when: false
+  failed_when: false
 
 - name: Display connectivity status
   ansible.builtin.debug:
-    msg: "{{ item.item.name }}: {{ item.lite_node.status | default('unknown') }}"
+    msg: "{{ item.item.name }}: {{ item.stdout_lines | join(' ') }}"
   loop: "{{ litenode_connectivity.results }}"
   loop_control:
     label: "{{ item.item.name }}"
-  when: item.lite_node is defined

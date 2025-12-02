@@ -24,8 +24,8 @@
       loop: "{{ cluster_nodes }}"
       register: litenode_removal
       until: litenode_removal is succeeded
-      retries: 6
-      delay: 5
+      retries: 40
+      delay: 10
       ignore_errors: true
 
     # ================================================================

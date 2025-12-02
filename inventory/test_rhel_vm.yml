@@ -71,7 +71,7 @@ all:
         vm_memory_mb: 4096
         vm_vcpus: 2
         vm_disk_gb: 40
-        vm_network: "bcm-internalnet"
+        vm_network: "nvidia-bcm-internal"
         skip_vm_creation: false
 
         # ================================================================

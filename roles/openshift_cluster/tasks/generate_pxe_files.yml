@@ -112,7 +112,6 @@
   ansible.builtin.stat:
     path: "{{ openshift_pull_secret_path }}"
   register: pull_secret_check
-  delegate_to: localhost
   when: openshift_pull_secret_path is defined
 
 - name: Set pull secret fact from file

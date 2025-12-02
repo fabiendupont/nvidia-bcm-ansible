@@ -33,8 +33,10 @@ tags:
   - gpu
 
 dependencies:
+  ansible.posix: '>=1.5.0'
   brightcomputing.bcm110: '>=30.0.0'
   containers.podman: '>=1.10.0'
+  kubernetes.core: '>=2.4.0'
 
 repository: https://github.com/fabiendupont/nvidia-bcm-ansible
 documentation: https://github.com/fabiendupont/nvidia-bcm-ansible
