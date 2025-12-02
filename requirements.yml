@@ -6,6 +6,9 @@
 
 collections:
   # External dependencies
+  - name: ansible.posix
+    version: '>=1.5.0'
+
   - name: containers.podman
     version: '>=1.10.0'
 

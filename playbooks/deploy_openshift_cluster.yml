@@ -103,8 +103,7 @@
 
     - name: Build BCM agent container image
       ansible.builtin.include_role:
-        name: fabiendupont.bcm.openshift_cluster
-        tasks_from: build_bcm_agent_image
+        name: fabiendupont.bcm.bcm_agent_image
       when: not (skip_bcm_agent | default(false))
 
     - name: Generate OpenShift PXE Boot Files

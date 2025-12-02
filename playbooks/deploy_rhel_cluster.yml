@@ -72,6 +72,11 @@
         dest: "{{ deployment_log_file }}"
         mode: '0644'
 
+    - name: Save deployment log path for later use
+      ansible.builtin.set_fact:
+        deployment_log_file: "{{ deployment_log_file }}"
+        cacheable: true
+
   roles:
     # Setup PXE infrastructure (extract ISO, create boot files)
     - role: fabiendupont.bcm.pxe_setup
@@ -223,9 +228,6 @@
   hosts: bcm_headnode
   become: true
   gather_facts: true
-
-  vars:
-    deployment_log_file: "/var/log/bcm-deployment-{{ cluster_name }}-{{ ansible_date_time.iso8601_basic_short }}.log"
 
   pre_tasks:
     - name: Display Phase 3 start
